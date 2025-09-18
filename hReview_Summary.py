@@ -120,29 +120,154 @@ def _load_clock_sources() -> tuple[Optional[str], Optional[str]]:
 
     return js, single
 
-# ---------- HEADER (clock + market chip) ----------
 from pathlib import Path
-import base64
-import uuid
+import base64, uuid
 from textwrap import dedent
 import streamlit.components.v1 as components
 
-def render_quantml_clock(*,
-                         size: int = 200,
-                         tz: str = "Europe/Dublin",
-                         title: str = "Dublin",
-                         show_seconds: bool = True,
-                         is_24h: bool = True,
-                         logo_path: str | None = "Clock/quantml.png") -> None:
-    render_banner_clock(size=size, tz=tz, title=title,
-                        show_seconds=show_seconds, is_24h=is_24h,
-                        logo_path=logo_path)
+def render_quantml_clock(
+    size: int = 220,
+    tz: str = "Europe/Dublin",
+    title: str = "Dublin",
+    show_seconds: bool = True,
+    is_24h: bool = True,
+    logo_path: str | None = "Clock/quantml.png",
+    logo_scale: float = 0.55,   # 0.0–1.0 of the clock size
+) -> None:
+    """Canvas clock with QUANTML logo. One time sample drives both analog & digital."""
+    import base64, io
+    from textwrap import dedent
 
-def render_banner_clock(*, size=200, tz="Europe/Dublin",
-                        title="Dublin", show_seconds=True, is_24h=True,
-                        logo_path=None) -> None:
-    """Analog+digital clock, exact TZ via Intl.DateTimeFormat, with optional center logo."""
-    # Inline logo as base64 (works on Streamlit Cloud)
+    logo_b64 = ""
+    if logo_path:
+        try:
+            with open(logo_path, "rb") as f:
+                logo_b64 = base64.b64encode(f.read()).decode("ascii")
+        except Exception:
+            logo_b64 = ""
+
+    canvas_id = f"qmclk_canvas_{st.session_state.get('_clk', 0)}"
+    time_id   = f"qmclk_time_{st.session_state.get('_clk', 0)}"
+    date_id   = f"qmclk_date_{st.session_state.get('_clk', 0)}"
+    st.session_state['_clk'] = st.session_state.get('_clk', 0) + 1
+
+    h = size + 125  # room for labels
+
+    html = dedent(f"""
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+      <canvas id="{canvas_id}" width="{size}" height="{size}" style="
+        width:{size}px;height:{size}px;border-radius:16px;background:#0f172a;box-shadow:0 6px 20px rgba(0,0,0,.25);
+      "></canvas>
+      <div style="font:700 26px system-ui; color:navy; letter-spacing:0.5px" id="{time_id}"></div>
+      <div style="font:500 16px system-ui; color:#C7D2FE">{title}</div>
+      <div style="font:500 16px system-ui; color:#C7D2FE" id="{date_id}"></div>
+    </div>
+    <script>
+    (function(){{
+      const cssW={size}, cssH={size}, LOGO_SCALE={logo_scale};
+      const tz="{tz}", showSeconds={str(show_seconds).lower()}, is24h={str(is_24h).lower()};
+      const canvas=document.getElementById("{canvas_id}");
+      const dpr=Math.max(1, window.devicePixelRatio||1);
+      canvas.width=cssW*dpr; canvas.height=cssH*dpr; canvas.style.width=cssW+"px"; canvas.style.height=cssH+"px";
+      const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0);
+      const cx=cssW/2, cy=cssH/2, R=Math.min(cx,cy)-6, OFF=-Math.PI/2; // << rotate so 0° is at 12
+
+      // inline logo
+      const logoData="{logo_b64}";
+      let logoImg=null, logoReady=false;
+      if (logoData) {{ logoImg=new Image(); logoImg.onload=()=>logoReady=true; logoImg.src="data:image/png;base64,"+logoData; }}
+
+      // one true time source (sample ONCE per tick for analog+digital)
+      function nowInTZ() {{
+        // build a Date with the *local clock* of tz
+        return new Date(new Date().toLocaleString('en-US', {{ timeZone: tz }}));
+      }}
+      function pad(n){{return String(n).padStart(2,'0');}}
+
+      function sampleParts(){{
+        const d=nowInTZ();
+        const h=d.getHours(), m=d.getMinutes(), s=d.getSeconds(), ms=d.getMilliseconds();
+        const weekday=d.toLocaleString('en-GB', {{ weekday:'short', timeZone: tz }});
+        const mon=d.toLocaleString('en-GB', {{ month:'short', timeZone: tz }});
+        const day=pad(d.getDate()), year=d.getFullYear();
+        return {{ h, m, s, ms, dateStr:`${{weekday}}, ${{day}} ${{mon}} ${{year}}` }};
+      }}
+
+      function drawFace(){{
+        ctx.clearRect(0,0,cssW,cssH);
+        // ticks, with OFF so 0 is at 12 o'clock
+        for(let i=0;i<60;i++) {{
+          const a=(Math.PI/30)*i + OFF;
+          const r1=R*(i%5===0?0.82:0.88), r2=R*0.97;
+          ctx.beginPath();
+          ctx.moveTo(cx+r1*Math.cos(a), cy+r1*Math.sin(a));
+          ctx.lineTo(cx+r2*Math.cos(a), cy+r2*Math.sin(a));
+          ctx.lineWidth=(i%5===0)?2.4:1.2;
+          ctx.strokeStyle="rgba(180,197,255,0.9)";
+          ctx.stroke();
+        }}
+        ctx.beginPath(); ctx.arc(cx,cy,R*0.99,0,Math.PI*2);
+        ctx.strokeStyle="rgba(79,70,229,0.6)"; ctx.lineWidth=2; ctx.stroke();
+
+        const L=Math.min(cssW,cssH)*LOGO_SCALE;
+        if(logoReady){{ ctx.save(); ctx.globalAlpha=0.95; ctx.drawImage(logoImg,cx-L/2,cy-L/2,L,L); ctx.restore(); }}
+      }}
+
+      function hand(angle,len,w,col) {{
+        ctx.save(); ctx.translate(cx,cy); ctx.rotate(angle+OFF);
+        ctx.beginPath(); ctx.moveTo(-R*0.08,0); ctx.lineTo(len,0);
+        ctx.lineWidth=w; ctx.lineCap="round"; ctx.strokeStyle=col; ctx.stroke(); ctx.restore();
+      }}
+
+      function drawHandsFromParts(p) {{
+        const pi=Math.PI;
+        const hrA  = (pi/6)  * ((p.h%12) + p.m/60 + p.s/3600);
+        const minA = (pi/30) * (p.m + p.s/60);
+        const secA = (pi/30) *  p.s;
+        hand(hrA,  R*0.50, 5,  "#9DB2FF");
+        hand(minA, R*0.72, 3.4,"#9DB2FF");
+        if(showSeconds) hand(secA,R*0.78, 2,  "#4F7BFF");
+        // center pin
+        ctx.beginPath(); ctx.arc(cx,cy,6,0,pi*2); ctx.fillStyle="#99A8FF"; ctx.fill();
+        ctx.beginPath(); ctx.arc(cx,cy,3,0,pi*2); ctx.fillStyle="#335CFF"; ctx.fill();
+      }}
+
+      function drawDigitalFromParts(p) {{
+        const hh = is24h ? pad(p.h) : pad(((p.h%12)||12));
+        const ampm = is24h ? "" : (p.h<12 ? " AM" : " PM");
+        document.getElementById("{time_id}").textContent =
+          {str(show_seconds).lower()} ? `${{hh}}:${{pad(p.m)}}:${{pad(p.s)}}${{ampm}}` : `${{hh}}:${{pad(p.m)}}${{ampm}}`;
+        document.getElementById("{date_id}").textContent = p.dateStr;
+      }}
+
+      function scheduleNext(ms) {{ setTimeout(tick, 1000 - (ms % 1000)); }}
+
+      function tick() {{
+        const p = sampleParts();       // one sample → both analog & digital
+        drawFace(); drawHandsFromParts(p); drawDigitalFromParts(p);
+        scheduleNext(p.ms);
+      }}
+      tick();
+    }})();
+    </script>
+    """)
+    components.html(html, height=h, scrolling=False)
+
+
+def render_banner_clock(*,
+                        size=200, tz="Europe/Dublin", title="Dublin",
+                        show_seconds=True, is_24h=True,
+                        logo_path=None, logo_scale: float = 0.55) -> None:
+    """
+    Analog + digital clock locked to the same TZ sample each tick.
+    The analog hands are computed from the SAME h/m/s used to render the digital text.
+    """
+    import base64, uuid
+    from pathlib import Path
+    from textwrap import dedent
+    import streamlit.components.v1 as components
+
+    # Inline the logo so it renders on Streamlit Cloud
     logo_b64 = ""
     try:
         if logo_path and Path(logo_path).exists():
@@ -160,19 +285,22 @@ def render_banner_clock(*, size=200, tz="Europe/Dublin",
     <div style="display:flex;flex-direction:column;align-items:center;">
       <div style="background:#0b1220;border-radius:18px;padding:12px 16px 18px 16px;box-shadow:0 10px 30px rgba(0,0,0,.35);">
         <canvas id="{canvas_id}" style="display:block;width:{size}px;height:{size}px;"></canvas>
-        <div style="margin-top:10px;text-align:center;font-family:ui-sans-serif;color:#E5E7EB;">
+        <div style="margin-top:10px;text-align:center;font-family:ui-sans-serif;color:navy;">
           <div id="{time_id}" style="font-weight:800;font-size:22px;">loading…</div>
           <div id="{date_id}" style="margin-top:2px;font-size:14px;opacity:.85;">—</div>
           <div style="font-size:13px;opacity:.75;">{title}</div>
         </div>
       </div>
     </div>
+
     <script>
     (function(){{
       const tz = "{tz}";
       const showSeconds = {str(show_seconds).lower()};
       const is24h = {str(is_24h).lower()};
       const cssW = {size}, cssH = {size};
+      const LOGO_SCALE = {logo_scale};
+
       const canvas = document.getElementById("{canvas_id}");
       const dpr = Math.max(1, window.devicePixelRatio || 1);
       canvas.width = cssW*dpr; canvas.height = cssH*dpr;
@@ -181,26 +309,28 @@ def render_banner_clock(*, size=200, tz="Europe/Dublin",
       ctx.setTransform(dpr,0,0,dpr,0,0);
       const cx = cssW/2, cy = cssH/2, R = Math.min(cx,cy)-6;
 
+      // Inline logo
       const logoData = "{logo_b64}";
       let logoImg=null, logoReady=false;
       if (logoData) {{ logoImg = new Image(); logoImg.onload=()=>logoReady=true; logoImg.src="data:image/png;base64,"+logoData; }}
 
-      function getParts(){{
-        try {{
-          const fmt = new Intl.DateTimeFormat('en-GB', {{
-            timeZone: tz, hour:'2-digit', minute:'2-digit', second:'2-digit',
-            weekday:'short', day:'2-digit', month:'short', year:'numeric', hour12:!is24h
-          }});
-          const arr = fmt.formatToParts(new Date());
-          const m={{}}; for (const p of arr) m[p.type]=p.value;
-          return {{
-            h:parseInt(m.hour)||0, m:parseInt(m.minute)||0, s:parseInt(m.second)||0,
-            dateStr: `${{m.weekday||""}}, ${{m.day||""}} ${{m.month||""}} ${{m.year||""}}`
-          }};
-        }} catch(e) {{
-          const d = new Date(new Date().toLocaleString('en-GB', {{timeZone: tz}}));
-          return {{h:d.getHours(), m:d.getMinutes(), s:d.getSeconds(), dateStr:d.toDateString()}};
-        }}
+      // ---- one true time source (used by both analog & digital) ----
+      function nowInTZ(){{
+        return new Date(new Date().toLocaleString('en-US', {{ timeZone: tz }}));
+      }}
+      function pad(n){{return String(n).padStart(2,'0');}}
+
+      function sampleParts(){{
+        const d = nowInTZ();                 // <— single sample per tick
+        const h = d.getHours(), m = d.getMinutes(), s = d.getSeconds(), ms = d.getMilliseconds();
+        const weekday = d.toLocaleString('en-GB', {{ weekday:'short', timeZone: tz }});
+        const mon  = d.toLocaleString('en-GB', {{ month:'short',  timeZone: tz }});
+        const day  = pad(d.getDate());
+        const year = d.getFullYear();
+        return {{
+          h, m, s, ms,
+          dateStr: `${{weekday}}, ${{day}} ${{mon}} ${{year}}`
+        }};
       }}
 
       function drawFace(){{
@@ -218,9 +348,9 @@ def render_banner_clock(*, size=200, tz="Europe/Dublin",
         ctx.beginPath(); ctx.arc(cx,cy,R*0.99,0,Math.PI*2);
         ctx.strokeStyle="rgba(79,70,229,0.6)"; ctx.lineWidth=2; ctx.stroke();
 
-        const L = Math.min(cssW, cssH) * 0.28;
+        const L = Math.min(cssW, cssH) * LOGO_SCALE;
         if (logoReady) {{
-          ctx.save(); ctx.globalAlpha=0.92;
+          ctx.save(); ctx.globalAlpha=0.95;
           ctx.drawImage(logoImg, cx-L/2, cy-L/2, L, L);
           ctx.restore();
         }} else {{
@@ -232,27 +362,54 @@ def render_banner_clock(*, size=200, tz="Europe/Dublin",
           ctx.restore();
         }}
       }}
+
       function hand(a,len,w,col){{ ctx.save(); ctx.translate(cx,cy); ctx.rotate(a);
         ctx.beginPath(); ctx.moveTo(-R*0.08,0); ctx.lineTo(len,0);
         ctx.lineWidth=w; ctx.lineCap="round"; ctx.strokeStyle=col; ctx.stroke(); ctx.restore(); }}
-      function drawHands(h,m,s){{
+
+      // compute analog angles **from the same h/m/s used for digital**
+      function drawHandsFromParts(p){{
         const pi=Math.PI;
-        hand((pi/6)*((h%12)+m/60+s/3600), R*0.5, 5,  "#9DB2FF");
-        hand((pi/30)*(m+s/60),            R*0.72,3.4,"#9DB2FF");
-        if (showSeconds) hand((pi/30)*s,  R*0.78,2,  "#4F7BFF");
+        const h = p.h, m = p.m, s = p.s;
+        const hrA  = (pi/6)  * ((h%12) + m/60 + s/3600);
+        const minA = (pi/30) * (m + s/60);
+        const secA = (pi/30) * s;
+
+        hand(hrA,  R*0.50, 5,  "#9DB2FF");
+        hand(minA, R*0.72, 3.4,"#9DB2FF");
+        if (showSeconds) hand(secA, R*0.78, 2,  "#4F7BFF");
         ctx.beginPath(); ctx.arc(cx,cy,6,0,pi*2); ctx.fillStyle="#99A8FF"; ctx.fill();
         ctx.beginPath(); ctx.arc(cx,cy,3,0,pi*2); ctx.fillStyle="#335CFF"; ctx.fill();
       }}
-      function tick(){{
-        const p=getParts(); drawFace(); drawHands(p.h,p.m,p.s);
-        document.getElementById("{time_id}").textContent =
-          new Intl.DateTimeFormat('en-GB', {{timeZone: tz, hour:'2-digit', minute:'2-digit', second: showSeconds?'2-digit':undefined, hour12:!is24h}}).format(new Date());
+
+      function drawDigitalFromParts(p){{
+        const hh = is24h ? pad(p.h) : pad(((p.h%12)||12));
+        const ampm = is24h ? "" : (p.h<12? " AM" : " PM");
+        const txt = showSeconds ? `${{hh}}:${{pad(p.m)}}:${{pad(p.s)}}${{ampm}}`
+                                : `${{hh}}:${{pad(p.m)}}${{ampm}}`;
+        document.getElementById("{time_id}").textContent = txt;
         document.getElementById("{date_id}").textContent = p.dateStr;
       }}
-      tick(); setInterval(tick,1000);
+
+      // align ticks to the next second boundary to avoid drift
+      function scheduleNext(ms){{
+        const delay = 1000 - (ms % 1000);
+        setTimeout(tick, delay);
+      }}
+
+      function tick(){{
+        const p = sampleParts();      // <— ONE sample
+        drawFace();                   // analog frame
+        drawHandsFromParts(p);        // analog hands from p
+        drawDigitalFromParts(p);      // digital from p
+        scheduleNext(p.ms);
+      }}
+
+      tick();
     }})();
     </script>
     """), height=h, scrolling=False)
+
 
 def render_header(api):
     c1, c2, c3 = st.columns([0.20, 0.65, 0.15], vertical_alignment="center")
@@ -947,24 +1104,178 @@ def _fmt_dub(dt: datetime) -> str:
     except Exception:
         return dt.strftime("%Y-%m-%d")
 
+# ---------- HISTORY FROM FILLS (per day) ----------
+from collections import defaultdict, deque
+from datetime import datetime, timedelta, timezone
+
+@st.cache_data(ttl=120, show_spinner=False)
+def _pull_fills_df(_api: Optional[REST], days: int = 7) -> pd.DataFrame:
+    """Account activities → FILLs for the past N days (ascending)."""
+    cols = ["ts","date","symbol","side","qty","price"]
+    if _api is None:
+        return pd.DataFrame(columns=cols)
+
+    # Timezone-aware 'after' so Alpaca honors the filter
+    after = (datetime.now(timezone.utc) - timedelta(days=days+2)).isoformat()
+
+    acts = []
+    try:
+        acts = _api.get_activities(activity_types="FILL", after=after)
+    except TypeError:
+        try:
+            acts = _api.get_activities("FILL", after=after)
+        except Exception:
+            acts = []
+    except Exception:
+        try:
+            acts = _api.get_account_activities("FILL", after=after)
+        except Exception:
+            acts = []
+
+    rows = []
+    for a in acts or []:
+        sym  = (getattr(a, "symbol", None) or getattr(a, "asset_symbol", None) or "").upper()
+        side = (getattr(a, "side", "") or "").lower()
+        try:
+            price = float(getattr(a, "price", getattr(a, "fill_price", 0.0)) or 0.0)
+            qty   = float(getattr(a, "qty", getattr(a, "quantity", 0.0)) or 0.0)
+        except Exception:
+            price, qty = 0.0, 0.0
+        ts = getattr(a, "transaction_time", getattr(a, "timestamp", getattr(a, "date", None)))
+        ts = pd.to_datetime(str(ts), utc=True, errors="coerce")
+        if pd.isna(ts) or not sym or qty <= 0 or price <= 0:
+            continue
+        rows.append({"ts": ts, "date": ts.date(), "symbol": sym, "side": side, "qty": qty, "price": price})
+
+    if not rows:
+        return pd.DataFrame(columns=cols)
+
+    df = pd.DataFrame(rows)
+    df["ts"] = pd.to_datetime(df["ts"], utc=True, errors="coerce")
+    return df.sort_values("ts")
+
+
+def build_history_rows_from_fills(api: Optional[REST],
+                                  positions: pd.DataFrame | None,
+                                  days: int = 5) -> tuple[pd.DataFrame, float]:
+    """
+    FIFO lot tracker per symbol:
+      - 'Cost to open positions' (notional added) per day
+      - 'Liquidated'  = realized P&L for portions closed that day
+      - 'Open (current value)' for that day's remaining lots (valued at *current* price)
+      - 'P&L $'       = realized (that day) + unrealized on remaining lots from that day
+      - 'P&L %'       = P&L $ / day_cost_open
+    Returns (history_df, realized_total_lastN).
+    """
+    fills = _pull_fills_df(api, days=days)
+    if fills.empty:
+        return pd.DataFrame(), 0.0
+
+    # current prices for open lots valuation
+    curr_px = {}
+    if positions is not None and not positions.empty:
+        sym_col = "Ticker" if "Ticker" in positions.columns else "symbol"
+        for _, r in positions.iterrows():
+            s = str(r.get(sym_col, "")).upper()
+            if s:
+                try: curr_px[s] = float(r.get("current_price"))
+                except Exception: pass
+
+    lots = defaultdict(deque)               # symbol -> deque of open lots: {'day','qty'(signed),'price'}
+    day_cost_open = defaultdict(float)
+    day_liq_notional = defaultdict(float)
+    day_realized = defaultdict(float)
+
+    for _, r in fills.iterrows():
+        sym, side, qty, px, day = r["symbol"], r["side"], float(r["qty"]), float(r["price"]), r["date"]
+        change = qty if side == "buy" else -qty
+        prev_qty = sum(l["qty"] for l in lots[sym])
+        new_qty  = prev_qty + change
+        inc_exp  = (abs(new_qty) > abs(prev_qty))  # moving away from zero → opening/add
+
+        if inc_exp:
+            lots[sym].append({"day": day, "qty": change, "price": px})
+            day_cost_open[day] += abs(change) * px
+        else:
+            # closing exposure: FIFO across lots
+            qty_to_close = abs(change)
+            while qty_to_close > 1e-9 and lots[sym]:
+                lot = lots[sym][0]
+                lot_sign = 1.0 if lot["qty"] > 0 else -1.0
+                avail = abs(lot["qty"])
+                take = min(avail, qty_to_close)
+                # realized P&L for this slice
+                day_realized[day] += lot_sign * (px - lot["price"]) * take
+                day_liq_notional[day] += px * take
+                lot["qty"] = lot["qty"] - lot_sign * take
+                qty_to_close -= take
+                if abs(lot["qty"]) <= 1e-9:
+                    lots[sym].popleft()
+
+    # leftover lots → unrealized by original open day
+    day_open_val = defaultdict(float)
+    day_unrl_pnl = defaultdict(float)
+    for sym, dq in lots.items():
+        cp = curr_px.get(sym, np.nan)
+        for lot in dq:
+            d = lot["day"]
+            q_abs = abs(lot["qty"])
+            entry = lot["price"]
+            sign  = 1.0 if lot["qty"] > 0 else -1.0
+            if np.isfinite(cp):
+                day_open_val[d] += q_abs * cp
+                day_unrl_pnl[d] += sign * (cp - entry) * q_abs
+
+    # assemble last N days (descending)
+    all_days = sorted(set(list(day_cost_open.keys()) + list(day_open_val.keys()) + list(day_realized.keys())))
+    cutoff = (datetime.utcnow().date() - timedelta(days=days))
+    rows = []
+    for d in sorted([x for x in all_days if x >= cutoff], reverse=True):
+        cost_open = day_cost_open.get(d, 0.0)
+        open_val  = day_open_val.get(d, 0.0)
+        realized  = day_realized.get(d, 0.0)
+        pl_d      = realized + day_unrl_pnl.get(d, 0.0)
+        pl_pct    = (pl_d / cost_open * 100.0) if cost_open > 0 else 0.0
+        rows.append({
+            "date": d.strftime("%d-%b-%y"),
+            "cost_open": round(cost_open, 2),
+            "open_value": round(open_val, 2),
+            "realized": round(realized, 2),
+            "pl_dollar": round(pl_d, 2),
+            "pl_percent": round(pl_pct, 2),
+        })
+
+    hist_df = pd.DataFrame(rows, columns=["date","cost_open","open_value","realized","pl_dollar","pl_percent"])
+    realized_total = float(sum(day_realized.values()))
+    return hist_df, realized_total
+
+
+# ---------- OPEN LEDGER (sign-correct for shorts) ----------
 def _compute_open_ledger(positions: pd.DataFrame) -> dict:
-    """Cost to open, current value, unrealized P&L for open positions."""
+    """Cost to open, current value, and UNRL P&L (+/−) for all currently open lots."""
     if positions is None or positions.empty:
         return {"cost_open": 0.0, "open_value": 0.0, "unrl": 0.0, "unrl_pct": 0.0}
 
     z = compute_derived_metrics(positions).copy()
-    qty = pd.to_numeric(z.get("qty"), errors="coerce").abs()
-    entry = pd.to_numeric(z.get("entry_price"), errors="coerce")
-    curr  = pd.to_numeric(z.get("current_price"), errors="coerce")
+    qty_abs  = pd.to_numeric(z.get("qty"), errors="coerce").abs()
+    entry    = pd.to_numeric(z.get("entry_price"), errors="coerce")
+    current  = pd.to_numeric(z.get("current_price"), errors="coerce")
 
-    cost_open  = float((qty * entry).sum(skipna=True))
-    open_value = float((qty * curr).sum(skipna=True))
-    unrl = open_value - cost_open
+    # Notional views (always positive)
+    cost_open  = float((qty_abs * entry).sum(skipna=True))
+    open_value = float((qty_abs * current).sum(skipna=True))
+
+    # UNRL P&L with correct sign for shorts (sum of row P&L)
+    unrl = float(pd.to_numeric(z.get("pl_$"), errors="coerce").sum(skipna=True))
     unrl_pct = (unrl / cost_open * 100.0) if cost_open > 0 else 0.0
-    return {"cost_open": round(cost_open, 2),
-            "open_value": round(open_value, 2),
-            "unrl": round(unrl, 2),
-            "unrl_pct": round(unrl_pct, 2)}
+
+    return {
+        "cost_open": round(cost_open, 2),
+        "open_value": round(open_value, 2),
+        "unrl": round(unrl, 2),
+        "unrl_pct": round(unrl_pct, 2),
+    }
+
 
 def render_portfolio_ledger_table(positions: pd.DataFrame,
                                   realized_pnl_total: float | None = None,
@@ -1058,13 +1369,18 @@ def main() -> None:
     api = _load_alpaca_api()
     render_header(api)
 
-    # Pull live positions, attach TP/SL, and compute metrics once
+    # In main(), right before the 3 dials:
     positions = pull_live_positions(api)
     positions = merge_tp_sl_from_alpaca_orders(positions, api)
     positions = compute_derived_metrics(positions)
 
-    # ⬇️ NEW: replace the old broker grid + KPI row with the ledger table
-    render_portfolio_ledger_table(positions, realized_pnl_total=None, history_rows=None)
+    # NEW: build history from fills (last 5 days by default)
+    hist_df, realized_total = build_history_rows_from_fills(api, positions, days=5)
+
+    # Render the ledger with History rows included, and correct sign for shorts
+    render_portfolio_ledger_table(positions,
+                                realized_pnl_total=realized_total,
+                                history_rows=hist_df)
     st.divider()
 
     # Totals for the 3 dials (unchanged)
