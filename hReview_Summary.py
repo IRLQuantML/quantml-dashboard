@@ -1,5 +1,4 @@
 # streamlit run hReview_Summary.py
-
 #git add hReview_Summary.py
 #git commit -m "Update investor summary UI"
 #git push
@@ -134,21 +133,16 @@ def render_quantml_clock(*,
                          title: str = "Dublin",
                          show_seconds: bool = True,
                          is_24h: bool = True,
-                         logo_path: str | None = "Clock/quantml_logo_clock.png") -> None:
+                         logo_path: str | None = "Clock/quantml.png") -> None:
     render_banner_clock(size=size, tz=tz, title=title,
                         show_seconds=show_seconds, is_24h=is_24h,
                         logo_path=logo_path)
 
-def render_banner_clock(*,
-                        size=200, tz="Europe/Dublin", title="Dublin",
-                        show_seconds=True, is_24h=True, logo_path=None) -> None:
-    """
-    Analog + digital clock that ALWAYS renders in the requested timezone.
-    - Uses Intl.DateTimeFormat(..., timeZone=tz).formatToParts() for accurate TZ math.
-    - Optional center logo: put a square PNG at Clock/quantml_logo_clock.png in the repo.
-      (Falls back to a subtle QUANTML wordmark if the file is not present.)
-    """
-    # Inline the logo (if present) as a base64 data URI so it works on Streamlit Cloud
+def render_banner_clock(*, size=200, tz="Europe/Dublin",
+                        title="Dublin", show_seconds=True, is_24h=True,
+                        logo_path=None) -> None:
+    """Analog+digital clock, exact TZ via Intl.DateTimeFormat, with optional center logo."""
+    # Inline logo as base64 (works on Streamlit Cloud)
     logo_b64 = ""
     try:
         if logo_path and Path(logo_path).exists():
@@ -162,7 +156,7 @@ def render_banner_clock(*,
     time_id   = f"qmTime-{uid}"
     date_id   = f"qmDate-{uid}"
 
-    html = dedent(f"""
+    components.html(dedent(f"""
     <div style="display:flex;flex-direction:column;align-items:center;">
       <div style="background:#0b1220;border-radius:18px;padding:12px 16px 18px 16px;box-shadow:0 10px 30px rgba(0,0,0,.35);">
         <canvas id="{canvas_id}" style="display:block;width:{size}px;height:{size}px;"></canvas>
@@ -173,7 +167,6 @@ def render_banner_clock(*,
         </div>
       </div>
     </div>
-
     <script>
     (function(){{
       const tz = "{tz}";
@@ -188,42 +181,30 @@ def render_banner_clock(*,
       ctx.setTransform(dpr,0,0,dpr,0,0);
       const cx = cssW/2, cy = cssH/2, R = Math.min(cx,cy)-6;
 
-      // Load the (optional) logo once
       const logoData = "{logo_b64}";
-      let logoImg = null, logoReady = false;
-      if (logoData) {{
-        logoImg = new Image();
-        logoImg.onload = function(){{ logoReady = true; }};
-        logoImg.src = "data:image/png;base64," + logoData;
-      }}
+      let logoImg=null, logoReady=false;
+      if (logoData) {{ logoImg = new Image(); logoImg.onload=()=>logoReady=true; logoImg.src="data:image/png;base64,"+logoData; }}
 
       function getParts(){{
-        // Robust TZ parts (works across browsers)
         try {{
           const fmt = new Intl.DateTimeFormat('en-GB', {{
             timeZone: tz, hour:'2-digit', minute:'2-digit', second:'2-digit',
-            weekday:'short', day:'2-digit', month:'short', year:'numeric',
-            hour12: !is24h
+            weekday:'short', day:'2-digit', month:'short', year:'numeric', hour12:!is24h
           }});
           const arr = fmt.formatToParts(new Date());
-          const m = {{}};
-          for (const p of arr) m[p.type] = p.value;
+          const m={{}}; for (const p of arr) m[p.type]=p.value;
           return {{
-            h: parseInt(m.hour)||0,
-            m: parseInt(m.minute)||0,
-            s: parseInt(m.second)||0,
+            h:parseInt(m.hour)||0, m:parseInt(m.minute)||0, s:parseInt(m.second)||0,
             dateStr: `${{m.weekday||""}}, ${{m.day||""}} ${{m.month||""}} ${{m.year||""}}`
           }};
         }} catch(e) {{
-          // Fallback: coerce Date into tz via toLocaleString
-          const d = new Date(new Date().toLocaleString('en-GB', {{ timeZone: tz }}));
-          return {{ h:d.getHours(), m:d.getMinutes(), s:d.getSeconds(), dateStr:d.toDateString() }};
+          const d = new Date(new Date().toLocaleString('en-GB', {{timeZone: tz}}));
+          return {{h:d.getHours(), m:d.getMinutes(), s:d.getSeconds(), dateStr:d.toDateString()}};
         }}
       }}
 
       function drawFace(){{
         ctx.clearRect(0,0,cssW,cssH);
-        // tick marks
         for(let i=0;i<60;i++) {{
           const a=(Math.PI/30)*i;
           const r1=R*(i%5===0?0.82:0.88), r2=R*0.97;
@@ -234,69 +215,51 @@ def render_banner_clock(*,
           ctx.strokeStyle="rgba(180,197,255,0.9)";
           ctx.stroke();
         }}
-        // outer ring
         ctx.beginPath(); ctx.arc(cx,cy,R*0.99,0,Math.PI*2);
         ctx.strokeStyle="rgba(79,70,229,0.6)"; ctx.lineWidth=2; ctx.stroke();
 
-        // center logo (if available), else subtle wordmark
         const L = Math.min(cssW, cssH) * 0.28;
         if (logoReady) {{
-          ctx.save(); ctx.globalAlpha = 0.92;
-          ctx.drawImage(logoImg, cx - L/2, cy - L/2, L, L);
+          ctx.save(); ctx.globalAlpha=0.92;
+          ctx.drawImage(logoImg, cx-L/2, cy-L/2, L, L);
           ctx.restore();
         }} else {{
           ctx.save();
-          ctx.fillStyle = "rgba(226,232,255,0.18)";
-          ctx.font = "bold 14px system-ui, -apple-system, Segoe UI, Roboto";
+          ctx.fillStyle="rgba(226,232,255,0.18)";
+          ctx.font="bold 14px system-ui,-apple-system,Segoe UI,Roboto";
           ctx.textAlign="center"; ctx.textBaseline="middle";
           ctx.fillText("QUANTML", cx, cy);
           ctx.restore();
         }}
       }}
-
-      function hand(angle,len,width,color){{
-        ctx.save(); ctx.translate(cx,cy); ctx.rotate(angle);
+      function hand(a,len,w,col){{ ctx.save(); ctx.translate(cx,cy); ctx.rotate(a);
         ctx.beginPath(); ctx.moveTo(-R*0.08,0); ctx.lineTo(len,0);
-        ctx.lineWidth=width; ctx.lineCap="round"; ctx.strokeStyle=color; ctx.stroke();
-        ctx.restore();
-      }}
-
+        ctx.lineWidth=w; ctx.lineCap="round"; ctx.strokeStyle=col; ctx.stroke(); ctx.restore(); }}
       function drawHands(h,m,s){{
         const pi=Math.PI;
-        const hrA=(pi/6)*((h%12)+m/60+s/3600);
-        const minA=(pi/30)*(m+s/60);
-        const secA=(pi/30)*s;
-        hand(hrA, R*0.50, 5,  "#9DB2FF");
-        hand(minA, R*0.72, 3.4,"#9DB2FF");
-        if (showSeconds) hand(secA, R*0.78, 2, "#4F7BFF");
+        hand((pi/6)*((h%12)+m/60+s/3600), R*0.5, 5,  "#9DB2FF");
+        hand((pi/30)*(m+s/60),            R*0.72,3.4,"#9DB2FF");
+        if (showSeconds) hand((pi/30)*s,  R*0.78,2,  "#4F7BFF");
         ctx.beginPath(); ctx.arc(cx,cy,6,0,pi*2); ctx.fillStyle="#99A8FF"; ctx.fill();
         ctx.beginPath(); ctx.arc(cx,cy,3,0,pi*2); ctx.fillStyle="#335CFF"; ctx.fill();
       }}
-
       function tick(){{
-        const p = getParts();
-        drawFace(); drawHands(p.h,p.m,p.s);
+        const p=getParts(); drawFace(); drawHands(p.h,p.m,p.s);
         document.getElementById("{time_id}").textContent =
-          new Intl.DateTimeFormat('en-GB', {{
-            timeZone: tz, hour:'2-digit', minute:'2-digit', second: showSeconds? '2-digit': undefined, hour12: !is24h
-          }}).format(new Date());
+          new Intl.DateTimeFormat('en-GB', {{timeZone: tz, hour:'2-digit', minute:'2-digit', second: showSeconds?'2-digit':undefined, hour12:!is24h}}).format(new Date());
         document.getElementById("{date_id}").textContent = p.dateStr;
       }}
-
-      tick(); setInterval(tick, 1000);
+      tick(); setInterval(tick,1000);
     }})();
     </script>
-    """)
+    """), height=h, scrolling=False)
 
-    components.html(html, height=h, scrolling=False)
-
-def render_header(api: Optional[REST]) -> None:
+def render_header(api):
     c1, c2, c3 = st.columns([0.20, 0.65, 0.15], vertical_alignment="center")
     with c1:
-        # Dublin clock with fixed timezone & optional logo
         render_quantml_clock(size=200, tz="Europe/Dublin", title="Dublin",
                              show_seconds=True, is_24h=True,
-                             logo_path="Clock/quantml_logo_clock.png")
+                             logo_path="Clock/quantml.png")
     with c2:
         st.markdown("## QUANTML — Investor Summary (Live)")
         if api is not None:
@@ -968,6 +931,125 @@ def pull_live_positions(api: Optional[REST]) -> pd.DataFrame:
         })
     return pd.DataFrame(rows)
 
+# ---------- LEDGER SUMMARY TABLE (Totals / Current / History shell) ----------
+from datetime import datetime
+try:
+    from zoneinfo import ZoneInfo
+    _DUBLIN = ZoneInfo("Europe/Dublin")
+except Exception:
+    _DUBLIN = None
+
+def _fmt_dub(dt: datetime) -> str:
+    try:
+        if _DUBLIN is not None:
+            dt = dt.astimezone(_DUBLIN)
+        return dt.strftime("%d-%b-%y")
+    except Exception:
+        return dt.strftime("%Y-%m-%d")
+
+def _compute_open_ledger(positions: pd.DataFrame) -> dict:
+    """Cost to open, current value, unrealized P&L for open positions."""
+    if positions is None or positions.empty:
+        return {"cost_open": 0.0, "open_value": 0.0, "unrl": 0.0, "unrl_pct": 0.0}
+
+    z = compute_derived_metrics(positions).copy()
+    qty = pd.to_numeric(z.get("qty"), errors="coerce").abs()
+    entry = pd.to_numeric(z.get("entry_price"), errors="coerce")
+    curr  = pd.to_numeric(z.get("current_price"), errors="coerce")
+
+    cost_open  = float((qty * entry).sum(skipna=True))
+    open_value = float((qty * curr).sum(skipna=True))
+    unrl = open_value - cost_open
+    unrl_pct = (unrl / cost_open * 100.0) if cost_open > 0 else 0.0
+    return {"cost_open": round(cost_open, 2),
+            "open_value": round(open_value, 2),
+            "unrl": round(unrl, 2),
+            "unrl_pct": round(unrl_pct, 2)}
+
+def render_portfolio_ledger_table(positions: pd.DataFrame,
+                                  realized_pnl_total: float | None = None,
+                                  history_rows: pd.DataFrame | None = None) -> None:
+    """
+    Renders a compact ledger-style table:
+      Columns: Cost to open positions | Open (current value) | Liquidated | P&L $ | P&L %
+      Sections: Totals, Current (today), History (optional)
+    - 'Liquidated' is interpreted as realized P&L (if you pass it).
+    - P&L $ = Unrealized + Realized.
+    - P&L % uses cost_to_open as the denominator (typical view for open risk).
+    """
+    st.subheader("Portfolio Ledger")
+
+    o = _compute_open_ledger(positions)
+    realized = float(realized_pnl_total or 0.0)
+    total_pl = o["unrl"] + realized
+    total_pl_pct = (total_pl / o["cost_open"] * 100.0) if o["cost_open"] > 0 else 0.0
+
+    rows = []
+
+    # Totals row (same as Current unless you pass history/realized from logs)
+    rows.append({
+        "Section": "Totals",
+        "Date": "",
+        "Cost to open positions": o["cost_open"],
+        "Open (current value)":   o["open_value"],
+        "Liquidated":             realized,      # realized P&L (if known)
+        "P&L $":                  total_pl,
+        "P&L %":                  total_pl_pct,
+    })
+
+    # Current (today)
+    rows.append({
+        "Section": "Current",
+        "Date": _fmt_dub(datetime.utcnow()),
+        "Cost to open positions": o["cost_open"],
+        "Open (current value)":   o["open_value"],
+        "Liquidated":             realized,
+        "P&L $":                  total_pl,
+        "P&L %":                  total_pl_pct,
+    })
+
+    # Optional history rows you may pass in (columns: date, cost_open, open_value, realized, pl$, pl%)
+    if isinstance(history_rows, pd.DataFrame) and not history_rows.empty:
+        for _, r in history_rows.iterrows():
+            rows.append({
+                "Section": "History",
+                "Date": str(r.get("date", "")),
+                "Cost to open positions": float(r.get("cost_open", 0)),
+                "Open (current value)":   float(r.get("open_value", 0)),
+                "Liquidated":             float(r.get("realized", 0)),
+                "P&L $":                  float(r.get("pl_dollar", 0)),
+                "P&L %":                  float(r.get("pl_percent", 0)),
+            })
+
+    df = pd.DataFrame(rows, columns=[
+        "Section","Date","Cost to open positions","Open (current value)","Liquidated","P&L $","P&L %"
+    ])
+
+    # Style: currency/percent formatting + green/red for P&L columns
+    def _style_ledger(s: pd.Series) -> pd.Series:
+        sty = pd.Series("", index=s.index, dtype="object")
+        try:
+            c = float(s.get("P&L $", 0) or 0)
+            pct = float(s.get("P&L %", 0) or 0)
+        except Exception:
+            c, pct = 0.0, 0.0
+        color = "#16A34A" if c >= 0 else "#DC2626"
+        sty["P&L $"] = f"color:{color}; font-weight:700;"
+        sty["P&L %"] = f"color:{color}; font-weight:700;"
+        return sty
+
+    styled = (df.style
+                .format({
+                    "Cost to open positions": "${:,.2f}",
+                    "Open (current value)":   "${:,.2f}",
+                    "Liquidated":             "${:,.2f}",
+                    "P&L $":                  "${:,.2f}",
+                    "P&L %":                  "{:+.2f}%"
+                }, na_rep="—")
+                .apply(_style_ledger, axis=1))
+
+    st.dataframe(styled, use_container_width=True, hide_index=True)
+    st.caption("“Liquidated” = realized P&L (if provided). P&L $ = Unrealized + Realized. P&L % is relative to cost to open.")
 
 # =============================================================================
 # Main — orchestrate sections (no duplicates)
@@ -976,25 +1058,31 @@ def main() -> None:
     api = _load_alpaca_api()
     render_header(api)
 
-    # New top section: broker snapshot grid
-    acct = pull_account_snapshot(api)
-    render_broker_balances(acct)
-    st.divider()
-
-    # Live positions → TP/SL → totals (unchanged)
+    # Pull live positions, attach TP/SL, and compute metrics once
     positions = pull_live_positions(api)
     positions = merge_tp_sl_from_alpaca_orders(positions, api)
     positions = compute_derived_metrics(positions)
-    totals    = derive_totals_from_positions(positions)
 
-    # 5 KPIs row (right above your 3 dials)
-    acct_equity = acct.get("equity") if acct else None
-    render_top_kpis(totals, _PORTFOLIO_BUDGET, acct_equity=acct_equity)
+    # ⬇️ NEW: replace the old broker grid + KPI row with the ledger table
+    render_portfolio_ledger_table(positions, realized_pnl_total=None, history_rows=None)
     st.divider()
 
-    # ↓↓↓ KEEP your existing 3 dials and everything below from here ↓↓↓
-    # (No changes required to your dials, traffic lights, table, etc.)
+    # Totals for the 3 dials (unchanged)
+    totals = derive_totals_from_positions(positions)
+    cap   = float(totals.get("capital_spent", 0.0))
+    gross = float(totals.get("gross_exposure", 0.0))
+    win   = float(totals.get("win_rate_%", 0.0))
 
+    d1, d2, d3 = st.columns(3)
+    with d1:
+        st.plotly_chart(gauge_budget_pct(cap, _PORTFOLIO_BUDGET, "Capital Deployed"), width="stretch")
+        st.caption("How much of your portfolio budget is currently invested (capital_spent ÷ budget). Bands: 60/80/100%.")
+    with d2:
+        st.plotly_chart(gauge_exposure_pct(gross, _PORTFOLIO_BUDGET, "Gross Exposure"), width="stretch")
+        st.caption("Long + |Short| exposure relative to budget (percentage). Shows how levered the book is regardless of netting.")
+    with d3:
+        st.plotly_chart(gauge_win_rate(win, "Win Rate"), width="stretch")
+        st.caption("Share of open positions that are currently up in P&L.")
 
     st.divider()
 
