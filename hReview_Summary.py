@@ -159,8 +159,8 @@ def render_quantml_clock(
         width:{size}px;height:{size}px;border-radius:16px;background:#0f172a;box-shadow:0 6px 20px rgba(0,0,0,.25);
       "></canvas>
       <div style="font:700 26px system-ui; color:navy; letter-spacing:0.5px" id="{time_id}"></div>
-      <div style="font:500 16px system-ui; color:#C7D2FE">{title}</div>
-      <div style="font:500 16px system-ui; color:#C7D2FE" id="{date_id}"></div>
+      <div style="font:500 16px system-ui; color:navy">{title}</div>
+      <div style="font:500 16px system-ui; color:navy" id="{date_id}"></div>
     </div>
     <script>
     (function(){{
