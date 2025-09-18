@@ -1,14 +1,16 @@
 # streamlit run hReview_Summary.py
+
+#git add hReview_Summary.py
+#git commit -m "Update investor summary UI"
+#git push
 # hReview_Summary.py — Investor Dashboard (Live)
 # Sections: Header (clock + market chip) → 5 KPIs → 3 Dials → Traffic Lights → Live Positions → (optional) Closed Trades
 
 from __future__ import annotations
 
 import os
-import io
-import json
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional
 from datetime import datetime, timedelta, timezone
 from textwrap import dedent
 import uuid
@@ -19,12 +21,7 @@ import plotly.graph_objects as go
 import streamlit as st
 import streamlit.components.v1 as components
 
-# If you use Alpaca:
 from alpaca_trade_api.rest import REST
-
-# --- QuantML Clock integration: imports & asset locations ---
-import re
-from textwrap import dedent
 
 # Prefer local Clock/ folder, then project root, then /mnt/data (for notebook runs)
 _CLOCK_JS_CANDIDATES = [
@@ -124,55 +121,40 @@ def _load_clock_sources() -> tuple[Optional[str], Optional[str]]:
 
     return js, single
 
+# ---------- HEADER (clock + market chip) ----------
+from pathlib import Path
+import base64
+import uuid
+from textwrap import dedent
+import streamlit.components.v1 as components
+
 def render_quantml_clock(*,
                          size: int = 200,
                          tz: str = "Europe/Dublin",
                          title: str = "Dublin",
                          show_seconds: bool = True,
-                         is_24h: bool = True) -> None:
+                         is_24h: bool = True,
+                         logo_path: str | None = "Clock/quantml_logo_clock.png") -> None:
     render_banner_clock(size=size, tz=tz, title=title,
-                        show_seconds=show_seconds, is_24h=is_24h)
+                        show_seconds=show_seconds, is_24h=is_24h,
+                        logo_path=logo_path)
 
-
-def render_header(api: Optional[REST]) -> None:
-    c1, c2, c3 = st.columns([0.20, 0.65, 0.15], vertical_alignment="center")
-
-    with c1:
-        # Single Dublin clock
-        render_quantml_clock(size=200, tz="Europe/Dublin", title="Dublin",
-                             show_seconds=True, is_24h=True)
-
-    with c2:
-        st.markdown("## QUANTML — Investor Summary (Live)")
-        if api is not None:
-            render_market_chip(api)  # NYSE OPEN / CLOSED chip (live from Alpaca)
-
-    with c3:
-        # Right-aligned refresh icon to pull the latest from Alpaca on demand
-        st.markdown("<div style='text-align:right'>", unsafe_allow_html=True)
-        if st.button("🔄 Refresh", help="Pull latest live data from Alpaca",
-                     key="refresh_live", use_container_width=False):
-            st.cache_data.clear()   # clear cached _open_exits_df etc.
-            st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
-
-
-from textwrap import dedent
-import uuid
-import streamlit.components.v1 as components
-
-def render_banner_clock(*, size=200, tz="Europe/Dublin",
-                        title="Dublin", show_seconds=True, is_24h=True,
-                        logo_opacity=0.14) -> None:
+def render_banner_clock(*,
+                        size=200, tz="Europe/Dublin", title="Dublin",
+                        show_seconds=True, is_24h=True, logo_path=None) -> None:
     """
-    Inline QuantML clock with analog + digital display.
-    - Unique IDs per instance
-    - No Object.fromEntries
-    - Works in Streamlit iframe
+    Analog + digital clock that ALWAYS renders in the requested timezone.
+    - Uses Intl.DateTimeFormat(..., timeZone=tz).formatToParts() for accurate TZ math.
+    - Optional center logo: put a square PNG at Clock/quantml_logo_clock.png in the repo.
+      (Falls back to a subtle QUANTML wordmark if the file is not present.)
     """
-    import uuid
-    from textwrap import dedent
-    import streamlit.components.v1 as components
+    # Inline the logo (if present) as a base64 data URI so it works on Streamlit Cloud
+    logo_b64 = ""
+    try:
+        if logo_path and Path(logo_path).exists():
+            logo_b64 = base64.b64encode(Path(logo_path).read_bytes()).decode("ascii")
+    except Exception:
+        logo_b64 = ""
 
     h = int(size + 120)
     uid = uuid.uuid4().hex[:8]
@@ -182,9 +164,9 @@ def render_banner_clock(*, size=200, tz="Europe/Dublin",
 
     html = dedent(f"""
     <div style="display:flex;flex-direction:column;align-items:center;">
-      <div class="qm-clock-wrap" style="background:#0b1220;border-radius:18px;padding:12px 16px 18px 16px;box-shadow:0 10px 30px rgba(0,0,0,.35);">
+      <div style="background:#0b1220;border-radius:18px;padding:12px 16px 18px 16px;box-shadow:0 10px 30px rgba(0,0,0,.35);">
         <canvas id="{canvas_id}" style="display:block;width:{size}px;height:{size}px;"></canvas>
-        <div class="qm-digital" style="margin-top:10px;text-align:center;font-family:ui-sans-serif;color:#E5E7EB;">
+        <div style="margin-top:10px;text-align:center;font-family:ui-sans-serif;color:#E5E7EB;">
           <div id="{time_id}" style="font-weight:800;font-size:22px;">loading…</div>
           <div id="{date_id}" style="margin-top:2px;font-size:14px;opacity:.85;">—</div>
           <div style="font-size:13px;opacity:.75;">{title}</div>
@@ -194,98 +176,138 @@ def render_banner_clock(*, size=200, tz="Europe/Dublin",
 
     <script>
     (function(){{
-      try {{
-        const tz = "{tz}";
-        const showSeconds = {str(show_seconds).lower()};
-        const is24h = {str(is_24h).lower()};
-        const cssW = {size}, cssH = {size};
-        const canvas = document.getElementById("{canvas_id}");
-        const dpr = Math.max(1, window.devicePixelRatio || 1);
-        canvas.width = cssW*dpr; canvas.height = cssH*dpr;
-        canvas.style.width = cssW+"px"; canvas.style.height = cssH+"px";
-        const ctx = canvas.getContext("2d");
-        ctx.setTransform(dpr,0,0,dpr,0,0);
-        const cx = cssW/2, cy = cssH/2, R = Math.min(cx,cy)-6;
+      const tz = "{tz}";
+      const showSeconds = {str(show_seconds).lower()};
+      const is24h = {str(is_24h).lower()};
+      const cssW = {size}, cssH = {size};
+      const canvas = document.getElementById("{canvas_id}");
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      canvas.width = cssW*dpr; canvas.height = cssH*dpr;
+      canvas.style.width = cssW+"px"; canvas.style.height = cssH+"px";
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      const cx = cssW/2, cy = cssH/2, R = Math.min(cx,cy)-6;
 
-        function getParts(){{
-          try {{
-            const fmt = new Intl.DateTimeFormat('en-GB',{{
-              timeZone: tz,hour:'2-digit',minute:'2-digit',second:'2-digit',
-              weekday:'short',day:'2-digit',month:'short',year:'numeric',
-              hour12:!is24h
-            }});
-            const arr = fmt.formatToParts(new Date());
-            let map = {{}};
-            for(let p of arr) map[p.type]=p.value;
-            return {{
-              h: parseInt(map.hour)||0,
-              m: parseInt(map.minute)||0,
-              s: parseInt(map.second)||0,
-              dateStr: `${{map.weekday||""}}, ${{map.day||""}} ${{map.month||""}} ${{map.year||""}}`
-            }};
-          }} catch(e){{
-            const d=new Date(new Date().toLocaleString('en-GB',{{timeZone:tz}}));
-            return {{h:d.getHours(),m:d.getMinutes(),s:d.getSeconds(),dateStr:d.toDateString()}};
-          }}
-        }}
-
-        function drawFace(){{
-          ctx.clearRect(0,0,cssW,cssH);
-          for(let i=0;i<60;i++){{ 
-            const a=(Math.PI/30)*i;
-            const r1=R*(i%5===0?0.82:0.88), r2=R*0.97;
-            ctx.beginPath();
-            ctx.moveTo(cx+r1*Math.cos(a), cy+r1*Math.sin(a));
-            ctx.lineTo(cx+r2*Math.cos(a), cy+r2*Math.sin(a));
-            ctx.lineWidth=(i%5===0)?2.4:1.2;
-            ctx.strokeStyle="rgba(180,197,255,0.9)";
-            ctx.stroke();
-          }}
-          ctx.beginPath(); ctx.arc(cx,cy,R*0.99,0,Math.PI*2);
-          ctx.strokeStyle="rgba(79,70,229,0.6)"; ctx.lineWidth=2; ctx.stroke();
-        }}
-
-        function handLine(angle,len,width,color){{
-          ctx.save(); ctx.translate(cx,cy); ctx.rotate(angle);
-          ctx.beginPath(); ctx.moveTo(-R*0.08,0); ctx.lineTo(len,0);
-          ctx.lineWidth=width; ctx.lineCap="round"; ctx.strokeStyle=color;
-          ctx.stroke(); ctx.restore();
-        }}
-
-        function drawHands(h,m,s){{
-          const pi=Math.PI;
-          const hrA=(pi/6)*((h%12)+m/60+s/3600);
-          const minA=(pi/30)*(m+s/60);
-          const secA=(pi/30)*s;
-          handLine(hrA,R*0.5,5,"#9DB2FF");
-          handLine(minA,R*0.72,3.4,"#9DB2FF");
-          if(showSeconds) handLine(secA,R*0.78,2,"#4F7BFF");
-          ctx.beginPath();ctx.arc(cx,cy,6,0,pi*2);ctx.fillStyle="#99A8FF";ctx.fill();
-          ctx.beginPath();ctx.arc(cx,cy,3,0,pi*2);ctx.fillStyle="#335CFF";ctx.fill();
-        }}
-
-        function tick(){{
-          const p=getParts();
-          drawFace(); drawHands(p.h,p.m,p.s);
-          document.getElementById("{time_id}").textContent =
-            new Intl.DateTimeFormat('en-GB',{{timeZone:tz,hour:'2-digit',minute:'2-digit',second:showSeconds?'2-digit':undefined,hour12:!is24h}}).format(new Date());
-          document.getElementById("{date_id}").textContent=p.dateStr;
-        }}
-
-        tick(); setInterval(tick,1000);
-      }} catch(err){{
-        document.getElementById("{time_id}").textContent="Clock error";
+      // Load the (optional) logo once
+      const logoData = "{logo_b64}";
+      let logoImg = null, logoReady = false;
+      if (logoData) {{
+        logoImg = new Image();
+        logoImg.onload = function(){{ logoReady = true; }};
+        logoImg.src = "data:image/png;base64," + logoData;
       }}
+
+      function getParts(){{
+        // Robust TZ parts (works across browsers)
+        try {{
+          const fmt = new Intl.DateTimeFormat('en-GB', {{
+            timeZone: tz, hour:'2-digit', minute:'2-digit', second:'2-digit',
+            weekday:'short', day:'2-digit', month:'short', year:'numeric',
+            hour12: !is24h
+          }});
+          const arr = fmt.formatToParts(new Date());
+          const m = {{}};
+          for (const p of arr) m[p.type] = p.value;
+          return {{
+            h: parseInt(m.hour)||0,
+            m: parseInt(m.minute)||0,
+            s: parseInt(m.second)||0,
+            dateStr: `${{m.weekday||""}}, ${{m.day||""}} ${{m.month||""}} ${{m.year||""}}`
+          }};
+        }} catch(e) {{
+          // Fallback: coerce Date into tz via toLocaleString
+          const d = new Date(new Date().toLocaleString('en-GB', {{ timeZone: tz }}));
+          return {{ h:d.getHours(), m:d.getMinutes(), s:d.getSeconds(), dateStr:d.toDateString() }};
+        }}
+      }}
+
+      function drawFace(){{
+        ctx.clearRect(0,0,cssW,cssH);
+        // tick marks
+        for(let i=0;i<60;i++) {{
+          const a=(Math.PI/30)*i;
+          const r1=R*(i%5===0?0.82:0.88), r2=R*0.97;
+          ctx.beginPath();
+          ctx.moveTo(cx+r1*Math.cos(a), cy+r1*Math.sin(a));
+          ctx.lineTo(cx+r2*Math.cos(a), cy+r2*Math.sin(a));
+          ctx.lineWidth=(i%5===0)?2.4:1.2;
+          ctx.strokeStyle="rgba(180,197,255,0.9)";
+          ctx.stroke();
+        }}
+        // outer ring
+        ctx.beginPath(); ctx.arc(cx,cy,R*0.99,0,Math.PI*2);
+        ctx.strokeStyle="rgba(79,70,229,0.6)"; ctx.lineWidth=2; ctx.stroke();
+
+        // center logo (if available), else subtle wordmark
+        const L = Math.min(cssW, cssH) * 0.28;
+        if (logoReady) {{
+          ctx.save(); ctx.globalAlpha = 0.92;
+          ctx.drawImage(logoImg, cx - L/2, cy - L/2, L, L);
+          ctx.restore();
+        }} else {{
+          ctx.save();
+          ctx.fillStyle = "rgba(226,232,255,0.18)";
+          ctx.font = "bold 14px system-ui, -apple-system, Segoe UI, Roboto";
+          ctx.textAlign="center"; ctx.textBaseline="middle";
+          ctx.fillText("QUANTML", cx, cy);
+          ctx.restore();
+        }}
+      }}
+
+      function hand(angle,len,width,color){{
+        ctx.save(); ctx.translate(cx,cy); ctx.rotate(angle);
+        ctx.beginPath(); ctx.moveTo(-R*0.08,0); ctx.lineTo(len,0);
+        ctx.lineWidth=width; ctx.lineCap="round"; ctx.strokeStyle=color; ctx.stroke();
+        ctx.restore();
+      }}
+
+      function drawHands(h,m,s){{
+        const pi=Math.PI;
+        const hrA=(pi/6)*((h%12)+m/60+s/3600);
+        const minA=(pi/30)*(m+s/60);
+        const secA=(pi/30)*s;
+        hand(hrA, R*0.50, 5,  "#9DB2FF");
+        hand(minA, R*0.72, 3.4,"#9DB2FF");
+        if (showSeconds) hand(secA, R*0.78, 2, "#4F7BFF");
+        ctx.beginPath(); ctx.arc(cx,cy,6,0,pi*2); ctx.fillStyle="#99A8FF"; ctx.fill();
+        ctx.beginPath(); ctx.arc(cx,cy,3,0,pi*2); ctx.fillStyle="#335CFF"; ctx.fill();
+      }}
+
+      function tick(){{
+        const p = getParts();
+        drawFace(); drawHands(p.h,p.m,p.s);
+        document.getElementById("{time_id}").textContent =
+          new Intl.DateTimeFormat('en-GB', {{
+            timeZone: tz, hour:'2-digit', minute:'2-digit', second: showSeconds? '2-digit': undefined, hour12: !is24h
+          }}).format(new Date());
+        document.getElementById("{date_id}").textContent = p.dateStr;
+      }}
+
+      tick(); setInterval(tick, 1000);
     }})();
     </script>
     """)
+
     components.html(html, height=h, scrolling=False)
-# Market OPEN/CLOSED chip
-try:
-    from zoneinfo import ZoneInfo
-    _NY = ZoneInfo("America/New_York")
-except Exception:
-    _NY = None
+
+def render_header(api: Optional[REST]) -> None:
+    c1, c2, c3 = st.columns([0.20, 0.65, 0.15], vertical_alignment="center")
+    with c1:
+        # Dublin clock with fixed timezone & optional logo
+        render_quantml_clock(size=200, tz="Europe/Dublin", title="Dublin",
+                             show_seconds=True, is_24h=True,
+                             logo_path="Clock/quantml_logo_clock.png")
+    with c2:
+        st.markdown("## QUANTML — Investor Summary (Live)")
+        if api is not None:
+            render_market_chip(api)  # NYSE OPEN/CLOSED chip from Alpaca
+    with c3:
+        st.markdown("<div style='text-align:right'>", unsafe_allow_html=True)
+        if st.button("🔄 Refresh", help="Pull latest live data from Alpaca", key="refresh_live"):
+            st.cache_data.clear()
+            st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
+
 
 def _parse_ts(ts):
     if isinstance(ts, datetime):
@@ -331,12 +353,10 @@ def render_market_chip(api: REST) -> None:
         unsafe_allow_html=True
     )
 
-# --- NEW: Account snapshot (balances, buying power, margins, cash, PDT) ---
-from typing import Optional
-import numpy as np
+# ---------- BROKER BALANCES & BUYING POWER ----------
 
 def pull_account_snapshot(api: Optional[REST]) -> dict:
-    """Return key broker fields as floats (safe if a field is missing)."""
+    """Grab the key Alpaca fields and compute a few safe derived metrics."""
     if api is None:
         return {}
     try:
@@ -350,31 +370,22 @@ def pull_account_snapshot(api: Optional[REST]) -> dict:
         except: return None
 
     data = {
-        # Buying power
-        "regt_buying_power":          _f(getattr(a, "regt_buying_power", None)),
-        "daytrading_buying_power":    _f(getattr(a, "daytrading_buying_power", None)),
-        "buying_power":               _f(getattr(a, "buying_power", None)),  # effective BP
-        "non_marginable_buying_power":_f(getattr(a, "non_marginable_buying_power", None)),
-        # Margin
-        "initial_margin":             _f(getattr(a, "initial_margin", None)),
-        "maintenance_margin":         _f(getattr(a, "maintenance_margin", None)),
-        # Cash
-        "cash":                       _f(getattr(a, "cash", None)),
-        "cash_withdrawable":          _f(getattr(a, "cash_withdrawable", None) or getattr(a, "withdrawable_amount", None)),
-        "pending_transfer_out":       _f(getattr(a, "pending_transfer_out", None)),
-        "pending_transfer_in":        _f(getattr(a, "pending_transfer_in", None)),
-        # Positions / equity
-        "equity":                     _f(getattr(a, "equity", None)),
-        "last_equity":                _f(getattr(a, "last_equity", None)),
-        "long_market_value":          _f(getattr(a, "long_market_value", None)),
-        "short_market_value":         _f(getattr(a, "short_market_value", None)),
-        # Misc
-        "accrued_fees":               _f(getattr(a, "accrued_fees", None)),
-        "held_ach_deposits":          _f(getattr(a, "held_away_funds", None) or getattr(a, "held_ach_deposits", None)),
-        "daytrade_count":             int(getattr(a, "daytrade_count", 0) or 0),
+        "regt_buying_power":           _f(getattr(a, "regt_buying_power", None)),
+        "daytrading_buying_power":     _f(getattr(a, "daytrading_buying_power", None)),
+        "buying_power":                _f(getattr(a, "buying_power", None)),
+        "non_marginable_buying_power": _f(getattr(a, "non_marginable_buying_power", None)),
+        "initial_margin":              _f(getattr(a, "initial_margin", None)),
+        "maintenance_margin":          _f(getattr(a, "maintenance_margin", None)),
+        "cash":                        _f(getattr(a, "cash", None)),
+        "cash_withdrawable":           _f(getattr(a, "cash_withdrawable", None) or getattr(a, "withdrawable_amount", None)),
+        "equity":                      _f(getattr(a, "equity", None)),
+        "last_equity":                 _f(getattr(a, "last_equity", None)),
+        "long_market_value":           _f(getattr(a, "long_market_value", None)),
+        "short_market_value":          _f(getattr(a, "short_market_value", None)),
+        "accrued_fees":                _f(getattr(a, "accrued_fees", None)),
+        "daytrade_count":              int(getattr(a, "daytrade_count", 0) or 0),
     }
 
-    # Derived
     lm = data.get("long_market_value")  or 0.0
     sm = data.get("short_market_value") or 0.0
     data["position_market_value"] = abs(lm) + abs(sm)
@@ -386,42 +397,38 @@ def pull_account_snapshot(api: Optional[REST]) -> dict:
     data["margin_util_pct"] = (mm / e * 100.0) if (mm and e and e > 0) else None
     return data
 
-# --- NEW: Render broker balance & buying power ---
 def render_broker_balances(acct: dict) -> None:
     st.subheader("Broker Balance & Buying Power (Alpaca)")
     if not acct:
         st.info("—"); return
 
-    # Top row: Buying power spectrum
     c1, c2, c3, c4 = st.columns(4)
-    with c1: _kpi_card("RegT Buying Power", money(acct.get("regt_buying_power") or 0.0))
+    with c1: _kpi_card("RegT Buying Power",        money(acct.get("regt_buying_power") or 0.0))
     with c2: _kpi_card("Day Trading Buying Power", money(acct.get("daytrading_buying_power") or 0.0))
-    with c3: _kpi_card("Effective Buying Power", money(acct.get("buying_power") or 0.0))
-    with c4: _kpi_card("Non‑Marginable BP", money(acct.get("non_marginable_buying_power") or 0.0))
+    with c3: _kpi_card("Effective Buying Power",   money(acct.get("buying_power") or 0.0))
+    with c4: _kpi_card("Non‑Marginable BP",        money(acct.get("non_marginable_buying_power") or 0.0))
 
-    # Second row: Margin + Equity with last close context + Position MV
     c5, c6, c7, c8 = st.columns(4)
-    with c5: _kpi_card("Initial Margin", money(acct.get("initial_margin") or 0.0))
+    with c5: _kpi_card("Initial Margin",     money(acct.get("initial_margin") or 0.0))
     with c6: _kpi_card("Maintenance Margin", money(acct.get("maintenance_margin") or 0.0))
     with c7:
-        eq  = acct.get("equity")
-        leq = acct.get("last_equity")
+        eq, leq = acct.get("equity"), acct.get("last_equity")
         delta = (eq - leq) if (eq is not None and leq is not None) else 0.0
-        tone = "pos" if (delta or 0) >= 0 else "neg"
-        rel  = (delta / leq * 100.0) if (leq and leq != 0) else 0.0
+        rel   = (delta / leq * 100.0) if (leq and leq != 0) else 0.0
+        tone  = "pos" if (delta or 0) >= 0 else "neg"
         _kpi_card("Equity", money(eq or 0.0), tone, caption=f"vs last close: {money(leq)} ({rel:+.2f}%)")
     with c8: _kpi_card("Position Market Value", money(acct.get("position_market_value") or 0.0))
 
-    # Third row: Cash & PDT
     c9, c10, c11, c12 = st.columns(4)
-    with c9:  _kpi_card("Cash", money(acct.get("cash") or 0.0))
+    with c9:  _kpi_card("Cash",              money(acct.get("cash") or 0.0))
     with c10: _kpi_card("Cash Withdrawable", money(acct.get("cash_withdrawable") or 0.0))
-    with c11: _kpi_card("Accrued Fees", money(acct.get("accrued_fees") or 0.0))
+    with c11: _kpi_card("Accrued Fees",      money(acct.get("accrued_fees") or 0.0))
     with c12: _kpi_card("Day Trade Count (5‑day)", str(int(acct.get("daytrade_count") or 0)))
 
-    # Margin utilization dial (lower is better)
     if acct.get("margin_util_pct") is not None:
-        st.plotly_chart(_banded_gauge(float(acct["margin_util_pct"]), "Margin Utilization", bands=(25, 50, 100), good="low"), use_container_width=True)
+        st.plotly_chart(_banded_gauge(float(acct["margin_util_pct"]), "Margin Utilization",
+                                      bands=(25, 50, 100), good="low"),
+                        use_container_width=True)
         st.caption("= Maintenance margin ÷ equity. Lower is safer.")
 
 # =============================================================================
@@ -812,14 +819,16 @@ def _kpi_card(title: str, value_str: str, tone: str = "neutral", caption: str | 
         unsafe_allow_html=True
     )
 
+# ---------- TOP KPI ROW ----------
 def render_top_kpis(totals: dict, budget: float, acct_equity: float | None = None) -> None:
+    """
+    5 cards: Capital Deployed, Current Portfolio Value, Total P/L %, Total P/L $, Win Rate
+    Uses broker equity if available so the 'Current Portfolio Value' matches Alpaca.
+    """
     cap  = float(totals.get("capital_spent", 0.0))
     upnl = float(totals.get("unrealized_pl_$", 0.0))
     wr   = float(totals.get("win_rate_%", totals.get("win_rate", 0.0)))
-
-    # Use broker equity if available; otherwise keep existing calc (cap + P&L)
     cur_val = float(acct_equity) if acct_equity is not None else (cap + upnl)
-
     pl_pct_from_kpis = (upnl / cap * 100.0) if cap > 0 else 0.0
 
     c1, c2, c3, c4, c5 = st.columns(5)
@@ -967,38 +976,25 @@ def main() -> None:
     api = _load_alpaca_api()
     render_header(api)
 
-    # NEW: broker balances/buying power snapshot
+    # New top section: broker snapshot grid
     acct = pull_account_snapshot(api)
     render_broker_balances(acct)
     st.divider()
 
-    # Live positions → TP/SL → totals (existing)
+    # Live positions → TP/SL → totals (unchanged)
     positions = pull_live_positions(api)
     positions = merge_tp_sl_from_alpaca_orders(positions, api)
     positions = compute_derived_metrics(positions)
     totals    = derive_totals_from_positions(positions)
 
-    # (Optional) pass Alpaca equity to KPIs so "Current Portfolio Value" uses broker equity if present
+    # 5 KPIs row (right above your 3 dials)
     acct_equity = acct.get("equity") if acct else None
-    # Five KPIs
-    render_top_kpis(totals, _PORTFOLIO_BUDGET, acct_equity=acct_equity)  # see small change below   
+    render_top_kpis(totals, _PORTFOLIO_BUDGET, acct_equity=acct_equity)
     st.divider()
 
-    # Three dials (+ explanations underneath)
-    cap   = float(totals.get("capital_spent", 0.0))
-    gross = float(totals.get("gross_exposure", 0.0))
-    win   = float(totals.get("win_rate_%", 0.0))
+    # ↓↓↓ KEEP your existing 3 dials and everything below from here ↓↓↓
+    # (No changes required to your dials, traffic lights, table, etc.)
 
-    d1, d2, d3 = st.columns(3)
-    with d1:
-        st.plotly_chart(gauge_budget_pct(cap, _PORTFOLIO_BUDGET, "Capital Deployed"), width="stretch")
-        st.caption("How much of your portfolio budget is currently invested (capital_spent ÷ budget). Bands: 60/80/100%.")
-    with d2:
-        st.plotly_chart(gauge_exposure_pct(gross, _PORTFOLIO_BUDGET, "Gross Exposure"), width="stretch")
-        st.caption("Long + |Short| exposure relative to budget (percentage). Shows how levered the book is regardless of netting.")
-    with d3:
-        st.plotly_chart(gauge_win_rate(win, "Win Rate"), width="stretch")
-        st.caption("Share of open positions that are currently up in P&L.")
 
     st.divider()
 
