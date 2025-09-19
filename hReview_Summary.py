@@ -131,7 +131,7 @@ def render_quantml_clock(
     title: str = "Dublin",
     show_seconds: bool = True,
     is_24h: bool = True,
-    logo_path: str | None = "Clock/quantml.png",
+    logo_path: str | None = "Clock/QuantML.png",
     logo_scale: float = 0.55
 ) -> None:
     """Canvas clock with QUANTML logo. One time sample drives both analog & digital."""
@@ -486,12 +486,12 @@ def load_logo_b64(candidates: list[str] | None = None) -> str:
     # 2) Files on disk (try several common locations/cases)
     if candidates is None:
         candidates = [
-            "Clock/quantml.png",
             "Clock/QuantML.png",
-            "Clock/QUANTML.png",
-            "assets/quantml.png",
-            "quantml.png",
-            str(Path(__file__).with_name("quantml.png")),
+            "Clock/QuantML.png",
+            "Clock/QuantML.png",
+            "assets/QuantML.png",
+            "QuantML.png",
+            str(Path(__file__).with_name("QuantML.png")),
         ]
     for p in candidates:
         fp = Path(p)
