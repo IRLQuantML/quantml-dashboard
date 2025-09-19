@@ -410,6 +410,58 @@ def render_banner_clock(*,
     </script>
     """), height=h, scrolling=False)
 
+def enable_autorefresh(seconds: int = 20) -> None:
+    """
+    Reruns the Streamlit app every `seconds` seconds.
+    Uses a tiny JS snippet so no extra pip package is required.
+    """
+    components.html(
+        f"<script>setTimeout(() => window.parent.location.reload(), {seconds*1000});</script>",
+        height=0,
+    )
+
+
+def render_ticker_tape(prices: list[dict]) -> None:
+    """
+    Horizontal scrolling ticker feed for your open symbols.
+    """
+    items = []
+    for p in prices:
+        sym = p.get("symbol", "")
+        price = p.get("price", 0.0)
+        change = p.get("change", 0.0)
+        color = "#16A34A" if change >= 0 else "#DC2626"
+        items.append(
+            f"<span style='margin-right:24px; font-weight:600; font-size:16px;'>"
+            f"{sym} <span style='color:{color}'>{price:,.2f} ({change:+.2f}%)</span>"
+            f"</span>"
+        )
+
+    html = f"""
+    <marquee behavior="scroll" direction="left" scrollamount="6"
+             style="white-space:nowrap; font-family:system-ui; background:#0B1220; color:white; padding:6px 0; border-radius:6px;">
+        {"".join(items)}
+    </marquee>
+    """
+    st.markdown(html, unsafe_allow_html=True)
+
+@st.cache_data(ttl=20, show_spinner=False)
+def get_open_ticker_prices(_api) -> list[dict]:
+    """
+    Live prices for currently open tickers from Alpaca, cached for 20s.
+    Each item: {"symbol": str, "price": float, "change": float}
+    """
+    df = pull_live_positions(_api)  # uses the same Alpaca client
+    prices = []
+    for _, r in df.iterrows():
+        prices.append({
+            "symbol": str(r["Ticker"]),
+            "price": float(r["current_price"]),
+            "change": float(r.get("pl_%", 0.0)),
+        })
+    return prices
+
+
 
 def render_header(api):
     c1, c2, c3 = st.columns([0.20, 0.65, 0.15], vertical_alignment="center")
@@ -420,7 +472,14 @@ def render_header(api):
     with c2:
         st.markdown("## QUANTML — Investor Summary (Live)")
         if api is not None:
-            render_market_chip(api)  # NYSE OPEN/CLOSED chip from Alpaca
+            render_market_chip(api)  # your existing chip
+            prices = get_open_ticker_prices(api)
+            if prices:
+                render_ticker_tape(prices)
+
+    # make the whole page refresh every 30 seconds
+    enable_autorefresh(30)
+
     with c3:
         st.markdown("<div style='text-align:right'>", unsafe_allow_html=True)
         if st.button("🔄 Refresh", help="Pull latest live data from Alpaca", key="refresh_live"):
