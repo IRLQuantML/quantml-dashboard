@@ -109,6 +109,166 @@ try:
 except Exception:
     _PORTFOLIO_BUDGET = 5000.0
 
+# ===================== Sorting + Drawdown helpers =====================
+
+def _traffic_group(value: float, thr: float = TL_THRESH_PCT) -> int:
+    """0 = green (>= +thr), 1 = amber (-thr..+thr), 2 = red (<= -thr)"""
+    try:
+        v = float(value)
+    except Exception:
+        v = 0.0
+    if v >= thr:
+        return 0
+    if v <= -thr:
+        return 2
+    return 1
+
+def _default_timeframe_for_period(period: str) -> str:
+    """
+    Choose an Alpaca‑valid timeframe for a given UI period.
+    1D → 5Min, 1W → 15Min, 1M/3M/6M → 1H, 1Y/all → 1D
+    """
+    p = (period or "").strip().upper()
+    if p == "1D": return "5Min"
+    if p == "1W": return "15Min"
+    if p in {"1M", "3M", "6M"}: return "1H"
+    return "1D"  # 1Y (1A after normalization) and 'all'
+
+def _normalize_period(period: str) -> str:
+    """Map user/UI periods to Alpaca's expected units (A=years)."""
+    if not period:
+        return "1D"
+    period = period.strip()
+    return {"1Y": "1A"}.get(period, period)  # pass-through for others incl. "all"
+
+def _order_by_green_amber_red(series: pd.Series) -> list[str]:
+    """Return index labels ordered: green (desc), amber (|x| asc), red (asc)."""
+    v = pd.to_numeric(series, errors="coerce").fillna(0.0)
+    grp = v.apply(_traffic_group)  # 0,1,2
+    within = np.where(grp.eq(0), -v, np.where(grp.eq(2), v, v.abs()))
+    tmp = pd.DataFrame({"sym": v.index, "grp": grp, "within": within})
+    tmp = tmp.sort_values(["grp", "within"])
+    return tmp["sym"].tolist()
+
+
+# ===================== Alpaca Portfolio History =====================
+@st.cache_data(ttl=60, show_spinner=False)
+def get_portfolio_history_df(_api: Optional[REST],
+                             period: str = "1D",
+                             timeframe: Optional[str] = None,
+                             extended_hours: bool = True) -> pd.DataFrame:
+    """
+    Wraps Alpaca /v2/account/portfolio/history into a tidy DataFrame.
+    """
+    if _api is None:
+        return pd.DataFrame()
+
+    # 🔧 Normalize "1Y" -> "1A" for Alpaca
+    alpaca_period = _normalize_period(period)
+
+    # Sensible timeframe defaults
+    if timeframe:
+        # Sensible timeframe defaults (use only Alpaca‑valid values)
+        tf = timeframe or _default_timeframe_for_period(period)
+
+    else:
+        if alpaca_period == "1D":
+            tf = "5Min"
+        elif alpaca_period.endswith("W"):
+            tf = "30Min"
+        else:
+            tf = "1D"
+
+    try:
+        ph = _api.get_portfolio_history(period=alpaca_period, timeframe=tf, extended_hours=extended_hours)
+    except TypeError:
+        ph = _api.get_portfolio_history(period=alpaca_period, timeframe=tf)
+    # Lists/arrays coming from SDK (sometimes numpy arrays)
+    ts = (getattr(ph, "timestamp", None) or getattr(ph, "time", None) or
+          getattr(ph, "ts", None) or ph.get("timestamp", []))
+    eq = (getattr(ph, "equity", None) or ph.get("equity", []))
+    pl = (getattr(ph, "profit_loss", None) or ph.get("profit_loss", []))
+
+    df = pd.DataFrame({
+        "ts": pd.to_datetime(ts, unit="s", utc=True, errors="coerce"),
+        "equity": pd.to_numeric(pd.Series(eq), errors="coerce")   # Series guards dtype
+    }).dropna()
+
+    # Use Series to safely call .fillna no matter if source was list/array
+    if len(pl) == len(df):
+        pl_series = pd.to_numeric(pd.Series(pl), errors="coerce").fillna(0.0)
+        df["pl"] = pl_series.to_numpy()
+    else:
+        # Fallback: compute diff of equity
+        df["pl"] = df["equity"].diff().fillna(0.0)
+
+    df["ret"] = (df["equity"] / df["equity"].iloc[0]) - 1.0
+    df["ret_pct"] = df["ret"] * 100.0
+    return df
+
+@st.cache_data(ttl=300, show_spinner=False)
+def compute_period_returns(_api: Optional[REST]) -> dict:
+    try:
+        from zoneinfo import ZoneInfo
+        tz = ZoneInfo("US/Eastern")
+    except Exception:
+        tz = timezone.utc
+
+    df = get_portfolio_history_df(_api, period="1A", timeframe="1D")
+    if df.empty:
+        return {"MTD": np.nan, "QTD": np.nan, "YTD": np.nan}
+
+    last_ts = df["ts"].iloc[-1].to_pydatetime().astimezone(tz)
+
+    # Start dates
+    m_start = last_ts.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    q_month = ((last_ts.month - 1) // 3) * 3 + 1
+    q_start = last_ts.replace(month=q_month, day=1, hour=0, minute=0, second=0, microsecond=0)
+    y_start = last_ts.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    def perf_from(start_dt):
+        start_dt = pd.Timestamp(start_dt)
+        if start_dt.tz is None:
+            start_dt = start_dt.tz_localize(tz)
+        start_dt = start_dt.tz_convert("UTC")
+        s = df[df["ts"] >= start_dt]
+        if len(s) >= 2:
+            start, end = float(s["equity"].iloc[0]), float(s["equity"].iloc[-1])
+            if start > 0 and np.isfinite(start):
+                return float((end / start - 1.0) * 100.0)
+        return np.nan  # prevents +inf%
+
+    return {
+        "MTD": perf_from(m_start),
+        "QTD": perf_from(q_start),
+        "YTD": perf_from(y_start),
+    }
+
+def _sort_df_green_amber_red(df: pd.DataFrame, pct_col: str) -> pd.DataFrame:
+    """
+    Sort DataFrame rows by:
+      1) greens first (high→low), then amber (closest to zero first), then red (low→high)
+    """
+    z = df.copy()
+    v = pd.to_numeric(z[pct_col], errors="coerce").fillna(0.0)
+    grp = v.apply(_traffic_group)
+    within = np.where(grp.eq(0), -v, np.where(grp.eq(2), v, v.abs()))
+    z["__grp"] = grp
+    z["__within"] = within
+    z = z.sort_values(["__grp", "__within"]).drop(columns=["__grp", "__within"])
+    return z
+
+def _max_drawdown_pct(equity: pd.Series) -> float:
+    """Max drawdown in %, computed on a series of equity values."""
+    if equity is None or len(equity) == 0:
+        return 0.0
+    s = pd.to_numeric(pd.Series(equity), errors="coerce").dropna()
+    if s.empty:
+        return 0.0
+    running_max = s.cummax()
+    dd = s / running_max - 1.0
+    return float(dd.min() * 100.0)
+
 
 @st.cache_resource
 def _load_clock_sources() -> tuple[Optional[str], Optional[str]]:
@@ -543,7 +703,67 @@ def render_header(api):
         st.markdown("</div>", unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
+# ===================== Equity Chart (replicates Alpaca Home) =====================
+def render_portfolio_equity_chart(api: Optional[REST]) -> dict:
+    """Render Alpaca portfolio equity with period toggles and tight y-range."""
+    st.subheader("Your portfolio (Alpaca)")
 
+    # Period selector
+    period = st.radio(
+        "Period",
+        options=["1D", "1W", "1M", "3M", "6M", "1Y", "all"],
+        horizontal=True,
+        label_visibility="collapsed",
+        key="ph_period",
+    )
+
+    # Fetch series (get_portfolio_history_df handles 1Y->1A and timeframe defaults)
+    try:
+        df = get_portfolio_history_df(api, period=period)
+    except Exception as e:
+        st.error(f"Could not load portfolio history: {e}")
+        return {"period": period, "error": str(e)}
+
+    if df.empty:
+        st.info("No portfolio history is available.")
+        return {"period": period}
+
+    # Tighten the y-range so the area doesn't flood the plot
+    y = pd.to_numeric(df["equity"], errors="coerce").astype(float)
+    ymin, ymax = float(np.nanmin(y)), float(np.nanmax(y))
+    span = ymax - ymin
+    pad = max(1.0, 0.02 * span) if np.isfinite(span) else 1.0
+    yrange = [ymin - pad, ymax + pad] if np.isfinite(ymin) and np.isfinite(ymax) else None
+
+    # Main area chart (low-opacity fill)
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=df["ts"],
+        y=y,
+        mode="lines",
+        name="Equity",
+        fill="tozeroy",
+        fillcolor="rgba(79,70,229,0.15)",  # soft fill
+        line=dict(width=2),
+    ))
+    fig.update_layout(
+        height=280,
+        showlegend=False,
+        margin=dict(l=8, r=8, t=6, b=6),
+        yaxis_title=None,
+        xaxis_title=None,
+    )
+    if yrange:
+        fig.update_yaxes(range=yrange)
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Quick stats from the plotted series
+    chg_pct = float(df["ret_pct"].iloc[-1]) if len(df) else float("nan")
+    idd_pct = _max_drawdown_pct(y)
+    st.caption(f"Change {period}: {chg_pct:+.2f}% · Max drawdown over period: {idd_pct:.2f}%")
+
+    return {"period": period, "change_pct": chg_pct, "idd_pct": idd_pct}
 
 def _parse_ts(ts):
     if isinstance(ts, datetime):
@@ -632,6 +852,111 @@ def pull_account_snapshot(api: Optional[REST]) -> dict:
     mm = data.get("maintenance_margin")
     data["margin_util_pct"] = (mm / e * 100.0) if (mm and e and e > 0) else None
     return data
+
+# ===================== Extra KPIs + Contributors/Detractors =====================
+def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> None:
+    """
+    KPIs: Day P&L ($/% from equity curve) and Today total P&L ($/% from positions intraday),
+    plus top contributors/detractors. (Exposure/MTD/QTD/YTD computed but not shown.)
+    """
+    # ===== Intraday equity curve (for Day P&L $/% and the % base) =====
+    intraday = get_portfolio_history_df(api, period="1D")
+    day_pl_usd = day_pl_pct = np.nan
+    start_equity = np.nan
+    if not intraday.empty:
+        start_equity = float(intraday["equity"].iloc[0])
+        last_equity  = float(intraday["equity"].iloc[-1])
+        day_pl_usd   = last_equity - start_equity
+        day_pl_pct   = (day_pl_usd / start_equity * 100.0) if start_equity > 0 else np.nan
+
+    # ===== Today total P&L from open positions (sum of intraday P&L across positions) =====
+    today_total_pl_usd = np.nan
+    today_total_pl_pct = np.nan
+    if positions is not None and not positions.empty:
+        z = compute_derived_metrics(positions).copy()
+
+        # Try multiple possible intraday P&L columns
+        intraday_cols_usd = [
+            "pl_today_usd",                # from compute_derived_metrics()
+            "unrealized_intraday_pl",      # Alpaca field
+            "intraday_pl_usd",
+        ]
+        c_today_usd = next((c for c in intraday_cols_usd if c in z.columns), None)
+
+        if c_today_usd is None:
+            # Fallback: (current - prev close) * qty if those fields exist
+            if {"current_price", "prev_close", "qty"}.issubset(set(z.columns)):
+                today_vec = (pd.to_numeric(z["current_price"], errors="coerce")
+                            - pd.to_numeric(z["prev_close"],  errors="coerce")) \
+                            * pd.to_numeric(z["qty"], errors="coerce")
+                today_total_pl_usd = float(np.nansum(today_vec.to_numpy()))
+            else:
+                today_total_pl_usd = np.nan
+        else:
+            today_total_pl_usd = float(pd.to_numeric(z[c_today_usd], errors="coerce").sum())
+
+        if start_equity and np.isfinite(start_equity) and start_equity > 0 and np.isfinite(today_total_pl_usd):
+            today_total_pl_pct = float(today_total_pl_usd / start_equity * 100.0)
+
+    # ===== (Optional) Exposure & leverage from account snapshot — computed but not shown =====
+    acct = pull_account_snapshot(api)
+    equity   = float(acct.get("equity") or 0.0)
+    long_mv  = float(acct.get("long_market_value")  or 0.0)
+    short_mv = float(acct.get("short_market_value") or 0.0)
+    gross = abs(long_mv) + abs(short_mv)
+    net   = long_mv + short_mv
+    leverage = (gross / equity * 100.0) if equity > 0 else np.nan
+
+    # ===== (Optional) Rolling returns — computed but not shown =====
+    rolls = compute_period_returns(api)
+    mtd, qtd, ytd = rolls.get("MTD", np.nan), rolls.get("QTD", np.nan), rolls.get("YTD", np.nan)
+
+    # ===== Top movers today by $ P&L =====
+    winners = losers = pd.DataFrame()
+    if positions is not None and not positions.empty:
+        z = compute_derived_metrics(positions).copy()
+        base_col = "pl_today_usd" if "pl_today_usd" in z.columns else ("pl_$" if "pl_$" in z.columns else None)
+        if base_col:
+            tmp = pd.DataFrame({
+                "Symbol": z.get("Ticker", z.get("symbol")),
+                "P&L $": pd.to_numeric(z[base_col], errors="coerce"),
+            })
+            winners = tmp.sort_values("P&L $", ascending=False).head(3)
+            losers  = tmp.sort_values("P&L $", ascending=True).head(3)
+
+    # ===== KPI cards in requested order =====
+    c1, c2, c3, c4 = st.columns(4)
+
+    with c1:
+        _kpi_card("Today total P&L $", money(today_total_pl_usd),
+                  "pos" if (today_total_pl_usd or 0) >= 0 else "neg")
+
+    with c2:
+        _kpi_card("Today total P&L %",
+                  f"{(today_total_pl_pct if np.isfinite(today_total_pl_pct) else 0):+.2f}%",
+                  "pos" if (today_total_pl_pct or 0) >= 0 else "neg")
+
+    with c3:
+        _kpi_card("Day P&L $", money(day_pl_usd),
+                  "pos" if (day_pl_usd or 0) >= 0 else "neg")
+
+    with c4:
+        _kpi_card("Day P&L %",
+                  f"{(day_pl_pct if np.isfinite(day_pl_pct) else 0):+.2f}%",
+                  "pos" if (day_pl_pct or 0) >= 0 else "neg")
+
+    # ===== Contributors / Detractors tables =====
+    if not winners.empty or not losers.empty:
+        c1, c2 = st.columns(2)
+        if not winners.empty:
+            with c1:
+                st.markdown("**Top contributors (today)**")
+                st.table(winners.assign(**{"P&L $": winners["P&L $"].map(lambda x: f"{x:,.2f}")}))
+        if not losers.empty:
+            with c2:
+                st.markdown("**Top detractors (today)**")
+                st.table(losers.assign(**{"P&L $": losers["P&L $"].map(lambda x: f"{x:,.2f}")}))
+
 
 def render_broker_balances(acct: dict) -> None:
     st.subheader("Broker Balance & Buying Power (Alpaca)")
@@ -1086,6 +1411,8 @@ def render_top_kpis(totals: dict, budget: float, acct_equity: float | None = Non
         _kpi_card("Win Rate", f"{wr:.0f}%", caption="Open positions up ÷ total")
 
 
+# ===================== Traffic Lights (sorted green→amber→red) =====================
+
 def render_traffic_lights(df: pd.DataFrame) -> None:
     st.subheader("Traffic Lights (per open position)")
     if df is None or df.empty:
@@ -1093,30 +1420,40 @@ def render_traffic_lights(df: pd.DataFrame) -> None:
         return
 
     z = compute_derived_metrics(df).copy()
-    z = z.sort_values("Ticker")
+    # choose today % if available; else total %
+    z["pl_light_%"] = np.where(
+        pd.to_numeric(z.get("pl_today_%"), errors="coerce").notna(),
+        pd.to_numeric(z.get("pl_today_%"), errors="coerce"),
+        pd.to_numeric(z.get("pl_%"), errors="coerce")
+    )
+    z = _sort_df_green_amber_red(z, "pl_light_%")
 
     CHIP = ("display:inline-flex;align-items:center;gap:8px;padding:6px 10px;"
             "border-radius:16px;background:rgba(14,27,58,0.06);border:1px solid rgba(14,27,58,0.20);"
             "margin:3px 4px;")
-
     chips = []
     for _, r in z.iterrows():
         sym = r.get("Ticker", r.get("symbol", "?"))
-        pl_today_pct = float(r.get("pl_today_%", np.nan)) if pd.notna(r.get("pl_today_%", np.nan)) else float(r.get("pl_%", 0.0))
+        pl_today_pct = float(r.get("pl_light_%", 0.0))
         col = _tl_color_for_pct(pl_today_pct)
         label = f"{sym} · {r.get('Side','—')} · {pl_today_pct:+.2f}% / {money_signed(r.get('pl_$', 0.0))}"
         dot = f"<span style='width:12px;height:12px;border-radius:50%;display:inline-block;border:2px solid {col};background:{col};'></span>"
-        chips.append(f"<span style='{CHIP}'>{dot}<span style='font-weight:600;font-size:0.9rem;color:#0E1B3A'>{label}</span></span>")
-
+        chips.append(f"<span style='{CHIP}'>{dot}"
+                     f"<span style='font-weight:600;font-size:0.9rem;color:#0E1B3A'>{label}</span></span>")
     st.markdown("<div style='display:flex;flex-wrap:wrap;gap:8px'>" + "".join(chips) + "</div>", unsafe_allow_html=True)
 
+# ===================== Live Positions (sorted green→amber→red) =====================
+
 def render_positions_table(df: pd.DataFrame) -> None:
-    st.subheader("Live Positions (Alpaca)")
+    st.subheader("Overall Performance vs Your Entry")
     if df is None or df.empty:
-        st.info("—"); return
+        st.info("—")
+        return
 
     z = compute_derived_metrics(df).copy()
     z["Market Value"] = pd.to_numeric(z["current_price"], errors="coerce") * pd.to_numeric(z["qty"], errors="coerce")
+    # Sort by total P/L % using the green→amber→red rule
+    z = _sort_df_green_amber_red(z, "pl_%")
 
     def _status_row(r):
         up = (r.get("pl_$", 0.0) or 0.0) >= 0
@@ -1136,7 +1473,8 @@ def render_positions_table(df: pd.DataFrame) -> None:
         "Total P/L (%)": pd.to_numeric(z["pl_%"], errors="coerce"),
     })
 
-    order = ["Asset","Status","Qty","Side","Avg Entry","Current Price","TP","Market Value","Total P/L ($)","Total P/L (%)"]
+    order = ["Asset","Status","Qty","Side","Avg Entry","Current Price","TP",
+             "Market Value","Total P/L ($)","Total P/L (%)"]
     show = show[[c for c in order if c in show.columns]]
 
     styled = (
@@ -1281,70 +1619,82 @@ def render_color_system_legend() -> None:
     st.markdown(html, unsafe_allow_html=True)
 
 def render_current_status_grid(df: pd.DataFrame) -> None:
-    """Two-row mini grid: Today P&L % and Start-of-day P&L % (carry)."""
+    """Two-row mini grid: Today P&L % and Start-of-day P&L % (carry),
+    each cell shows '(Total %)' and is sorted/styled by the row's metric.
+    """
     st.subheader("Current status")
-
     if df is None or df.empty:
         st.info("No open positions.")
         return
 
     z = df.copy()
 
-    # Normalize column names we need
+    # --- column detection
     col_sym   = _first_existing_col(z, "Ticker", "symbol") or "Ticker"
     col_today = _first_existing_col(z, "pl_today_%", "pl_today_pc", "pl_today_pct")
     col_carry = _first_existing_col(z, "carry_%", "carry_pl_%", "carry_pc", "carry_pct")
+    col_total = _first_existing_col(z, "pl_%", "pl_pc", "pl_pct")
 
-    # If carry % is missing but we have total pl_% and today %, derive it.
-    if col_carry is None:
-        col_total = _first_existing_col(z, "pl_%", "pl_pc", "pl_pct")
-        if (col_total is not None) and (col_today is not None):
-            z["carry_%"] = pd.to_numeric(z[col_total], errors="coerce") - pd.to_numeric(z[col_today], errors="coerce")
-            col_carry = "carry_%"
+    # --- derive missing pieces when possible
+    if col_total is None and (col_today and col_carry):
+        z["pl_%"] = pd.to_numeric(z[col_today], errors="coerce") + pd.to_numeric(z[col_carry], errors="coerce")
+        col_total = "pl_%"
+    if col_carry is None and (col_total and col_today):
+        z["carry_%"] = pd.to_numeric(z[col_total], errors="coerce") - pd.to_numeric(z[col_today], errors="coerce")
+        col_carry = "carry_%"
+    if col_today is None and (col_total and col_carry):
+        z["pl_today_%"] = pd.to_numeric(z[col_total], errors="coerce") - pd.to_numeric(z[col_carry], errors="coerce")
+        col_today = "pl_today_%"
 
-    # If today % is missing but we have total and carry, derive it.
-    if col_today is None:
-        col_total = _first_existing_col(z, "pl_%", "pl_pc", "pl_pct")
-        if (col_total is not None) and (col_carry is not None):
-            z["pl_today_%"] = pd.to_numeric(z[col_total], errors="coerce") - pd.to_numeric(z[col_carry], errors="coerce")
-            col_today = "pl_today_%"
-
-    # Final guardrails
-    if col_today is None or col_carry is None:
-        st.warning("Unable to compute Current status grid (missing today/carry % columns).")
+    if any(c is None for c in [col_today, col_carry, col_total]):
+        st.warning("Unable to compute Current status grid (missing today/carry/total %).")
         return
 
-    # Preserve original ticker order in the table
-    tickers = z[col_sym].astype(str).tolist()
+    # --- series keyed by symbol
+    s_today = pd.to_numeric(z.set_index(col_sym)[col_today], errors="coerce")
+    s_carry = pd.to_numeric(z.set_index(col_sym)[col_carry], errors="coerce")
+    s_total = pd.to_numeric(z.set_index(col_sym)[col_total], errors="coerce")
 
-    # Build a 2xN frame
-    grid = pd.DataFrame(
-        [
-            pd.to_numeric(z.set_index(col_sym)[col_today], errors="coerce").reindex(tickers).values,
-            pd.to_numeric(z.set_index(col_sym)[col_carry], errors="coerce").reindex(tickers).values,
-        ],
-        index=["Open positions current status (Today P&L %)",
-               "Open positions start of day – P&L %"],
-        columns=tickers,
-    )
+    # --- order each row independently (Green→Amber→Red)
+    order_today = _order_by_green_amber_red(s_today)
+    order_carry = _order_by_green_amber_red(s_carry)
 
-    def _fmt(v):
+    # --- display values "row-metric % (Total %)"
+    def _fmt_cell(v, sym):
         try:
-            x = float(v)
-            return f"{x:+.2f}"
+            base = float(v); tot = float(s_total.get(sym, np.nan))
+            return f"{base:+.2f}% ({tot:+.2f}%)"
         except Exception:
             return "—"
 
-    def _style_cell(val):
-        color = _tl_color_for_pct(val)  # uses the new ±0.10% rules
-        return f"background-color: {color}22; border: 1px solid {color}66; font-weight:700;"
+    row1_vals = [_fmt_cell(s_today.get(sym, np.nan), sym) for sym in order_today]
+    row2_vals = [_fmt_cell(s_carry.get(sym, np.nan), sym) for sym in order_carry]
 
-    styled = (grid.style
-                   .format(_fmt, na_rep="—")
-                   .applymap(_style_cell))
+    row1 = pd.DataFrame([row1_vals],
+                        index=["Open positions current status (Today P&L %)"],
+                        columns=order_today)
+    row2 = pd.DataFrame([row2_vals],
+                        index=["Open positions start of day – P&L %"],
+                        columns=order_carry)
 
-    st.dataframe(styled, use_container_width=True, hide_index=False)
+    # --- per-row style helpers (return a list matching the number of columns)
+    def _style_row_by_metric(row: pd.Series, metric_series: pd.Series):
+        styles = []
+        for col in row.index:
+            pct = float(metric_series.get(col, 0.0))
+            c = _tl_color_for_pct(pct)
+            styles.append(f"background-color:{c}22; border:1px solid {c}66; font-weight:700;")
+        return styles
 
+    st.dataframe(
+        row1.style.apply(lambda r: _style_row_by_metric(r, s_today), axis=1),
+        use_container_width=True, hide_index=False
+    )
+    st.dataframe(
+        row2.style.apply(lambda r: _style_row_by_metric(r, s_carry), axis=1),
+        use_container_width=True, hide_index=False
+    )
+    
 def _symbols_touched_today(api: Optional[REST]) -> set[str]:
     """Symbols that had any fills today (local to US/Eastern market day)."""
     df = _pull_fills_df(api, days=1)
@@ -1687,26 +2037,34 @@ def main() -> None:
     positions = merge_tp_sl_from_alpaca_orders(positions, api)
     positions = compute_derived_metrics(positions)
 
+    render_perf_and_risk_kpis(api, positions)
+    st.divider()
     # ----- Current status (mini-grid) + colour legend -----
     render_current_status_grid(positions)
     st.divider()
+
+    # === NEW: Alpaca “Home” equity chart + additional KPIs ===
+    render_portfolio_equity_chart(api)
+    st.divider()
+
+    # ----- Traffic Lights + Live Positions table (sorted) -----
     render_traffic_lights(positions)
+    st.divider()
     render_color_system_legend()
     st.divider()
-    # ----- Traffic Lights + Live Positions table -----
     render_positions_table(positions)
     st.divider()
-    # ----- Dials (new set) -----
+
+    # ----- Dials (existing) -----
     render_updated_dials(positions, api)
     st.divider()
 
-    # ----- Portfolio Ledger (incl. history from fills) -----
-    hist_df, realized_total = build_history_rows_from_fills(api, positions, days=5)
-    render_portfolio_ledger_table(positions,
-                                  realized_pnl_total=realized_total,
-                                  history_rows=hist_df)
+    # ----- Portfolio Ledger (existing) -----
+    #hist_df, realized_total = build_history_rows_from_fills(api, positions, days=5)
+    #render_portfolio_ledger_table(positions,
+    #                              realized_pnl_total=realized_total,
+    #                              history_rows=hist_df)
 
-    st.caption(f"As of: {datetime.now().strftime('%Y-%m-%d %H:%M')} • Budget: {money(_PORTFOLIO_BUDGET)}")
 
 if __name__ == "__main__":
     main()
