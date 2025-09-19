@@ -132,7 +132,7 @@ def render_quantml_clock(
     show_seconds: bool = True,
     is_24h: bool = True,
     logo_path: str | None = "Clock/quantml.png",
-    logo_scale: float = 0.55  # 0.0–1.0 of the clock size
+    logo_scale: float = 0.55
 ) -> None:
     """Canvas clock with QUANTML logo. One time sample drives both analog & digital."""
     from textwrap import dedent
@@ -143,14 +143,14 @@ def render_quantml_clock(
         if logo_path and Path(logo_path).exists():
             logo_b64 = base64.b64encode(Path(logo_path).read_bytes()).decode("ascii")
         else:
-            logo_b64 = load_logo_b64()  # fall back to candidates
+            logo_b64 = load_logo_b64()  # fall back to candidates / secrets
     except Exception:
         logo_b64 = ""
 
     canvas_id = f"qmclk_canvas_{st.session_state.get('_clk', 0)}"
     time_id   = f"qmclk_time_{st.session_state.get('_clk', 0)}"
     date_id   = f"qmclk_date_{st.session_state.get('_clk', 0)}"
-    st.session_state['_clk'] = st.session_state.get('_clk', 0) + 1
+    st.session_state["_clk"] = st.session_state.get("_clk", 0) + 1
 
     h = size + 125  # room for labels
 
@@ -165,78 +165,93 @@ def render_quantml_clock(
     </div>
     <script>
     (function(){{
-      const cssW={size}, cssH={size}, LOGO_SCALE={logo_scale};
-      const tz="{tz}", showSeconds={( 'true' if show_seconds else 'false')}, is24h={( 'true' if is_24h else 'false')};
-      const canvas=document.getElementById("{canvas_id}");
-      const dpr=Math.max(1, window.devicePixelRatio||1);
-      canvas.width=cssW*dpr; canvas.height=cssH*dpr; canvas.style.width=cssW+"px"; canvas.style.height=cssH+"px";
-      const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0);
-      const cx=cssW/2, cy=cssH/2, R=Math.min(cx,cy)-6, OFF=-Math.PI/2;
+      const cssW = {size}, cssH = {size}, LOGO_SCALE = {logo_scale};
+      const tz = "{tz}", showSeconds = {('true' if show_seconds else 'false')}, is24h = {('true' if is_24h else 'false')};
+      const canvas = document.getElementById("{canvas_id}");
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      canvas.width = cssW*dpr; canvas.height = cssH*dpr; canvas.style.width = cssW+"px"; canvas.style.height = cssH+"px";
+      const ctx = canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0);
+      const cx = cssW/2, cy = cssH/2, R = Math.min(cx,cy)-6, OFF = -Math.PI/2;
 
       // inline logo
-      const logoData="{logo_b64}";
-      let logoImg=null, logoReady=false;
-      if (logoData) {{ logoImg=new Image(); logoImg.onload=()=>logoReady=true; logoImg.src="data:image/png;base64,"+logoData; }}
+      const logoData = "{logo_b64}";
+      let logoImg = null, logoReady = false;
+      if (logoData) {{ logoImg = new Image(); logoImg.onload = () => logoReady = true; logoImg.src = "data:image/png;base64," + logoData; }}
 
       function nowInTZ() {{ return new Date(new Date().toLocaleString('en-US', {{ timeZone: tz }})); }}
-      function pad(n){{return String(n).padStart(2,'0');}}
+      function pad(n) {{ return String(n).padStart(2,'0'); }}
 
-      function sampleParts(){{
-        const d=nowInTZ();
-        const h=d.getHours(), m=d.getMinutes(), s=d.getSeconds(), ms=d.getMilliseconds();
-        const weekday=d.toLocaleString('en-GB', {{ weekday:'short', timeZone: tz }});
-        const mon=d.toLocaleString('en-GB', {{ month:'short', timeZone: tz }});
-        const day=pad(d.getDate()), year=d.getFullYear();
-        return {{ h, m, s, ms, dateStr:`${{weekday}}, ${{day}} ${{mon}} ${{year}}` }};
+      function sampleParts() {{
+        const d = nowInTZ();
+        const h = d.getHours(), m = d.getMinutes(), s = d.getSeconds(), ms = d.getMilliseconds();
+        const weekday = d.toLocaleString('en-GB', {{ weekday:'short', timeZone: tz }});
+        const mon = d.toLocaleString('en-GB', {{ month:'short', timeZone: tz }});
+        const day = pad(d.getDate()), year = d.getFullYear();
+        return {{ h, m, s, ms, dateStr: `${{weekday}}, ${{day}} ${{mon}} ${{year}}` }};
       }}
 
-      function drawFace(){{
+      function drawFace() {{
         ctx.clearRect(0,0,cssW,cssH);
-        for(let i=0;i<60;i++) {{
-          const a=(Math.PI/30)*i + OFF;
-          const r1=R*(i%5===0?0.82:0.88), r2=R*0.97;
+        for (let i = 0; i < 60; i++) {{
+          const a = (Math.PI/30)*i + OFF;
+          const r1 = R*(i%5===0 ? 0.82 : 0.88), r2 = R*0.97;
           ctx.beginPath();
-          ctx.moveTo(cx+r1*Math.cos(a), cy+r1*Math.sin(a));
-          ctx.lineTo(cx+r2*Math.cos(a), cy+r2*Math.sin(a));
-          ctx.lineWidth=(i%5===0)?2.4:1.2;
-          ctx.strokeStyle="rgba(180,197,255,0.9)";
+          ctx.moveTo(cx + r1*Math.cos(a), cy + r1*Math.sin(a));
+          ctx.lineTo(cx + r2*Math.cos(a), cy + r2*Math.sin(a));
+          ctx.lineWidth = (i%5===0) ? 2.4 : 1.2;
+          ctx.strokeStyle = "rgba(180,197,255,0.9)";
           ctx.stroke();
         }}
         ctx.beginPath(); ctx.arc(cx,cy,R*0.99,0,Math.PI*2);
-        ctx.strokeStyle="rgba(79,70,229,0.6)"; ctx.lineWidth=2; ctx.stroke();
+        ctx.strokeStyle = "rgba(79,70,229,0.6)"; ctx.lineWidth = 2; ctx.stroke();
 
-        const L=Math.min(cssW,cssH)*LOGO_SCALE;
-        if(logoReady){{ ctx.save(); ctx.globalAlpha=0.95; ctx.drawImage(logoImg,cx-L/2,cy-L/2,L,L); ctx.restore(); }}
-      }}
+        const L = Math.min(cssW, cssH) * LOGO_SCALE;
+        if (logoReady) {{
+          ctx.save(); ctx.globalAlpha = 0.95; ctx.drawImage(logoImg, cx - L/2, cy - L/2, L, L); ctx.restore();
+        }} else {{
+          // visible fallback so you know the logo didn't load
+          ctx.save();
+          ctx.fillStyle = "rgba(226,232,255,0.18)";
+          ctx.font = "bold 16px system-ui,-apple-system,Segoe UI,Roboto";
+          ctx.textAlign = "center"; ctx.textBaseline = "middle";
+          ctx.fillText("QUANTML", cx, cy);
+          ctx.restore();
+        }}
+      }}  // <-- close drawFace()
 
-      function hand(angle,len,w,col) {{
-        ctx.save(); ctx.translate(cx,cy); ctx.rotate(angle+OFF);
-        ctx.beginPath(); ctx.moveTo(-R*0.08,0); ctx.lineTo(len,0);
-        ctx.lineWidth=w; ctx.lineCap="round"; ctx.strokeStyle=col; ctx.stroke(); ctx.restore();
+      function hand(angle, len, w, col) {{
+        ctx.save(); ctx.translate(cx,cy); ctx.rotate(angle + OFF);
+        ctx.beginPath(); ctx.moveTo(-R*0.08, 0); ctx.lineTo(len, 0);
+        ctx.lineWidth = w; ctx.lineCap = "round"; ctx.strokeStyle = col; ctx.stroke(); ctx.restore();
       }}
 
       function drawHandsFromParts(p) {{
-        const pi=Math.PI;
-        const hrA  = (pi/6)  * ((p.h%12) + p.m/60 + p.s/3600);
+        const pi = Math.PI;
+        const hrA  = (pi/6)  * ((p.h % 12) + p.m/60 + p.s/3600);
         const minA = (pi/30) * (p.m + p.s/60);
         const secA = (pi/30) *  p.s;
         hand(hrA,  R*0.50, 5,  "#9DB2FF");
         hand(minA, R*0.72, 3.4,"#9DB2FF");
-        if(showSeconds) hand(secA,R*0.78, 2,  "#4F7BFF");
+        if (showSeconds) hand(secA, R*0.78, 2, "#4F7BFF");
         ctx.beginPath(); ctx.arc(cx,cy,6,0,pi*2); ctx.fillStyle="#99A8FF"; ctx.fill();
         ctx.beginPath(); ctx.arc(cx,cy,3,0,pi*2); ctx.fillStyle="#335CFF"; ctx.fill();
       }}
 
       function drawDigitalFromParts(p) {{
-        const hh = is24h ? pad(p.h) : pad(((p.h%12)||12));
-        const ampm = is24h ? "" : (p.h<12 ? " AM" : " PM");
+        const hh = is24h ? pad(p.h) : pad(((p.h % 12) || 12));
+        const ampm = is24h ? "" : (p.h < 12 ? " AM" : " PM");
         document.getElementById("{time_id}").textContent =
-          showSeconds ? `${{hh}}:${{pad(p.m)}}:${{pad(p.s)}}${{ampm}}` : `${{hh}}:${{pad(p.m)}}${{ampm}}`;
+          showSeconds ? `${{hh}}:${{pad(p.m)}}:${{pad(p.s)}}${{ampm}}`
+                      : `${{hh}}:${{pad(p.m)}}${{ampm}}`;
         document.getElementById("{date_id}").textContent = p.dateStr;
       }}
 
       function scheduleNext(ms) {{ setTimeout(tick, 1000 - (ms % 1000)); }}
-      function tick() {{ const p = sampleParts(); drawFace(); drawHandsFromParts(p); drawDigitalFromParts(p); scheduleNext(p.ms); }}
+      function tick() {{
+        const p = sampleParts();
+        drawFace(); drawHandsFromParts(p); drawDigitalFromParts(p);
+        scheduleNext(p.ms);
+      }}
       tick();
     }})();
     </script>
@@ -450,21 +465,33 @@ def get_open_ticker_prices(_api) -> list[dict]:
         })
     return prices
 
+# --- Robust QUANTML logo loader (Streamlit Cloud safe) ---
 from pathlib import Path
-import base64
+import base64, os
 import streamlit as st
 
 @st.cache_resource
 def load_logo_b64(candidates: list[str] | None = None) -> str:
     """
-    Try several paths and return base64 of the first logo found.
+    Order:
+      1) st.secrets["LOGO_B64"] if present (recommended on Streamlit Cloud)
+      2) first existing file from candidates (case differences handled by trying multiple names)
+    Returns base64 string WITHOUT "data:image/...;base64," prefix.
     """
+    # 1) Secret (paste your base64 once in Streamlit secrets)
+    b64 = (st.secrets.get("LOGO_B64", "") or "").strip()
+    if b64:
+        return b64
+
+    # 2) Files on disk (try several common locations/cases)
     if candidates is None:
         candidates = [
             "Clock/quantml.png",
             "Clock/QuantML.png",
-            "quantml.png",
+            "Clock/QUANTML.png",
             "assets/quantml.png",
+            "quantml.png",
+            str(Path(__file__).with_name("quantml.png")),
         ]
     for p in candidates:
         fp = Path(p)
@@ -473,15 +500,15 @@ def load_logo_b64(candidates: list[str] | None = None) -> str:
                 return base64.b64encode(fp.read_bytes()).decode("ascii")
             except Exception:
                 pass
-    return ""
+    return ""  # caller can decide what to do if empty
 
 
 def render_header(api):
     c1, c2, c3 = st.columns([0.20, 0.65, 0.15], vertical_alignment="center")
     with c1:
         render_quantml_clock(size=200, tz="Europe/Dublin", title="Dublin",
-                             show_seconds=True, is_24h=True,
-                             logo_path="Clock/QuantML.png")
+                            show_seconds=True, is_24h=True)
+
     with c2:
         st.markdown("## QUANTML — Investor Summary (Live)")
         if api is not None:
@@ -620,7 +647,7 @@ def render_broker_balances(acct: dict) -> None:
     if acct.get("margin_util_pct") is not None:
         st.plotly_chart(_banded_gauge(float(acct["margin_util_pct"]), "Margin Utilization",
                                       bands=(25, 50, 100), good="low"),
-                        use_container_width=True)
+                        use_container_width="stretch")
         st.caption("= Maintenance margin ÷ equity. Lower is safer.")
 
 # =============================================================================
@@ -1300,7 +1327,7 @@ def build_history_rows_from_fills(api: Optional[REST],
 
     # assemble last N days (descending)
     all_days = sorted(set(list(day_cost_open.keys()) + list(day_open_val.keys()) + list(day_realized.keys())))
-    cutoff = (datetime.utcnow().date() - timedelta(days=days))
+    cutoff = (datetime.now(timezone.utc).date() - timedelta(days=days))
     rows = []
     for d in sorted([x for x in all_days if x >= cutoff], reverse=True):
         cost_open = day_cost_open.get(d, 0.0)
@@ -1383,7 +1410,7 @@ def render_portfolio_ledger_table(positions: pd.DataFrame,
     # Current (today)
     rows.append({
         "Section": "Current",
-        "Date": _fmt_dub(datetime.utcnow()),
+        "Date": _fmt_dub(datetime.now(timezone.utc)),
         "Cost to open positions": o["cost_open"],
         "Open (current value)":   o["open_value"],
         "Liquidated":             realized,
@@ -1431,7 +1458,7 @@ def render_portfolio_ledger_table(positions: pd.DataFrame,
                 }, na_rep="—")
                 .apply(_style_ledger, axis=1))
 
-    st.dataframe(styled, use_container_width=True, hide_index=True)
+    st.dataframe(styled, use_container_width="stretch", hide_index=True)
     st.caption("“Liquidated” = realized P&L (if provided). P&L $ = Unrealized + Realized. P&L % is relative to cost to open.")
 
 # =============================================================================
