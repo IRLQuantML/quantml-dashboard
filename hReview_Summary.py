@@ -131,7 +131,7 @@ def render_quantml_clock(
     title: str = "Dublin",
     show_seconds: bool = True,
     is_24h: bool = True,
-    logo_path: str | None = "Clock/quantml.png",
+    logo_path: str | None = "Clock/QuantML.png",
     logo_scale: float = 0.55,   # 0.0–1.0 of the clock size
 ) -> None:
     """Canvas clock with QUANTML logo. One time sample drives both analog & digital."""
@@ -468,7 +468,7 @@ def render_header(api):
     with c1:
         render_quantml_clock(size=200, tz="Europe/Dublin", title="Dublin",
                              show_seconds=True, is_24h=True,
-                             logo_path="Clock/quantml.png")
+                             logo_path="Clock/QuantML.png")
     with c2:
         st.markdown("## QUANTML — Investor Summary (Live)")
         if api is not None:
