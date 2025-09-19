@@ -125,8 +125,7 @@ import base64, uuid
 from textwrap import dedent
 import streamlit.components.v1 as components
 
-def render_quantml_clock(
-    size: int = 220,
+def render_quantml_clock(..., logo_path: str | None = "Clock/quantml.png", logo_scale: float = 0.55):    size: int = 220,
     tz: str = "Europe/Dublin",
     title: str = "Dublin",
     show_seconds: bool = True,
@@ -139,10 +138,13 @@ def render_quantml_clock(
     from textwrap import dedent
 
     logo_b64 = ""
-    if logo_path:
+        # prefer explicit path; if missing, try candidates
         try:
-            with open(logo_path, "rb") as f:
-                logo_b64 = base64.b64encode(f.read()).decode("ascii")
+            if logo_path and Path(logo_path).exists():
+                logo_b64 = base64.b64encode(Path(logo_path).read_bytes()).decode("ascii")
+            else:
+                b = load_logo_b64()
+                if b: logo_b64 = b
         except Exception:
             logo_b64 = ""
 
@@ -461,6 +463,30 @@ def get_open_ticker_prices(_api) -> list[dict]:
         })
     return prices
 
+from pathlib import Path
+import base64
+
+@st.cache_resource
+def load_logo_b64(candidates: list[str] = None) -> str | None:
+    """
+    Try several paths (case/dirs) and return base64 of the first that exists.
+    """
+    if candidates is None:
+        candidates = [
+            "Clock/quantml.png",
+            "Clock/QuantML.png",
+            "clock/quantml.png",
+            "assets/quantml.png",
+            "quantml.png",
+        ]
+    for p in candidates:
+        fp = Path(p)
+        if fp.exists():
+            try:
+                return base64.b64encode(fp.read_bytes()).decode("ascii")
+            except Exception:
+                pass
+    return None
 
 
 def render_header(api):
