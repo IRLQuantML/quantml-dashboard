@@ -125,7 +125,15 @@ import base64, uuid
 from textwrap import dedent
 import streamlit.components.v1 as components
 
-def render_quantml_clock(..., logo_path: str | None = "Clock/quantml.png", logo_scale: float = 0.55):    size: int = 220,
+def render_quantml_clock(
+    size: int = 220,
+    tz: str = "Europe/Dublin",
+    title: str = "Dublin",
+    show_seconds: bool = True,
+    is_24h: bool = True,
+    logo_path: str | None = "Clock/quantml.png",
+    logo_scale: float = 0.55   # no comma needed here
+) -> None:
     tz: str = "Europe/Dublin",
     title: str = "Dublin",
     show_seconds: bool = True,
