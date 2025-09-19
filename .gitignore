@@ -10,7 +10,6 @@
 /aGetSPYandVTY.py
 /bGenerate_base_features.py
 /catboost_info
-/Clock
 /config.py
 /cTrain.py
 /dBacktest.py
