@@ -410,7 +410,7 @@ def render_banner_clock(*,
     </script>
     """), height=h, scrolling=False)
 
-def enable_autorefresh(seconds: int = 20) -> None:
+def enable_autorefresh(seconds: int = 60) -> None:
     """
     Reruns the Streamlit app every `seconds` seconds.
     Uses a tiny JS snippet so no extra pip package is required.
@@ -477,8 +477,8 @@ def render_header(api):
             if prices:
                 render_ticker_tape(prices)
 
-    # make the whole page refresh every 30 seconds
-    enable_autorefresh(30)
+    # make the whole page refresh every 60 seconds
+    enable_autorefresh(60)
 
     with c3:
         st.markdown("<div style='text-align:right'>", unsafe_allow_html=True)
