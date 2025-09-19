@@ -50,6 +50,12 @@ BRAND = {
     "warning": "#EAB308",
     "danger":  "#DC2626",
 }
+# --- Traffic Light thresholds (percent points, not decimals) ---
+TL_THRESH_PCT = 0.10   # ±0.10% band -> amber
+TL_GREEN = BRAND["success"]
+TL_AMBER = BRAND["warning"]
+TL_RED   = BRAND["danger"]
+
 
 def apply_branding() -> None:
     px.defaults.template = "plotly_white"
@@ -58,13 +64,18 @@ def apply_branding() -> None:
     st.markdown("""
     <style>
       .block-container{
-        padding-top:2.4rem;          /* headroom under Streamlit's toolbar */
-        padding-bottom:2rem;
+        padding-top:1.0rem;     /* was 2.4rem */
+        padding-bottom:1.2rem;  /* was 2rem   */
         max-width:1750px;
       }
       @media (min-width: 1900px){ .block-container{ max-width:2000px; } }
 
-      /* Left‑align st.dataframe headers + cells */
+      /* Reduce top/bottom spacing between header and the next section */
+      .header-wrap { margin-bottom: 4px; }             /* wrapper we use in render_header */
+      .ticker-wrap { margin: 6px 0 10px 0; }           /* ribbon */
+      .stSubheader, h2, h3 { margin-top: 0.4rem; }     /* Streamlit heading tweaks */
+
+      /* Left-align st.dataframe headers + cells */
       div[data-testid="stDataFrame"] [role="columnheader"],
       div[data-testid="stDataFrame"] [role="gridcell"]{
         justify-content:flex-start !important;
@@ -449,6 +460,14 @@ def render_ticker_tape(prices: list[dict]) -> None:
     """
     st.markdown(html, unsafe_allow_html=True)
 
+def _first_existing_col(df: pd.DataFrame, *candidates: str) -> str | None:
+    """Return the first column name that exists in df (case sensitive)."""
+    for c in candidates:
+        if c in df.columns:
+            return c
+    return None
+
+
 @st.cache_data(ttl=20, show_spinner=False)
 def get_open_ticker_prices(_api) -> list[dict]:
     """
@@ -504,28 +523,26 @@ def load_logo_b64(candidates: list[str] | None = None) -> str:
 
 
 def render_header(api):
+    st.markdown('<div class="header-wrap">', unsafe_allow_html=True)
     c1, c2, c3 = st.columns([0.20, 0.65, 0.15], vertical_alignment="center")
     with c1:
-        render_quantml_clock(size=200, tz="Europe/Dublin", title="Dublin",
-                            show_seconds=True, is_24h=True)
-
+        render_quantml_clock(size=200, tz="Europe/Dublin", title="Dublin", show_seconds=True, is_24h=True)
     with c2:
         st.markdown("## QUANTML — Investor Summary (Live)")
         if api is not None:
-            render_market_chip(api)  # your existing chip
+            render_market_chip(api)
             prices = get_open_ticker_prices(api)
             if prices:
+                st.markdown('<div class="ticker-wrap">', unsafe_allow_html=True)
                 render_ticker_tape(prices)
-
-    # make the whole page refresh every 60 seconds
-    enable_autorefresh(60)
-
+                st.markdown('</div>', unsafe_allow_html=True)
     with c3:
         st.markdown("<div style='text-align:right'>", unsafe_allow_html=True)
-        if st.button("🔄 Refresh", help="Pull latest live data from Alpaca", key="refresh_live"):
-            st.cache_data.clear()
-            st.rerun()
+        if st.button("🔄 Refresh", key="refresh_live"):
+            st.cache_data.clear(); st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 def _parse_ts(ts):
@@ -980,15 +997,14 @@ def merge_tp_sl_from_alpaca_orders(positions: pd.DataFrame, api) -> pd.DataFrame
 # =============================================================================
 # Dials (3 core)
 # =============================================================================
-_DIAL_H = 210
-_NEEDLE = "#374151"  # gray‑700
+_DIAL_H = 280           # more vertical room
+_NEEDLE = "#374151"
 _BAND_GREEN = "rgba(22,163,74,0.22)"
 _BAND_AMBER = "rgba(234,179,8,0.26)"
 _BAND_RED   = "rgba(220,38,38,0.24)"
 
 def _banded_gauge(percent: float, title: str, bands=(60, 80, 100), good="low") -> go.Figure:
     val = float(max(0.0, percent))
-    # extend axis to the next 20% band over the current value (cap at, say, 200%)
     axis_max = min(200.0, max(100.0, (int(val/20.0)+1) * 20.0))
     a, b, c = bands
     steps = ([{"range":[0,a], "color":_BAND_GREEN},
@@ -998,15 +1014,20 @@ def _banded_gauge(percent: float, title: str, bands=(60, 80, 100), good="low") -
              [{"range":[0,a], "color":_BAND_RED},
               {"range":[a,b], "color":_BAND_AMBER},
               {"range":[b,100], "color":_BAND_GREEN}])
+
     fig = go.Figure(go.Indicator(
-        mode="gauge+number", value=min(val, axis_max),
-        title={"text": title, "font": {"size": 14}},
-        number={"suffix": "%", "font": {"size": 30}},
-        gauge={"axis": {"range": [0, axis_max], "tickwidth": 1, "ticklen": 4},
-               "bar": {"color": _NEEDLE}, "bgcolor": "white", "borderwidth": 0,
-               "steps": steps}
+        mode="gauge+number",
+        value=min(val, axis_max),
+        title={"text": title, "font": {"size": 13}},
+        number={"suffix": "%", "font": {"size": 24}},
+        gauge={
+            "axis": {"range": [0, axis_max], "tickwidth": 1, "ticklen": 3, "nticks": 6, "tickfont": {"size": 9}},
+            "bar": {"color": _NEEDLE, "thickness": 0.22},
+            "bgcolor": "white", "borderwidth": 0, "steps": steps
+        }
     ))
-    fig.update_layout(height=_DIAL_H, margin=dict(l=6, r=6, t=24, b=0))
+    # ↑ more top space for the (optional) title; ↑ **extra bottom** to guarantee clearance above captions
+    fig.update_layout(height=_DIAL_H, margin=dict(l=10, r=10, t=72, b=56))
     return fig
 
 
@@ -1066,27 +1087,26 @@ def render_top_kpis(totals: dict, budget: float, acct_equity: float | None = Non
 
 
 def render_traffic_lights(df: pd.DataFrame) -> None:
-    st.subheader("Traffic Lights (per Open position)")
+    st.subheader("Traffic Lights (per open position)")
     if df is None or df.empty:
-        st.info("—"); return
-    z = compute_derived_metrics(df)  # ensure pl_%/$ present
-    sort_col = "Ticker" if "Ticker" in z.columns else ("symbol" if "symbol" in z.columns else None)
-    if sort_col: z = z.sort_values(sort_col)
+        st.info("No open positions.")
+        return
 
-    CHIP_CSS = ("display:inline-flex;align-items:center;gap:8px;"
-                "padding:6px 10px;border-radius:16px;"
-                "background:rgba(14,27,58,0.08);border:1px solid rgba(14,27,58,0.26);"
-                "margin:3px 4px;")
+    z = compute_derived_metrics(df).copy()
+    z = z.sort_values("Ticker")
+
+    CHIP = ("display:inline-flex;align-items:center;gap:8px;padding:6px 10px;"
+            "border-radius:16px;background:rgba(14,27,58,0.06);border:1px solid rgba(14,27,58,0.20);"
+            "margin:3px 4px;")
+
     chips = []
     for _, r in z.iterrows():
-        col = BRAND["success"] if float(r.get("pl_$", 0) or 0) >= 0 else BRAND["danger"]
-        # precedence with R/pct if you prefer:
-        col = (BRAND["success"] if pd.to_numeric(pd.Series([r.get("R")]), errors="coerce").iloc[0] >= 1.0
-               else BRAND["warning"] if pd.to_numeric(pd.Series([r.get("pl_%")]), errors="coerce").iloc[0] >= -0.5
-               else col)
-        label = f"{r.get('Ticker', r.get('symbol','?'))} · {r.get('Side','—')} · {pct(r.get('pl_%'))} / {money_signed(r.get('pl_$'))}"
+        sym = r.get("Ticker", r.get("symbol", "?"))
+        pl_today_pct = float(r.get("pl_today_%", np.nan)) if pd.notna(r.get("pl_today_%", np.nan)) else float(r.get("pl_%", 0.0))
+        col = _tl_color_for_pct(pl_today_pct)
+        label = f"{sym} · {r.get('Side','—')} · {pl_today_pct:+.2f}% / {money_signed(r.get('pl_$', 0.0))}"
         dot = f"<span style='width:12px;height:12px;border-radius:50%;display:inline-block;border:2px solid {col};background:{col};'></span>"
-        chips.append(f"<span style='{CHIP_CSS}'>{dot}<span style='font-weight:600;font-size:0.9rem;color:#0E1B3A'>{label}</span></span>")
+        chips.append(f"<span style='{CHIP}'>{dot}<span style='font-weight:600;font-size:0.9rem;color:#0E1B3A'>{label}</span></span>")
 
     st.markdown("<div style='display:flex;flex-wrap:wrap;gap:8px'>" + "".join(chips) + "</div>", unsafe_allow_html=True)
 
@@ -1111,14 +1131,12 @@ def render_positions_table(df: pd.DataFrame) -> None:
         "Avg Entry":     pd.to_numeric(z["entry_price"], errors="coerce"),
         "Current Price": pd.to_numeric(z["current_price"], errors="coerce"),
         "TP":            pd.to_numeric(z.get("TP", z.get("tp_price")), errors="coerce"),
-        "SL":            pd.to_numeric(z.get("SL", z.get("sl_price")), errors="coerce"),
         "Market Value":  pd.to_numeric(z["Market Value"], errors="coerce"),
-        # IMPORTANT: keep pl_% as actual percent (already 100*x in compute_derived_metrics)
         "Total P/L ($)": pd.to_numeric(z["pl_$"], errors="coerce"),
         "Total P/L (%)": pd.to_numeric(z["pl_%"], errors="coerce"),
     })
 
-    order = ["Asset","Status","Qty","Side","Avg Entry","Current Price","TP","SL","Market Value","Total P/L ($)","Total P/L (%)"]
+    order = ["Asset","Status","Qty","Side","Avg Entry","Current Price","TP","Market Value","Total P/L ($)","Total P/L (%)"]
     show = show[[c for c in order if c in show.columns]]
 
     styled = (
@@ -1128,7 +1146,6 @@ def render_positions_table(df: pd.DataFrame) -> None:
                 "Avg Entry":      "{:.2f}",
                 "Current Price":  "{:.2f}",
                 "TP":             "{:.2f}",
-                "SL":             "{:.2f}",
                 "Market Value":   "${:,.2f}",
                 "Total P/L ($)":  "${:,.2f}",
                 "Total P/L (%)":  "{:+.2f}%",
@@ -1138,6 +1155,74 @@ def render_positions_table(df: pd.DataFrame) -> None:
 
     st.dataframe(styled, width="stretch", hide_index=True)
 
+def _gauge_percent(value: float, *, title: str, good: str = "high", bands=(40,60,80)) -> go.Figure:
+    return _banded_gauge(float(value), title, bands=bands, good=good)
+
+def _gauge_count(value: int, total: int, *, title: str) -> go.Figure:
+    """Gauge showing a count out of total, with bands at 33/66/100% of total."""
+    maxv = max(1, int(total))
+    v = max(0, int(value))
+    a = int(maxv/3); b = int(2*maxv/3); c = maxv
+    steps = [{"range":[0,a], "color":_BAND_RED},
+             {"range":[a,b], "color":_BAND_AMBER},
+             {"range":[b,c], "color":_BAND_GREEN}]
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number", value=v,
+        title={"text": title, "font":{"size":14}},
+        number={"suffix": f" / {maxv}", "font":{"size":30}},
+        gauge={"axis":{"range":[0, maxv], "tickwidth":1, "ticklen":4},
+               "bar":{"color": _NEEDLE},
+               "bgcolor":"white", "borderwidth":0, "steps":steps}
+    ))
+    fig.update_layout(height=_DIAL_H, margin=dict(l=6,r=6,t=24,b=0))
+    return fig
+
+def render_updated_dials(positions: pd.DataFrame, api: Optional[REST]) -> None:
+    st.subheader("Performance")
+
+    if positions is None or positions.empty:
+        st.info("No open positions.")
+        return
+
+    npos = int(len(positions))
+
+    # Dial 1: % up today
+    col_today_usd = next((c for c in ["pl_today_usd","pl_today_$","pl_today","pl_today_val"] if c in positions.columns), None)
+    if col_today_usd:
+        up_today = int((pd.to_numeric(positions[col_today_usd], errors="coerce") > 0).sum())
+    else:
+        col_total = next((c for c in ["pl_usd","pl_$"] if c in positions.columns), None)
+        up_today = int((pd.to_numeric(positions[col_total], errors="coerce") > 0).sum()) if col_total else 0
+    up_today_pct = (100.0 * up_today / max(1, npos))
+
+    # Dial 2: still open since SOD
+    touched = _symbols_touched_today(api)
+    open_syms = set(positions.get("Ticker", pd.Series(dtype=str)).astype(str).str.upper())
+    still_open_since_sod = len([s for s in open_syms if s not in touched])
+
+    # Dial 3: weighted total P/L %
+    totals = derive_totals_from_positions(positions) if npos else {}
+    total_pl_pct_weighted = float(totals.get("unrealized_pl_%_weighted", 0.0))
+
+    d1, d2, d3 = st.columns(3)
+
+    with d1:
+        st.markdown("<div style='font-weight:600;margin:0 0 4px 2px;'>% of stocks up today</div>", unsafe_allow_html=True)
+        st.plotly_chart(_gauge_percent(up_today_pct, title="", good="high", bands=(40,60,80)), use_container_width=True)
+        st.markdown("<div style='text-align:center;font-size:13px;color:#64748B;'>Dial 1: positive intraday P&L</div>", unsafe_allow_html=True)
+
+    with d2:
+        st.markdown("<div style='font-weight:600;margin:0 0 4px 2px;'># open since start of day</div>", unsafe_allow_html=True)
+        st.plotly_chart(_gauge_count(still_open_since_sod, max(1, npos), title=""), use_container_width=True)
+        st.markdown("<div style='text-align:center;font-size:13px;color:#64748B;'>Dial 2: untouched by fills today</div>", unsafe_allow_html=True)
+
+    with d3:
+        st.markdown("<div style='font-weight:600;margin:0 0 4px 2px;'>Total P/L % (open positions)</div>", unsafe_allow_html=True)
+        st.plotly_chart(_gauge_percent(total_pl_pct_weighted, title="", good="high", bands=(0,2,5)), use_container_width=True)
+        st.markdown("<div style='text-align:center;font-size:13px;color:#64748B;'>Dial 3: weighted open P&L %</div>", unsafe_allow_html=True)
+
+    # tiny spacer to ensure nothing touches the plots
+    st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
 
 # =============================================================================
 # Data source: Alpaca live snapshot
@@ -1163,7 +1248,117 @@ def _load_alpaca_api() -> Optional[REST]:
         st.error(f"Alpaca REST init failed: {e}")
         return None
 
+def _tl_color_for_pct(pct_val: float) -> str:
+    """Colour system for chips/mini-grid: green ≥ +0.10%; amber −0.10%..+0.10%; red < −0.10%."""
+    try:
+        v = float(pct_val)
+    except Exception:
+        v = 0.0
+    if v >= TL_THRESH_PCT:
+        return TL_GREEN
+    if v >= -TL_THRESH_PCT:
+        return TL_AMBER
+    return TL_RED
+
+def render_color_system_legend() -> None:
+    html = f"""
+    <strong>Traffic Lights (per open position) — colour system</strong>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:6px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="width:14px;height:14px;border-radius:50%;background:{TL_GREEN};border:2px solid {TL_GREEN};"></span>
+        <span>≥ +0.10%</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="width:14px;height:14px;border-radius:50%;background:{TL_AMBER};border:2px solid {TL_AMBER};"></span>
+        <span>−0.10% to +0.10%</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="width:14px;height:14px;border-radius:50%;background:{TL_RED};border:2px solid {TL_RED};"></span>
+        <span>&lt; −0.10%</span>
+      </div>
+    </div>
+    """
+    st.markdown(html, unsafe_allow_html=True)
+
+def render_current_status_grid(df: pd.DataFrame) -> None:
+    """Two-row mini grid: Today P&L % and Start-of-day P&L % (carry)."""
+    st.subheader("Current status")
+
+    if df is None or df.empty:
+        st.info("No open positions.")
+        return
+
+    z = df.copy()
+
+    # Normalize column names we need
+    col_sym   = _first_existing_col(z, "Ticker", "symbol") or "Ticker"
+    col_today = _first_existing_col(z, "pl_today_%", "pl_today_pc", "pl_today_pct")
+    col_carry = _first_existing_col(z, "carry_%", "carry_pl_%", "carry_pc", "carry_pct")
+
+    # If carry % is missing but we have total pl_% and today %, derive it.
+    if col_carry is None:
+        col_total = _first_existing_col(z, "pl_%", "pl_pc", "pl_pct")
+        if (col_total is not None) and (col_today is not None):
+            z["carry_%"] = pd.to_numeric(z[col_total], errors="coerce") - pd.to_numeric(z[col_today], errors="coerce")
+            col_carry = "carry_%"
+
+    # If today % is missing but we have total and carry, derive it.
+    if col_today is None:
+        col_total = _first_existing_col(z, "pl_%", "pl_pc", "pl_pct")
+        if (col_total is not None) and (col_carry is not None):
+            z["pl_today_%"] = pd.to_numeric(z[col_total], errors="coerce") - pd.to_numeric(z[col_carry], errors="coerce")
+            col_today = "pl_today_%"
+
+    # Final guardrails
+    if col_today is None or col_carry is None:
+        st.warning("Unable to compute Current status grid (missing today/carry % columns).")
+        return
+
+    # Preserve original ticker order in the table
+    tickers = z[col_sym].astype(str).tolist()
+
+    # Build a 2xN frame
+    grid = pd.DataFrame(
+        [
+            pd.to_numeric(z.set_index(col_sym)[col_today], errors="coerce").reindex(tickers).values,
+            pd.to_numeric(z.set_index(col_sym)[col_carry], errors="coerce").reindex(tickers).values,
+        ],
+        index=["Open positions current status (Today P&L %)",
+               "Open positions start of day – P&L %"],
+        columns=tickers,
+    )
+
+    def _fmt(v):
+        try:
+            x = float(v)
+            return f"{x:+.2f}"
+        except Exception:
+            return "—"
+
+    def _style_cell(val):
+        color = _tl_color_for_pct(val)  # uses the new ±0.10% rules
+        return f"background-color: {color}22; border: 1px solid {color}66; font-weight:700;"
+
+    styled = (grid.style
+                   .format(_fmt, na_rep="—")
+                   .applymap(_style_cell))
+
+    st.dataframe(styled, use_container_width=True, hide_index=False)
+
+def _symbols_touched_today(api: Optional[REST]) -> set[str]:
+    """Symbols that had any fills today (local to US/Eastern market day)."""
+    df = _pull_fills_df(api, days=1)
+    if df.empty:
+        return set()
+    today = pd.Timestamp.now(tz=timezone.utc).date()
+    touched = df[df["ts"].dt.date == today]["symbol"].astype(str).str.upper().unique().tolist()
+    return set(touched)
+
+
 def pull_live_positions(api: Optional[REST]) -> pd.DataFrame:
+    """
+    Pulls open positions and computes consistent fields used across the UI.
+    """
     if api is None:
         return pd.DataFrame()
     try:
@@ -1174,16 +1369,35 @@ def pull_live_positions(api: Optional[REST]) -> pd.DataFrame:
 
     rows = []
     for p in raw or []:
+        try:
+            qty            = float(p.qty)
+            entry_price    = float(p.avg_entry_price)
+            current_price  = float(p.current_price)
+            pl_total_usd   = float(getattr(p, "unrealized_pl", 0.0) or 0.0)
+            pl_total_pct   = float(getattr(p, "unrealized_plpc", 0.0) or 0.0) * 100.0
+            pl_today_usd   = float(getattr(p, "unrealized_intraday_pl", 0.0) or 0.0)
+            pl_today_pct   = float(getattr(p, "unrealized_intraday_plpc", 0.0) or 0.0) * 100.0
+        except Exception:
+            qty = entry_price = current_price = 0.0
+            pl_total_usd = pl_total_pct = pl_today_usd = pl_today_pct = 0.0
+
+        entry_notional = abs(qty * entry_price)
+        carry_usd  = pl_total_usd - pl_today_usd
+        carry_pct  = (carry_usd / entry_notional * 100.0) if entry_notional > 0 else 0.0
+
         rows.append({
             "Ticker":        p.symbol,
             "Side":          ("Long" if (getattr(p, "side", "long").lower() == "long") else "Short"),
-            "qty":           float(p.qty),
-            "entry_price":   float(p.avg_entry_price),
-            "current_price": float(p.current_price),
-            "notional":      float(p.market_value),
-            "pl_$":          float(getattr(p, "unrealized_pl", 0.0) or 0.0),
-            "pl_%":          (float(getattr(p, "unrealized_plpc", 0.0) or 0.0) * 100.0
-                              if float(p.avg_entry_price or 0) != 0 else 0.0),
+            "qty":           qty,
+            "entry_price":   entry_price,
+            "current_price": current_price,
+            "notional":      float(getattr(p, "market_value", qty * current_price) or qty * current_price),
+            "pl_usd":        pl_total_usd,
+            "pl_%":          pl_total_pct,
+            "pl_today_usd":  pl_today_usd,
+            "pl_today_%":    pl_today_pct,
+            "carry_usd":     carry_usd,
+            "carry_%":       carry_pct,
         })
     return pd.DataFrame(rows)
 
@@ -1466,50 +1680,32 @@ def render_portfolio_ledger_table(positions: pd.DataFrame,
 # =============================================================================
 def main() -> None:
     api = _load_alpaca_api()
-    render_header(api)
+    render_header(api)  # clock + heading + ticker ribbon
 
-    # In main(), right before the 3 dials:
+    # Live positions + attach TP/SL and derived metrics
     positions = pull_live_positions(api)
     positions = merge_tp_sl_from_alpaca_orders(positions, api)
     positions = compute_derived_metrics(positions)
 
-    # NEW: build history from fills (last 5 days by default)
-    hist_df, realized_total = build_history_rows_from_fills(api, positions, days=5)
-
-    # Render the ledger with History rows included, and correct sign for shorts
-    render_portfolio_ledger_table(positions,
-                                realized_pnl_total=realized_total,
-                                history_rows=hist_df)
+    # ----- Current status (mini-grid) + colour legend -----
+    render_current_status_grid(positions)
     st.divider()
-
-    # Totals for the 3 dials (unchanged)
-    totals = derive_totals_from_positions(positions)
-    cap   = float(totals.get("capital_spent", 0.0))
-    gross = float(totals.get("gross_exposure", 0.0))
-    win   = float(totals.get("win_rate_%", 0.0))
-
-    d1, d2, d3 = st.columns(3)
-    with d1:
-        st.plotly_chart(gauge_budget_pct(cap, _PORTFOLIO_BUDGET, "Capital Deployed"), width="stretch")
-        st.caption("How much of your portfolio budget is currently invested (capital_spent ÷ budget). Bands: 60/80/100%.")
-    with d2:
-        st.plotly_chart(gauge_exposure_pct(gross, _PORTFOLIO_BUDGET, "Gross Exposure"), width="stretch")
-        st.caption("Long + |Short| exposure relative to budget (percentage). Shows how levered the book is regardless of netting.")
-    with d3:
-        st.plotly_chart(gauge_win_rate(win, "Win Rate"), width="stretch")
-        st.caption("Share of open positions that are currently up in P&L.")
-
-    st.divider()
-
-    # Traffic Lights (chips) + Live Positions table (TP/SL shown after Current Price)
     render_traffic_lights(positions)
+    render_color_system_legend()
     st.divider()
+    # ----- Traffic Lights + Live Positions table -----
     render_positions_table(positions)
+    st.divider()
+    # ----- Dials (new set) -----
+    render_updated_dials(positions, api)
+    st.divider()
 
-    # Optional: recent closed trades (comment out if not needed)
-    # render_closed_trades_history(api, days=7)
+    # ----- Portfolio Ledger (incl. history from fills) -----
+    hist_df, realized_total = build_history_rows_from_fills(api, positions, days=5)
+    render_portfolio_ledger_table(positions,
+                                  realized_pnl_total=realized_total,
+                                  history_rows=hist_df)
 
-    # Footer
     st.caption(f"As of: {datetime.now().strftime('%Y-%m-%d %H:%M')} • Budget: {money(_PORTFOLIO_BUDGET)}")
 
 if __name__ == "__main__":
