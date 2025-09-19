@@ -132,29 +132,20 @@ def render_quantml_clock(
     show_seconds: bool = True,
     is_24h: bool = True,
     logo_path: str | None = "Clock/quantml.png",
-    logo_scale: float = 0.55   # no comma needed here
-) -> None:
-    tz: str = "Europe/Dublin",
-    title: str = "Dublin",
-    show_seconds: bool = True,
-    is_24h: bool = True,
-    logo_path: str | None = "Clock/QuantML.png",
-    logo_scale: float = 0.55,   # 0.0–1.0 of the clock size
+    logo_scale: float = 0.55  # 0.0–1.0 of the clock size
 ) -> None:
     """Canvas clock with QUANTML logo. One time sample drives both analog & digital."""
-    import base64, io
     from textwrap import dedent
 
+    # ---- load logo (inline as base64) ----
     logo_b64 = ""
-        # prefer explicit path; if missing, try candidates
-        try:
-            if logo_path and Path(logo_path).exists():
-                logo_b64 = base64.b64encode(Path(logo_path).read_bytes()).decode("ascii")
-            else:
-                b = load_logo_b64()
-                if b: logo_b64 = b
-        except Exception:
-            logo_b64 = ""
+    try:
+        if logo_path and Path(logo_path).exists():
+            logo_b64 = base64.b64encode(Path(logo_path).read_bytes()).decode("ascii")
+        else:
+            logo_b64 = load_logo_b64()  # fall back to candidates
+    except Exception:
+        logo_b64 = ""
 
     canvas_id = f"qmclk_canvas_{st.session_state.get('_clk', 0)}"
     time_id   = f"qmclk_time_{st.session_state.get('_clk', 0)}"
@@ -175,23 +166,19 @@ def render_quantml_clock(
     <script>
     (function(){{
       const cssW={size}, cssH={size}, LOGO_SCALE={logo_scale};
-      const tz="{tz}", showSeconds={str(show_seconds).lower()}, is24h={str(is_24h).lower()};
+      const tz="{tz}", showSeconds={( 'true' if show_seconds else 'false')}, is24h={( 'true' if is_24h else 'false')};
       const canvas=document.getElementById("{canvas_id}");
       const dpr=Math.max(1, window.devicePixelRatio||1);
       canvas.width=cssW*dpr; canvas.height=cssH*dpr; canvas.style.width=cssW+"px"; canvas.style.height=cssH+"px";
       const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0);
-      const cx=cssW/2, cy=cssH/2, R=Math.min(cx,cy)-6, OFF=-Math.PI/2; // << rotate so 0° is at 12
+      const cx=cssW/2, cy=cssH/2, R=Math.min(cx,cy)-6, OFF=-Math.PI/2;
 
       // inline logo
       const logoData="{logo_b64}";
       let logoImg=null, logoReady=false;
       if (logoData) {{ logoImg=new Image(); logoImg.onload=()=>logoReady=true; logoImg.src="data:image/png;base64,"+logoData; }}
 
-      // one true time source (sample ONCE per tick for analog+digital)
-      function nowInTZ() {{
-        // build a Date with the *local clock* of tz
-        return new Date(new Date().toLocaleString('en-US', {{ timeZone: tz }}));
-      }}
+      function nowInTZ() {{ return new Date(new Date().toLocaleString('en-US', {{ timeZone: tz }})); }}
       function pad(n){{return String(n).padStart(2,'0');}}
 
       function sampleParts(){{
@@ -205,7 +192,6 @@ def render_quantml_clock(
 
       function drawFace(){{
         ctx.clearRect(0,0,cssW,cssH);
-        // ticks, with OFF so 0 is at 12 o'clock
         for(let i=0;i<60;i++) {{
           const a=(Math.PI/30)*i + OFF;
           const r1=R*(i%5===0?0.82:0.88), r2=R*0.97;
@@ -237,7 +223,6 @@ def render_quantml_clock(
         hand(hrA,  R*0.50, 5,  "#9DB2FF");
         hand(minA, R*0.72, 3.4,"#9DB2FF");
         if(showSeconds) hand(secA,R*0.78, 2,  "#4F7BFF");
-        // center pin
         ctx.beginPath(); ctx.arc(cx,cy,6,0,pi*2); ctx.fillStyle="#99A8FF"; ctx.fill();
         ctx.beginPath(); ctx.arc(cx,cy,3,0,pi*2); ctx.fillStyle="#335CFF"; ctx.fill();
       }}
@@ -246,23 +231,17 @@ def render_quantml_clock(
         const hh = is24h ? pad(p.h) : pad(((p.h%12)||12));
         const ampm = is24h ? "" : (p.h<12 ? " AM" : " PM");
         document.getElementById("{time_id}").textContent =
-          {str(show_seconds).lower()} ? `${{hh}}:${{pad(p.m)}}:${{pad(p.s)}}${{ampm}}` : `${{hh}}:${{pad(p.m)}}${{ampm}}`;
+          showSeconds ? `${{hh}}:${{pad(p.m)}}:${{pad(p.s)}}${{ampm}}` : `${{hh}}:${{pad(p.m)}}${{ampm}}`;
         document.getElementById("{date_id}").textContent = p.dateStr;
       }}
 
       function scheduleNext(ms) {{ setTimeout(tick, 1000 - (ms % 1000)); }}
-
-      function tick() {{
-        const p = sampleParts();       // one sample → both analog & digital
-        drawFace(); drawHandsFromParts(p); drawDigitalFromParts(p);
-        scheduleNext(p.ms);
-      }}
+      function tick() {{ const p = sampleParts(); drawFace(); drawHandsFromParts(p); drawDigitalFromParts(p); scheduleNext(p.ms); }}
       tick();
     }})();
     </script>
     """)
     components.html(html, height=h, scrolling=False)
-
 
 def render_banner_clock(*,
                         size=200, tz="Europe/Dublin", title="Dublin",
@@ -473,19 +452,19 @@ def get_open_ticker_prices(_api) -> list[dict]:
 
 from pathlib import Path
 import base64
+import streamlit as st
 
 @st.cache_resource
-def load_logo_b64(candidates: list[str] = None) -> str | None:
+def load_logo_b64(candidates: list[str] | None = None) -> str:
     """
-    Try several paths (case/dirs) and return base64 of the first that exists.
+    Try several paths and return base64 of the first logo found.
     """
     if candidates is None:
         candidates = [
             "Clock/quantml.png",
             "Clock/QuantML.png",
-            "clock/quantml.png",
-            "assets/quantml.png",
             "quantml.png",
+            "assets/quantml.png",
         ]
     for p in candidates:
         fp = Path(p)
@@ -494,7 +473,7 @@ def load_logo_b64(candidates: list[str] = None) -> str | None:
                 return base64.b64encode(fp.read_bytes()).decode("ascii")
             except Exception:
                 pass
-    return None
+    return ""
 
 
 def render_header(api):
