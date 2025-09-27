@@ -711,7 +711,7 @@ def render_portfolio_equity_chart(api: Optional[REST]) -> dict:
     # Period selector
     period = st.radio(
         "Period",
-        options=["1D", "1W", "1M", "3M", "6M", "1Y", "all"],
+        options=["1D", "1M", "3M", "all"],
         horizontal=True,
         label_visibility="collapsed",
         key="ph_period",
@@ -924,27 +924,30 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
             winners = tmp.sort_values("P&L $", ascending=False).head(3)
             losers  = tmp.sort_values("P&L $", ascending=True).head(3)
 
-    # ===== KPI cards in requested order =====
+        # ===== KPI cards in requested order (swapped + renamed) =====
     c1, c2, c3, c4 = st.columns(4)
 
+    # Portfolio-level P&L (previously Day P&L)
     with c1:
-        _kpi_card("Today total P&L $", money(today_total_pl_usd),
-                  "pos" if (today_total_pl_usd or 0) >= 0 else "neg")
-
-    with c2:
-        _kpi_card("Today total P&L %",
-                  f"{(today_total_pl_pct if np.isfinite(today_total_pl_pct) else 0):+.2f}%",
-                  "pos" if (today_total_pl_pct or 0) >= 0 else "neg")
-
-    with c3:
-        _kpi_card("Day P&L $", money(day_pl_usd),
-                  "pos" if (day_pl_usd or 0) >= 0 else "neg")
-
-    with c4:
-        _kpi_card("Day P&L %",
+        _kpi_card("Today Portfolio P&L %",
                   f"{(day_pl_pct if np.isfinite(day_pl_pct) else 0):+.2f}%",
                   "pos" if (day_pl_pct or 0) >= 0 else "neg")
 
+    with c2:
+        _kpi_card("Today Portfolio P&L $", money(day_pl_usd),
+                  "pos" if (day_pl_usd or 0) >= 0 else "neg")
+
+    with c3:
+        _kpi_card("Today Open Positions P&L %",
+                  f"{(today_total_pl_pct if np.isfinite(today_total_pl_pct) else 0):+.2f}%",
+                  "pos" if (today_total_pl_pct or 0) >= 0 else "neg")
+
+    # Open positions intraday P&L (previously Today total P&L)
+    with c4:
+        _kpi_card("Today Open Positions P&L $", money(today_total_pl_usd),
+                  "pos" if (today_total_pl_usd or 0) >= 0 else "neg")
+
+        
     # ===== Contributors / Detractors tables =====
     if not winners.empty or not losers.empty:
         c1, c2 = st.columns(2)
@@ -1384,33 +1387,6 @@ def _kpi_card(title: str, value_str: str, tone: str = "neutral", caption: str | 
         unsafe_allow_html=True
     )
 
-# ---------- TOP KPI ROW ----------
-def render_top_kpis(totals: dict, budget: float, acct_equity: float | None = None) -> None:
-    """
-    5 cards: Capital Deployed, Current Portfolio Value, Total P/L %, Total P/L $, Win Rate
-    Uses broker equity if available so the 'Current Portfolio Value' matches Alpaca.
-    """
-    cap  = float(totals.get("capital_spent", 0.0))
-    upnl = float(totals.get("unrealized_pl_$", 0.0))
-    wr   = float(totals.get("win_rate_%", totals.get("win_rate", 0.0)))
-    cur_val = float(acct_equity) if acct_equity is not None else (cap + upnl)
-    pl_pct_from_kpis = (upnl / cap * 100.0) if cap > 0 else 0.0
-
-    c1, c2, c3, c4, c5 = st.columns(5)
-    with c1: _kpi_card("Total Capital Deployed", money(cap))
-    with c2:
-        tone = "pos" if cur_val >= cap else "neg"
-        _kpi_card("Current Portfolio Value", money(cur_val), tone, caption=f"Budget: {money(budget)}")
-    with c3:
-        tone = "pos" if pl_pct_from_kpis >= 0 else "neg"
-        _kpi_card("Total P/L %", f"{pl_pct_from_kpis:+.2f}%", tone)
-    with c4:
-        tone = "pos" if upnl >= 0 else "neg"
-        _kpi_card("Total P/L $", money(upnl), tone)
-    with c5:
-        _kpi_card("Win Rate", f"{wr:.0f}%", caption="Open positions up ÷ total")
-
-
 # ===================== Traffic Lights (sorted green→amber→red) =====================
 
 def render_traffic_lights(df: pd.DataFrame) -> None:
@@ -1671,10 +1647,10 @@ def render_current_status_grid(df: pd.DataFrame) -> None:
     row2_vals = [_fmt_cell(s_carry.get(sym, np.nan), sym) for sym in order_carry]
 
     row1 = pd.DataFrame([row1_vals],
-                        index=["Open positions current status (Today P&L %)"],
+                        index=["Today's performance)"],
                         columns=order_today)
     row2 = pd.DataFrame([row2_vals],
-                        index=["Open positions start of day – P&L %"],
+                        index=["Total P&L"],
                         columns=order_carry)
 
     # --- per-row style helpers (return a list matching the number of columns)
