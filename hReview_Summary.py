@@ -595,6 +595,203 @@ def enable_autorefresh(seconds: int = 60) -> None:
         height=0,
     )
 
+# ========= Transaction history (from Alpaca fills; FIFO realized per fill) =========
+from collections import defaultdict, deque
+try:
+    from zoneinfo import ZoneInfo
+    _ET = ZoneInfo("US/Eastern")
+except Exception:
+    _ET = None
+
+@st.cache_data(ttl=300, show_spinner=False)
+def _pull_all_fills_df(_api: Optional[REST], start: datetime | None = None) -> pd.DataFrame:
+    """
+    Pull ALL FILL activities since `start` (default: 2000-01-01), robust to old/new Alpaca SDKs.
+    Returns columns: ts (UTC), symbol, side, qty, price, fee.
+    """
+    cols = ["ts", "symbol", "side", "qty", "price", "fee"]
+    if _api is None:
+        return pd.DataFrame(columns=cols)
+
+    # go far back by default
+    if start is None:
+        start = datetime(2000, 1, 1, tzinfo=timezone.utc)
+    after_iso = start.isoformat()
+
+    acts = []
+    # try the different SDK signatures
+    try:
+        acts = _api.get_activities(activity_types="FILL", after=after_iso)
+    except TypeError:
+        try:
+            acts = _api.get_activities("FILL", after=after_iso)
+        except Exception:
+            try:
+                acts = _api.get_account_activities("FILL", after=after_iso)
+            except Exception:
+                acts = []
+
+    rows = []
+    for a in acts or []:
+        sym  = (getattr(a, "symbol", None) or getattr(a, "asset_symbol", None) or "").upper()
+        side = (getattr(a, "side", "") or "").lower()  # 'buy' or 'sell'
+        try:
+            price = float(getattr(a, "price", getattr(a, "fill_price", 0.0)) or 0.0)
+            qty   = float(getattr(a, "qty",   getattr(a, "quantity", 0.0)) or 0.0)
+        except Exception:
+            price, qty = 0.0, 0.0
+
+        # commission/fees (best‑effort across SDKs)
+        fee = None
+        for name in ("commission", "commissions", "fee", "fees", "trade_fees", "transaction_fees"):
+            v = getattr(a, name, None)
+            if v is not None:
+                try:
+                    fee = float(v)
+                    break
+                except Exception:
+                    pass
+        fee = float(fee if fee is not None else 0.0)
+
+        ts = getattr(a, "transaction_time", getattr(a, "timestamp", getattr(a, "date", None)))
+        ts = pd.to_datetime(str(ts), utc=True, errors="coerce")
+        if pd.isna(ts) or not sym or qty <= 0 or price <= 0:
+            continue
+        rows.append({"ts": ts, "symbol": sym, "side": side, "qty": qty, "price": price, "fee": fee})
+
+    if not rows:
+        return pd.DataFrame(columns=cols)
+
+    df = pd.DataFrame(rows)
+    df["ts"] = pd.to_datetime(df["ts"], utc=True, errors="coerce")
+    return df.sort_values("ts").reset_index(drop=True)
+
+
+def _fifo_realized_per_fill(fills: pd.DataFrame) -> pd.DataFrame:
+    """
+    Compute realized P&L per fill using FIFO lots, with correct signs for shorts.
+    Returns a DataFrame shaped like the History template.
+    """
+    if fills is None or fills.empty:
+        return pd.DataFrame(columns=["Date","Symbol","Side","Qty","Price","Notional","Realized","Fees","Amount","P&L $","Notes"])
+
+    lots = defaultdict(deque)   # symbol -> deque of open lots: each lot {'qty'(signed), 'price'}
+    out_rows = []
+
+    # Ensure proper dtypes/sort
+    z = fills.copy().sort_values("ts")
+    z["qty"]   = pd.to_numeric(z["qty"], errors="coerce").fillna(0.0)
+    z["price"] = pd.to_numeric(z["price"], errors="coerce").fillna(0.0)
+    z["fee"]   = pd.to_numeric(z.get("fee", 0.0), errors="coerce").fillna(0.0)
+
+    for _, r in z.iterrows():
+        ts     = pd.to_datetime(r["ts"], utc=True, errors="coerce")
+        sym    = str(r["symbol"]).upper()
+        side   = "Buy" if str(r["side"]).lower() == "buy" else "Sell"
+        qty    = float(r["qty"])
+        price  = float(r["price"])
+        fees   = float(r["fee"])
+        sign   = +1.0 if side == "Buy" else -1.0  # buy opens long / closes short; sell opens short / closes long
+
+        # Current net position before this trade
+        net_qty_before = sum(l["qty"] for l in lots[sym])
+
+        remaining = qty
+        realized  = 0.0
+
+        # Closing if the trade sign opposes current position sign
+        if net_qty_before * sign < 0:
+            while remaining > 1e-9 and lots[sym]:
+                lot = lots[sym][0]
+                lot_sign = 1.0 if lot["qty"] > 0 else -1.0
+                lot_abs  = abs(lot["qty"])
+                take = min(lot_abs, remaining)
+
+                # Realized against this lot:
+                # long lot (lot_sign=+1) closed by SELL:  +1*(close - entry)*qty
+                # short lot (lot_sign=-1) closed by BUY:  -1*(close - entry)*qty  == (entry - close)*qty
+                realized += lot_sign * (price - lot["price"]) * take
+
+                lot["qty"] = lot["qty"] - lot_sign * take
+                remaining -= take
+                if abs(lot["qty"]) <= 1e-9:
+                    lots[sym].popleft()
+
+        # If we crossed through zero, any leftover becomes a NEW lot in the trade direction
+        if remaining > 1e-9:
+            lots[sym].append({"qty": sign * remaining, "price": price})
+
+        notional = qty * price
+        amount   = (price * qty * (1.0 if side == "Sell" else -1.0)) - fees   # cash delta (+ for sells, − for buys)
+        pnl_d    = realized - fees
+
+        # Display time in US/Eastern (or UTC if zone unavailable)
+        dt = ts
+        if _ET is not None:
+            try: dt = ts.tz_convert(_ET)
+            except Exception: pass
+
+        out_rows.append({
+            "Date":     dt.tz_localize(None),
+            "Symbol":   sym,
+            "Side":     side,
+            "Qty":      qty,
+            "Price":    price,
+            "Notional": notional,
+            "Realized": realized,
+            "Fees":     fees,
+            "Amount":   amount,
+            "P&L $":    pnl_d,
+            "Notes":    "",
+        })
+
+    out = pd.DataFrame(out_rows)
+    # newest first for the UI
+    return out.sort_values("Date", ascending=False).reset_index(drop=True)
+
+
+def render_transaction_history_from_alpaca(api: Optional[REST], *, since: datetime | None = None) -> None:
+    st.subheader("Transaction History")
+    fills = _pull_all_fills_df(api, start=since)
+    if fills.empty:
+        st.info("No fill activity returned by Alpaca.")
+        return
+
+    hist = _fifo_realized_per_fill(fills)
+
+    # Daily roll‑up like the template's summary
+    day_group = (hist.assign(Day=hist["Date"].dt.date)
+                      .groupby("Day", dropna=True)
+                      .agg(**{
+                          "Trades": ("Symbol","count"),
+                          "Realized $": ("Realized","sum"),
+                          "Fees $": ("Fees","sum"),
+                          "P&L $": ("P&L $","sum")
+                      })
+                      .reset_index()
+                      .sort_values("Day", ascending=False))
+
+    c1, c2 = st.columns([0.60, 0.40])
+    with c1:
+        st.markdown("**Latest 200 fills**")
+        st.dataframe(
+            hist.head(200).style.format({
+                "Qty":"{:,.0f}",
+                "Price":"{:,.2f}",
+                "Notional":"${:,.2f}",
+                "Realized":"${:,.2f}",
+                "Fees":"${:,.2f}",
+                "Amount":"${:,.2f}",
+                "P&L $":"${:,.2f}"
+            }, na_rep="—"),
+            use_container_width=True, hide_index=True
+        )
+    with c2:
+        st.markdown("**Daily summary**")
+        st.dataframe(
+            day_group.style.format({"Realized $":"${:,.2f}","Fees $":"${:,.2f}","P&L $":"${:,.2f}"}),
+            use_container_width=True, hide_index=True
+        )
 
 def render_ticker_tape(prices: list[dict]) -> None:
     """
@@ -1060,50 +1257,49 @@ def compute_derived_metrics(df: pd.DataFrame | None) -> pd.DataFrame | None:
     res["R"] = np.where(res["risk_$"].abs().gt(1e-9), res["reward_$"] / res["risk_$"].abs(), np.nan)
     return res
 
-
 def derive_totals_from_positions(df: pd.DataFrame | None) -> dict:
-    """Totals used by KPIs / dials when a broker snapshot isn't present."""
+    """Totals used by KPIs / dials when a broker snapshot isn't present (robust)."""
     if df is None or df.empty:
         return {}
+
     z = compute_derived_metrics(df).copy()
 
-    qty_abs  = pd.to_numeric(z.get("qty"), errors="coerce").abs()
-    entry_px = pd.to_numeric(z.get("entry_price"), errors="coerce")
+    # ensure numeric
+    qty        = pd.to_numeric(z.get("qty"), errors="coerce").fillna(0.0)
+    entry_px   = pd.to_numeric(z.get("entry_price"), errors="coerce").fillna(0.0)
+    current_px = pd.to_numeric(z.get("current_price"), errors="coerce").fillna(0.0)
 
+    # notional (always positive)
     notional = pd.to_numeric(z.get("notional"), errors="coerce")
     if notional.isna().any():
-        notional = qty_abs * entry_px
+        notional = (qty.abs() * entry_px)
 
-    # Capital and unrealized
-    capital_spent = float(np.nansum(np.abs(notional)))
-    upnl = float(pd.to_numeric(z.get("pl_$"), errors="coerce").sum(skipna=True))
+    capital_spent = float(np.nansum(np.abs(notional.to_numpy())))
+    # P&L $ — prefer our computed column, else fall back to broker's
+    pl_cols = ["pl_$", "pl_usd", "unrealized_pl", "unrealized_pl_usd"]
+    pl_col  = next((c for c in pl_cols if c in z.columns), None)
+    if pl_col is None:
+        # compute from entry/current as a last resort
+        sign = np.where(z.get("Side","Long").astype(str).str.upper().eq("LONG"), 1.0, -1.0)
+        pl_series = sign * (current_px - entry_px) * qty.abs()
+    else:
+        pl_series = pd.to_numeric(z[pl_col], errors="coerce")
+
+    upnl = float(np.nansum(pl_series.to_numpy()))
+    # sum of row percents as a fallback total %
     pl_pct_sum = float(pd.to_numeric(z.get("pl_%"), errors="coerce").sum(skipna=True))
 
-    # Exposure
-    qty_signed = pd.to_numeric(z.get("qty"), errors="coerce")
-    exp_signed = np.where(qty_signed.notna(), entry_px * qty_signed, z["dir_sign"] * qty_abs * entry_px)
-    net_exp    = float(np.nansum(exp_signed))
-    gross_exp  = float(np.nansum(np.abs(exp_signed)))
-
-    # Win rate (rows with P&L > 0)
-    wins = int((pd.to_numeric(z.get("pl_$"), errors="coerce") > 0).sum())
-    npos = int(len(z))
-    win_rate = float(100.0 * wins / max(1, npos))
-
     return {
-        "positions": len(z),
+        "positions": int(len(z)),
         "capital_spent": round(capital_spent, 2),
         "unrealized_pl_$": round(upnl, 2),
-        # keep the weighted metric (now correct because capital is positive)
         "unrealized_pl_%_weighted": (round(upnl / capital_spent * 100.0, 3) if capital_spent > 0 else 0.0),
-        # NEW: sum of all row P/L %
         "unrealized_pl_%_sum": round(pl_pct_sum, 2),
-        "gross_exposure": round(gross_exp, 2),
-        "net_exposure": round(net_exp, 2),
-        "wins": wins,
-        "win_rate_%": round(win_rate, 2),
+        "gross_exposure": float(np.nansum(np.abs((qty.abs() * entry_px).to_numpy()))),
+        "net_exposure":   float(np.nansum(np.sign(qty.fillna(0)) * qty.abs() * entry_px)),
+        "wins": int((pl_series > 0).sum()),
+        "win_rate_%": float(100.0 * (pl_series > 0).sum() / max(1, len(z))),
     }
-
 
 # =============================================================================
 # Alpaca: Live pulls + TP/SL from open orders (cached)
@@ -1672,14 +1868,22 @@ def render_current_status_grid(df: pd.DataFrame) -> None:
     )
     
 def _symbols_touched_today(api: Optional[REST]) -> set[str]:
-    """Symbols that had any fills today (local to US/Eastern market day)."""
-    df = _pull_fills_df(api, days=1)
+    """Symbols with any fills since ET midnight (today)."""
+    df = _pull_all_fills_df(api)
     if df.empty:
         return set()
-    today = pd.Timestamp.now(tz=timezone.utc).date()
-    touched = df[df["ts"].dt.date == today]["symbol"].astype(str).str.upper().unique().tolist()
-    return set(touched)
 
+    try:
+        tz = ZoneInfo("US/Eastern")
+    except Exception:
+        tz = timezone.utc
+
+    now_et = datetime.now(tz)
+    sod_et = now_et.replace(hour=0, minute=0, second=0, microsecond=0)
+    sod_utc = sod_et.astimezone(timezone.utc)
+
+    touched = df[df["ts"] >= sod_utc]["symbol"].astype(str).str.upper().unique().tolist()
+    return set(touched)
 
 def pull_live_positions(api: Optional[REST]) -> pd.DataFrame:
     """
@@ -2036,11 +2240,12 @@ def main() -> None:
     st.divider()
 
     # ----- Portfolio Ledger (existing) -----
-    #hist_df, realized_total = build_history_rows_from_fills(api, positions, days=5)
-    #render_portfolio_ledger_table(positions,
-    #                              realized_pnl_total=realized_total,
-    #                              history_rows=hist_df)
+    hist_df, realized_total = build_history_rows_from_fills(api, positions, days=5)
+    render_portfolio_ledger_table(positions, realized_pnl_total=realized_total, history_rows=hist_df)
 
+    st.divider()
+    # ----- NEW: Attach your uploaded transaction history file -----
+    render_transaction_history_from_alpaca(api)
 
 if __name__ == "__main__":
     main()
