@@ -253,237 +253,389 @@ def _tp_sl_for_history(api: Optional[REST]) -> pd.DataFrame:
         out.append({"symbol":sym, "close_side":side, "tp": float(tp.iloc[0]) if len(tp) else np.nan, "sl": sl})
     return pd.DataFrame(out)
 
+import pandas as pd
+import numpy as np
+from datetime import datetime, timezone
 
-def build_position_transaction_history(api: Optional[REST], *, days: int | None = 180) -> pd.DataFrame:
+def _status_badge(s: str) -> str:
+    if s.startswith("Closed – Profit"):   color = "#16a34a"  # green
+    elif s.startswith("Closed – Loss"):   color = "#dc2626"  # red
+    elif s.startswith("Closed – Breakeven"): color = "#6b7280"  # gray
+    elif s == "Open":                     color = "#2563eb"  # blue
+    else:                                 color = "#374151"
+    return f'<span style="padding:2px 8px;border-radius:9999px;background:{color};color:white;font-weight:600;">{s}</span>'
+
+def _to_dt(x):
+    if pd.isna(x):
+        return pd.NaT
+    if isinstance(x, (pd.Timestamp, datetime)):
+        return pd.to_datetime(x).tz_convert("UTC") if getattr(x, "tzinfo", None) else pd.to_datetime(x, utc=True)
+    return pd.to_datetime(str(x), utc=True, errors="coerce")
+
+def _side_from_qty(qty):
+    # positive qty means LONG, negative means SHORT
+    return "Long" if qty > 0 else "Short"
+
+def _signed(qty, side):
+    return qty if side == "Long" else -qty
+
+def _vwap(prices: pd.Series, qtys: pd.Series) -> float:
+    qtys = qtys.astype(float).abs()
+    if qtys.sum() == 0:
+        return np.nan
+    return float(np.dot(prices.astype(float), qtys) / qtys.sum())
+
+def _load_fills_dataframe(api, days: int) -> pd.DataFrame:
     """
-    FIFO through fills to emit ONE row per (open-date per ticker) lot:
-      • Open rows (still in book): Date opened, action (Long/Short), entry notional/price/qty,
-        TP/SL from open orders, Status='Open', P/L $/%, no close date/price.
-      • Closed rows: matched FIFO slices with Date closed + Close-out price and realized P&L.
+    Pull account activities (FILL) for the last `days` days and normalize.
+    Works with Alpaca v2 REST `get_activities('FILL')`.
     """
-    fills = _pull_all_fills_full(api, days=days)
+    end = datetime.now(timezone.utc)
+    start = end - pd.Timedelta(days=days)
+    acts = api.get_activities(activity_types="FILL", after=start.isoformat(), until=end.isoformat())
+
+    rows = []
+    for a in acts:
+        # a has: symbol, side, qty, price, cum_qty, transaction_time, leaves_qty, order_id, id, ...
+        rows.append({
+            "symbol": a.symbol,
+            "time": _to_dt(a.transaction_time),
+            "side": str(a.side).lower(),             # 'buy'/'sell' for equities (or 'sell_short' on some brokers)
+            "qty": float(a.qty),                     # always positive in activities
+            "price": float(a.price),
+            "order_id": getattr(a, "order_id", None),
+            "id": getattr(a, "id", None),
+            "commission": float(getattr(a, "net_amount", 0.0)) * 0.0,  # placeholder if you don’t have fees field
+            "fee": float(getattr(a, "fee", 0.0)) if hasattr(a, "fee") else 0.0,
+        })
+    df = pd.DataFrame(rows).sort_values(["symbol", "time"]).reset_index(drop=True)
+    if df.empty:
+        return df
+
+    # Normalize side to signed quantity: buys increase long, sells decrease long (or cover short)
+    # Use +qty for buys, -qty for sells
+    df["signed_qty"] = np.where(df["side"].str.contains("buy"), df["qty"], -df["qty"])
+    return df
+
+def build_position_transaction_history(api, days: int = 180) -> pd.DataFrame:
+    """
+    One row per position *open lot*. Becomes Closed once cumulative qty returns to zero.
+    Emits:
+      open_date (UTC), open_ts (UTC), close_ts (UTC or None), symbol, side, status,
+      entry_vwap, exit_vwap (None if open), qty, days_open, realized_pl$, realized_pl%, fees$, tp, sl, notes
+    """
+    fills = _load_fills_dataframe(api, days=days)
     if fills.empty:
         return pd.DataFrame(columns=[
-            "Date opened","Ticker","action","dollars (from Alpaca)","Price (from Alpaca)",
-            "qty","sl_price","tp_price","Status","Date closed","Close out price","P/L $","P/L %"
+            "open_date","open_ts","close_ts","symbol","side","status",
+            "entry_vwap","exit_vwap","qty","days_open","realized_pl$","realized_pl%","fees$","tp","sl","notes"
         ])
 
-    # Current live info & open exits (for TP/SL on open lots)
-    live   = _live_positions_map(api)            # {SYM: {...}}
-    tp_sl  = _tp_sl_for_history(api)             # symbol, close_side, tp, sl
+    out_rows = []
+    for sym, g in fills.groupby("symbol", sort=False):
+        g = g.sort_values("time").reset_index(drop=True)
 
-    # Per-symbol FIFO lots (signed qty; + long, - short)
-    lots = defaultdict(deque)
-    rows = []
+        cum = 0.0
+        lot_start_idx = None
+        lot_side = None
 
-    for _, r in fills.iterrows():
-        ts, sym, side, qty, px = r["ts"], str(r["symbol"]).upper(), str(r["side"]).lower(), float(r["qty"]), float(r["price"])
-        # +qty for BUY (opens long / closes short), -qty for SELL (opens short / closes long)
-        delta = qty if side == "buy" else -qty
+        for i, r in g.iterrows():
+            prev_cum = cum
+            cum += r["signed_qty"]
 
-        # Net before this trade
-        net_before = sum(l["qty"] for l in lots[sym])
-        net_after  = net_before + delta
+            # --- Open a new lot on transition 0 -> non-zero
+            if prev_cum == 0 and cum != 0 and lot_start_idx is None:
+                lot_start_idx = i
+                lot_side = "Long" if cum > 0 else "Short"
 
-        # If moving away from zero in the same sign → opening or adding
-        if net_before == 0 or (np.sign(net_before) == np.sign(delta) or net_before == 0):
-            lots[sym].append({"opened_at": ts, "qty": delta, "price": px})  # keep sign on qty
-        else:
-            # Closing against existing lots (FIFO)
-            remaining = abs(delta)
-            while remaining > 1e-9 and lots[sym]:
-                lot = lots[sym][0]
-                lot_abs = abs(lot["qty"])
-                take = min(lot_abs, remaining)
+            # --- Lot closes exactly when cum returns to zero
+            if lot_start_idx is not None and cum == 0:
+                lot_df = g.iloc[lot_start_idx:i+1].copy()
 
-                # realized P&L versus this lot
-                realized = np.sign(lot["qty"]) * (px - lot["price"]) * take
-                action   = "Long" if lot["qty"] > 0 else "Short"
-                notional = take * lot["price"]
-                pl_pct   = (realized / notional * 100.0) if notional > 0 else np.nan
+                if lot_side == "Long":
+                    entries = lot_df[lot_df["signed_qty"] > 0]
+                    exits   = lot_df[lot_df["signed_qty"] < 0]
+                    qty = float(entries["qty"].sum())
+                    entry_vwap = _vwap(entries["price"], entries["qty"])
+                    exit_vwap  = _vwap(exits["price"], exits["qty"].abs())
+                    realized   = (exit_vwap - entry_vwap) * qty  # long P&L
+                else:
+                    entries = lot_df[lot_df["signed_qty"] < 0]    # shorts open with sells
+                    exits   = lot_df[lot_df["signed_qty"] > 0]    # close with buys
+                    qty = float(entries["qty"].sum())
+                    entry_vwap = _vwap(entries["price"], entries["qty"])
+                    exit_vwap  = _vwap(exits["price"], exits["qty"])
+                    realized   = (entry_vwap - exit_vwap) * qty   # short P&L
 
-                rows.append({
-                    "Date opened": lot["opened_at"].date(),
-                    "Ticker": sym,
-                    "action": action,
-                    "dollars (from Alpaca)": round(notional, 2),
-                    "Price (from Alpaca)": round(lot["price"], 4),
-                    "qty": round(take, 4),
-                    "sl_price": np.nan,
-                    "tp_price": np.nan,
-                    "Status": "Closed - profit" if realized > 0 else ("Closed - Loss" if realized < 0 else "Closed"),
-                    "Date closed": ts.date(),
-                    "Close out price": round(px, 4),
-                    "P/L $": round(realized, 2),
-                    "P/L %": round(pl_pct, 2) if np.isfinite(pl_pct) else np.nan,
+                fees = float(lot_df.get("fee", pd.Series(0.0)).sum())
+                open_time  = lot_df["time"].iloc[0]
+                close_time = lot_df["time"].iloc[-1]
+                # ensure tz-aware UTC (your _load_fills_dataframe already gives tz-aware)
+                if getattr(open_time, "tzinfo", None) is not None:
+                    open_utc  = open_time.tz_convert("UTC")
+                    close_utc = close_time.tz_convert("UTC")
+                else:
+                    open_utc  = pd.to_datetime(open_time, utc=True)
+                    close_utc = pd.to_datetime(close_time, utc=True)
+
+                days_open  = (close_utc - open_utc).total_seconds() / 86400.0
+                realized_pct = (realized / (entry_vwap * qty) * 100.0) if (entry_vwap and qty) else np.nan
+
+                # ✅ CLOSED lot (ONLY append closed here)
+                out_rows.append({
+                    "open_date": open_utc,
+                    "open_ts":   open_utc,
+                    "close_ts":  close_utc,
+                    "symbol": sym,
+                    "side": lot_side,
+                    "status": "Closed",
+                    "entry_vwap": round(entry_vwap, 4),
+                    "exit_vwap": round(exit_vwap, 4),
+                    "qty": int(qty),
+                    "days_open": round(days_open, 2),
+                    "realized_pl$": round(realized - fees, 2),
+                    "realized_pl%": round(realized_pct, 2),
+                    "fees$": round(fees, 2),
+                    "tp": None, "sl": None,
+                    "notes": "",
                 })
 
-                lot["qty"] = np.sign(lot["qty"]) * (lot_abs - take)
-                remaining -= take
-                if abs(lot["qty"]) <= 1e-9:
-                    lots[sym].popleft()
+                # reset for next lot
+                lot_start_idx = None
+                lot_side = None
 
-            # If we over-closed and actually flipped sign, the leftover delta opens a new lot
-            if remaining > 1e-9:
-                leftover = np.sign(delta) * remaining
-                lots[sym].append({"opened_at": ts, "qty": leftover, "price": px})
-
-    # Emit OPEN rows (remaining lots), with TP/SL and live P&L
-    for sym, dq in lots.items():
-        info = live.get(sym, {})
-        cur_px = float(info.get("current_price", np.nan))
-        # choose close-side for TP/SL (opposite of action)
-        # Long lot closes with SELL; Short lot closes with BUY
-        for lot in dq:
-            act = "Long" if lot["qty"] > 0 else "Short"
-            tpsl_side = "sell" if act == "Long" else "buy"
-            tpsl_row = tp_sl[(tp_sl["symbol"] == sym) & (tp_sl["close_side"] == tpsl_side)]
-            tp_px = float(tpsl_row["tp"].iloc[0]) if not tpsl_row.empty and pd.notna(tpsl_row["tp"].iloc[0]) else np.nan
-            sl_px = float(tpsl_row["sl"].iloc[0]) if not tpsl_row.empty and pd.notna(tpsl_row["sl"].iloc[0]) else np.nan
-
-            q = abs(float(lot["qty"]))
-            entry_px = float(lot["price"])
-            notional = q * entry_px
-            if np.isfinite(cur_px):
-                pnl = (cur_px - entry_px) * q if act == "Long" else (entry_px - cur_px) * q
-                pnl_pct = (pnl / notional * 100.0) if notional > 0 else np.nan
+        # --- If a lot is still open at the end, emit an Open row (genuine open case)
+        if lot_start_idx is not None and cum != 0:
+            lot_df = g.iloc[lot_start_idx:].copy()
+            if lot_side == "Long":
+                entries = lot_df[lot_df["signed_qty"] > 0]
+                qty = float(entries["qty"].sum()) - float(lot_df[lot_df["signed_qty"] < 0]["qty"].sum())
+                entry_vwap = _vwap(entries["price"], entries["qty"])
             else:
-                pnl = np.nan; pnl_pct = np.nan
+                entries = lot_df[lot_df["signed_qty"] < 0]
+                qty = float(entries["qty"].sum()) - float(lot_df[lot_df["signed_qty"] > 0]["qty"].sum())
+                qty = abs(qty)
+                entry_vwap = _vwap(entries["price"], entries["qty"])
 
-            rows.append({
-                "Date opened": lot["opened_at"].date(),
-                "Ticker": sym,
-                "action": act,
-                "dollars (from Alpaca)": round(notional, 2),
-                "Price (from Alpaca)": round(entry_px, 4),
-                "qty": round(q, 4),
-                "sl_price": sl_px,
-                "tp_price": tp_px,
-                "Status": "Open",
-                "Date closed": "",
-                "Close out price": "",
-                "P/L $": round(float(pnl), 2) if np.isfinite(pnl) else np.nan,
-                "P/L %": round(float(pnl_pct), 2) if np.isfinite(pnl_pct) else np.nan,
+            open_time = lot_df["time"].iloc[0]
+            if getattr(open_time, "tzinfo", None) is not None:
+                open_utc = open_time.tz_convert("UTC")
+            else:
+                open_utc = pd.to_datetime(open_time, utc=True)
+
+            days_open = (pd.Timestamp.now(tz=timezone.utc) - open_utc).total_seconds() / 86400.0
+
+            out_rows.append({
+                "open_date": open_utc,
+                "open_ts":   open_utc,      # include for drill-down window
+                "close_ts":  None,          # open lot has no close
+                "symbol": sym,
+                "side": lot_side,
+                "status": "Open",
+                "entry_vwap": round(entry_vwap, 4),
+                "exit_vwap": None,
+                "qty": int(qty),
+                "days_open": round(days_open, 2),
+                "realized_pl$": 0.0,
+                "realized_pl%": 0.0,
+                "fees$": round(float(lot_df.get("fee", pd.Series(0.0)).sum()), 2),
+                "tp": None, "sl": None,
+                "notes": "",
             })
 
-    if not rows:
-        return pd.DataFrame(columns=[
-            "Date opened","Ticker","action","dollars (from Alpaca)","Price (from Alpaca)",
-            "qty","sl_price","tp_price","Status","Date closed","Close out price","P/L $","P/L %"
-        ])
+    df_out = pd.DataFrame(out_rows).sort_values(["open_date","symbol"]).reset_index(drop=True)
+    return df_out
 
-    hist = pd.DataFrame(rows)
-    # Sort newest first by open date, then Ticker
-    hist = hist.sort_values(["Date opened","Ticker"], ascending=[False, True]).reset_index(drop=True)
-        # --- Collapse rows with same Date opened + Ticker + action ---
-    group_cols = ["Date opened","Ticker","action","Status","Date closed","Close out price"]
-    num_cols   = ["dollars (from Alpaca)","Price (from Alpaca)","qty","P/L $","P/L %"]
-    if not hist.empty:
-        # Weighted avg price for open rows
-        def _wavg_price(x):
-            try:
-                return (x["Price (from Alpaca)"] * x["qty"]).sum() / x["qty"].sum()
-            except Exception:
-                return np.nan
+def tidy_transaction_history(df: pd.DataFrame) -> pd.DataFrame:
+    # Ensure open_date is datetime
+    df["open_date"] = pd.to_datetime(df["open_date"], errors="coerce")
 
-        agg_map = {
-            "dollars (from Alpaca)": "sum",
-            "Price (from Alpaca)": _wavg_price,
-            "qty": "sum",
-            "sl_price": "last",
-            "tp_price": "last",
-            "P/L $": "sum",
-            "P/L %": "mean",  # you may prefer weighted avg here too
-        }
+    # Round numeric columns to 2 decimals
+    num_cols = df.select_dtypes(include=["float", "int"]).columns
+    df[num_cols] = df[num_cols].applymap(lambda x: round(x, 2) if pd.notna(x) else x)
 
-        hist = (
-            hist.groupby(group_cols, dropna=False, as_index=False)
-                .agg(agg_map)
-                .sort_values(["Date opened","Ticker"], ascending=[False, True])
-                .reset_index(drop=True)
-        )
+    # Replace NaN/None with blank
+    df = df.replace({None: "", np.nan: ""})
 
-    return hist
+    # Rename visible headers
+    rename_map = {
+        "open_date":     "Date",
+        "symbol":        "Ticker",
+        "side":          "Side",
+        "status":        "Status",
+        "entry_vwap":    "Entry",
+        "exit_vwap":     "Exit",
+        "qty":           "Qty",
+        "days_open":     "Days Open",
+        "realized_pl$":  "P&L $",
+        "realized_pl%":  "P&L %",
+        "fees$":         "Fees $",
+        # do not include tp/sl/notes
+    }
+    df = df.rename(columns=rename_map)
+
+    # Drop TP/SL/Notes if they sneak through
+    drop_cols = [c for c in ["tp","sl","notes","TP","SL","Notes"] if c in df.columns]
+    df = df.drop(columns=drop_cols, errors="ignore")
+
+    # Enforce column order
+    order = ["Date","Ticker","Side","Status","Entry","Exit","Qty","Days Open","P&L $","P&L %","Fees $"]
+    df = df[[c for c in order if c in df.columns]]
+
+    # ✅ Sort newest → oldest
+    if "Date" in df.columns:
+        df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
+        df = df.sort_values(["Date", "Ticker"], ascending=[False, True])
+        # Back to display-friendly format
+        df["Date"] = df["Date"].dt.strftime("%d/%m/%Y")
+
+    return df
+
+def _force_closed_if_flat(df_hist: pd.DataFrame, api: Optional[REST]) -> pd.DataFrame:
+    """
+    If a row is 'Open' but the symbol is NOT in current live positions, flip the status to
+    Closed – Profit/Loss/Breakeven using the lot's realized P&L (when available).
+
+    Expects the *base* history frame from build_position_transaction_history()
+    (i.e., columns like: symbol, status, realized_pl$, open_date, open_ts/close_ts, etc.).
+    """
+    if df_hist is None or df_hist.empty:
+        return df_hist
+
+    # Build a set of symbols we currently hold (live positions)
+    live_map = _live_positions_map(api) if callable(globals().get("_live_positions_map")) else {}
+    live_syms = {s.upper() for s in live_map.keys()}
+
+    out = df_hist.copy()
+    # Only rows marked Open AND not in live positions
+    if "symbol" not in out.columns or "status" not in out.columns:
+        return out
+
+    mask = (out["status"].astype(str).str.lower().eq("open")) & \
+           (~out["symbol"].astype(str).str.upper().isin(live_syms))
+
+    if not mask.any():
+        return out
+
+    # Use realized_pl$ if present to classify; otherwise just mark Closed
+    if "realized_pl$" in out.columns:
+        pl = pd.to_numeric(out.loc[mask, "realized_pl$"], errors="coerce").fillna(0.0)
+        labels = np.where(pl > 1e-4, "Closed – Profit",
+                  np.where(pl < -1e-4, "Closed – Loss", "Closed – Breakeven"))
+        out.loc[mask, "status"] = labels
+    else:
+        out.loc[mask, "status"] = "Closed"
+
+    # Optionally stamp close_ts as now for forced-closed rows that lack it
+    if "close_ts" in out.columns:
+        now_utc = pd.Timestamp.now(tz=timezone.utc)
+        out.loc[mask & out["close_ts"].isna(), "close_ts"] = now_utc
+
+    return out
 
 def render_transaction_history_positions(api: Optional[REST], *, days: int | None = 180) -> None:
     st.subheader("Transaction History (per open date per ticker)")
-    df = build_position_transaction_history(api, days=days)
-    if df.empty:
+
+    # Build lots DF (internal view with timestamps)
+    base_df = build_position_transaction_history(api, days=days)
+
+    # Optional: force-close rows when flat now
+    base_df = _force_closed_if_flat(base_df, api)   # if you kept the earlier patch
+
+    # -------- High-level (tidy) table --------
+    tidy_df = add_closed_outcome(base_df.copy())    # classify win/loss/breakeven
+    tidy_df = tidy_transaction_history(tidy_df)
+
+    if tidy_df.empty:
         st.info("No fills from Alpaca to build history.")
         return
-
-    # ---- Coerce numeric columns (avoid 'unknown format code f' on strings) ----
-    num_cols = [
-        "dollars (from Alpaca)", "Price (from Alpaca)", "qty",
-        "sl_price", "tp_price", "Close out price", "P/L $", "P/L %"
-    ]
+    num_cols = ["Entry","Exit","Qty","Days Open","P&L $","P&L %","Fees $"]
     for c in num_cols:
-        if c in df.columns:
-            df[c] = pd.to_numeric(df[c], errors="coerce")
-
-    # Ensure date column is proper datetime for display
-    if "Date opened" in df.columns:
-        df["Date opened"] = pd.to_datetime(df["Date opened"], errors="coerce")
-    if "Date closed" in df.columns:
-        df["Date closed"] = pd.to_datetime(df["Date closed"], errors="coerce")
-
-    # ---- Safe formatters: return empty string for NaN or non-numeric ----
-    def _fmt_money(x):
-        try:
-            return "" if pd.isna(x) else f"${float(x):,.2f}"
-        except Exception:
-            return ""
-
-    def _fmt_price(x):
-        try:
-            return "" if pd.isna(x) else f"{float(x):.2f}"
-        except Exception:
-            return ""
-
-    def _fmt_qty(x):
-        try:
-            # show no decimals for share qty if it's an integer; else 4 dp
-            if pd.isna(x):
-                return ""
-            xf = float(x)
-            return f"{xf:,.0f}" if abs(xf - round(xf)) < 1e-9 else f"{xf:,.4f}"
-        except Exception:
-            return ""
-
-    def _fmt_pct(x):
-        try:
-            return "" if pd.isna(x) else f"{float(x):+.2f}%"
-        except Exception:
-            return ""
-
-    def _fmt_date(x):
-        try:
-            if pd.isna(x):
-                return ""
-            # x may already be date/datetime/str
-            dt = pd.to_datetime(x, errors="coerce")
-            return "" if pd.isna(dt) else dt.strftime("%d/%m/%Y")
-        except Exception:
-            return ""
-
-    fmt_map = {
-        "Date opened": _fmt_date,
-        "Date closed": _fmt_date,
-        "dollars (from Alpaca)": _fmt_money,
-        "Price (from Alpaca)": _fmt_price,
-        "qty": _fmt_qty,
-        "sl_price": _fmt_price,
-        "tp_price": _fmt_price,
-        "Close out price": _fmt_price,
-        "P/L $": _fmt_money,
-        "P/L %": _fmt_pct,
-    }
+        if c in tidy_df.columns:
+            tidy_df[c] = pd.to_numeric(tidy_df[c], errors="coerce")
 
     st.dataframe(
-        df.style.format(fmt_map, na_rep=""),
-        use_container_width=True,
-        hide_index=True
+        tidy_df.style.format({
+            "Entry": "{:.2f}", "Exit": "{:.2f}", "Qty": "{:.0f}", "Days Open": "{:.2f}",
+            "P&L $": "${:,.2f}", "P&L %": "{:+.2f}%", "Fees $": "${:,.2f}"
+        }, na_rep=""),
+        use_container_width=True, hide_index=True
     )
+
+    # -------- Drill-down: per-fill for each lot --------
+    st.markdown("**Details by lot (drill-down)**")
+    fills_all = _pull_all_fills_df(api)  # already normalized to ts/symbol/side/qty/price
+    if fills_all.empty:
+        st.caption("No individual fill activity available.")
+        return
+
+    # Build a join key between base_df rows and tidy_df rows (date + symbol)
+    lot_rows = base_df.copy()
+    lot_rows["Date"]   = pd.to_datetime(lot_rows["open_date"]).dt.strftime("%d/%m/%Y")
+    lot_rows["Ticker"] = lot_rows["symbol"]
+
+    # For display order, follow the tidy (already latest→oldest)
+    display_keys = tidy_df[["Date","Ticker","Status"]].to_dict(orient="records")
+
+    for key in display_keys:
+        d = key["Date"]; sym = key["Ticker"]
+
+        # fetch the corresponding internal row (there can be multiple if same date/ticker across lots; take first)
+        match = lot_rows[(lot_rows["Date"] == d) & (lot_rows["Ticker"] == sym)]
+        if match.empty:
+            continue
+        r = match.iloc[0]
+        open_ts  = r.get("open_ts")
+        close_ts = r.get("close_ts")
+
+        with st.expander(f"{d} · {sym} · {key['Status']}"):
+            # per-fill slice
+            sub = _fills_for_lot_window(fills_all, sym, open_ts, close_ts)
+
+            # quick header stats (vwap/qty/fees)
+            entry = r.get("entry_vwap", None); exitp = r.get("exit_vwap", None)
+            qty   = r.get("qty", None); fees  = r.get("fees$", 0.0)
+            col1, col2, col3, col4 = st.columns(4)
+            with col1: st.metric("Entry VWAP", f"{entry:.2f}" if entry else "—")
+            with col2: st.metric("Exit VWAP",  f"{exitp:.2f}" if pd.notna(exitp) else "—")
+            with col3: st.metric("Qty",        f"{qty:.0f}" if qty else "—")
+            with col4: st.metric("Fees",       f"${fees:,.2f}")
+
+            if sub.empty:
+                st.caption("No fills matched for this lot window.")
+            else:
+                st.dataframe(
+                    sub.style.format({
+                        "Qty": "{:.0f}", "Price": "{:.2f}", "Notional": "${:,.2f}"
+                    }), use_container_width=True, hide_index=True
+                )
+
+def add_closed_outcome(df: pd.DataFrame, breakeven_tol: float = 1e-4) -> pd.DataFrame:
+    """
+    Convert Status 'Closed' into 'Closed – Profit/Loss/Breakeven' based on realized_pl$.
+    breakeven_tol avoids classifying tiny rounding noise as win/loss.
+    """
+    if "realized_pl$" in df.columns:          # before tidy()
+        pl_col = "realized_pl$"
+        status_col = "status"
+    else:                                      # after tidy() renames
+        pl_col = "P&L $"
+        status_col = "Status"
+
+    pl = pd.to_numeric(df[pl_col], errors="coerce").fillna(0.0)
+
+    def classify(row_pl, row_status):
+        if row_status != "Closed":
+            return row_status
+        if row_pl > breakeven_tol:
+            return "Closed – Profit"
+        if row_pl < -breakeven_tol:
+            return "Closed – Loss"
+        return "Closed – Breakeven"
+
+    df[status_col] = [classify(p, s) for p, s in zip(pl, df[status_col])]
+    return df
+
 
 # ===================== Alpaca Portfolio History =====================
 @st.cache_data(ttl=60, show_spinner=False)
@@ -999,6 +1151,42 @@ def _pull_all_fills_df(_api: Optional[REST], start: datetime | None = None) -> p
     df = pd.DataFrame(rows)
     df["ts"] = pd.to_datetime(df["ts"], utc=True, errors="coerce")
     return df.sort_values("ts").reset_index(drop=True)
+
+def _fills_for_lot_window(fills: pd.DataFrame,
+                          symbol: str,
+                          open_ts_utc: pd.Timestamp,
+                          close_ts_utc: pd.Timestamp | None) -> pd.DataFrame:
+    """
+    Slice fills for a given symbol between [open_ts_utc, close_ts_utc] (inclusive).
+    If close_ts_utc is None, take fills from open_ts onward (current open lot).
+    Returns a tidy per-fill table with ET time, side, qty, price, notional.
+    """
+    if fills is None or fills.empty or not symbol or pd.isna(open_ts_utc):
+        return pd.DataFrame(columns=["Time (ET)","Side","Qty","Price","Notional"])
+
+    d = fills[(fills["symbol"].str.upper() == str(symbol).upper()) &
+              (fills["ts"] >= open_ts_utc)]
+    if close_ts_utc is not None and pd.notna(close_ts_utc):
+        d = d[d["ts"] <= close_ts_utc]
+
+    if d.empty:
+        return pd.DataFrame(columns=["Time (ET)","Side","Qty","Price","Notional"])
+
+    # Convert to ET for display
+    try:
+        from zoneinfo import ZoneInfo
+        et = ZoneInfo("US/Eastern")
+        d["Time (ET)"] = d["ts"].dt.tz_convert(et).dt.strftime("%Y-%m-%d %H:%M:%S")
+    except Exception:
+        d["Time (ET)"] = d["ts"].dt.strftime("%Y-%m-%d %H:%M:%S %Z")
+
+    d = d.copy()
+    d["Side"]     = d["side"].str.upper()     # BUY / SELL / SELL_SHORT
+    d["Qty"]      = pd.to_numeric(d["qty"], errors="coerce")
+    d["Price"]    = pd.to_numeric(d["price"], errors="coerce")
+    d["Notional"] = d["Qty"] * d["Price"]
+    show = d[["Time (ET)","Side","Qty","Price","Notional"]].sort_values("Time (ET)")
+    return show
 
 
 def _fifo_realized_per_fill(fills: pd.DataFrame) -> pd.DataFrame:
