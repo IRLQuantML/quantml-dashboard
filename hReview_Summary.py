@@ -1665,20 +1665,7 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
     with c4:
         _kpi_card("Today Open Positions P&L $", money(today_total_pl_usd),
                   "pos" if (today_total_pl_usd or 0) >= 0 else "neg")
-
         
-    # ===== Contributors / Detractors tables =====
-    if not winners.empty or not losers.empty:
-        c1, c2 = st.columns(2)
-        if not winners.empty:
-            with c1:
-                st.markdown("**Top contributors (today)**")
-                st.table(winners.assign(**{"P&L $": winners["P&L $"].map(lambda x: f"{x:,.2f}")}))
-        if not losers.empty:
-            with c2:
-                st.markdown("**Top detractors (today)**")
-                st.table(losers.assign(**{"P&L $": losers["P&L $"].map(lambda x: f"{x:,.2f}")}))
-
 
 def render_broker_balances(acct: dict) -> None:
     st.subheader("Broker Balance & Buying Power (Alpaca)")
@@ -2115,11 +2102,7 @@ def render_traffic_lights(df: pd.DataFrame) -> None:
 
     z = compute_derived_metrics(df).copy()
     # choose today % if available; else total %
-    z["pl_light_%"] = np.where(
-        pd.to_numeric(z.get("pl_today_%"), errors="coerce").notna(),
-        pd.to_numeric(z.get("pl_today_%"), errors="coerce"),
-        pd.to_numeric(z.get("pl_%"), errors="coerce")
-    )
+    z["pl_light_%"] = pd.to_numeric(z.get("pl_%"), errors="coerce")
     z = _sort_df_green_amber_red(z, "pl_light_%")
 
     CHIP = ("display:inline-flex;align-items:center;gap:8px;padding:6px 10px;"
@@ -2139,7 +2122,7 @@ def render_traffic_lights(df: pd.DataFrame) -> None:
 # ===================== Live Positions (sorted green→amber→red) =====================
 
 def render_positions_table(df: pd.DataFrame) -> None:
-    st.subheader("Overall Performance vs Your Entry")
+    st.subheader("Overall Performance vs Entry")
     if df is None or df.empty:
         st.info("—")
         return
@@ -2281,36 +2264,47 @@ def _load_alpaca_api() -> Optional[REST]:
         return None
 
 def _tl_color_for_pct(pct_val: float) -> str:
-    """Colour system for chips/mini-grid: green ≥ +0.10%; amber −0.10%..+0.10%; red < −0.10%."""
+    """
+    Updated traffic-light logic:
+    - Green: ≥ 0%
+    - Amber: < 0% and ≥ -0.8%
+    - Red: < -0.8%
+    """
     try:
         v = float(pct_val)
     except Exception:
         v = 0.0
-    if v >= TL_THRESH_PCT:
+
+    if v >= 0.0:
         return TL_GREEN
-    if v >= -TL_THRESH_PCT:
+    elif v >= -0.8:
         return TL_AMBER
-    return TL_RED
+    else:
+        return TL_RED
 
 def render_color_system_legend() -> None:
     html = f"""
     <strong>Traffic Lights (per open position) — colour system</strong>
     <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:6px;">
       <div style="display:flex;align-items:center;gap:8px;">
-        <span style="width:14px;height:14px;border-radius:50%;background:{TL_GREEN};border:2px solid {TL_GREEN};"></span>
-        <span>≥ +0.10%</span>
+        <span style="width:14px;height:14px;border-radius:50%;background:{TL_GREEN};
+              border:2px solid {TL_GREEN};"></span>
+        <span>≥ 0%</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span style="width:14px;height:14px;border-radius:50%;background:{TL_AMBER};border:2px solid {TL_AMBER};"></span>
-        <span>−0.10% to +0.10%</span>
+        <span style="width:14px;height:14px;border-radius:50%;background:{TL_AMBER};
+              border:2px solid {TL_AMBER};"></span>
+        <span>-0.8% ≤ x &lt; 0%</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span style="width:14px;height:14px;border-radius:50%;background:{TL_RED};border:2px solid {TL_RED};"></span>
-        <span>&lt; −0.10%</span>
+        <span style="width:14px;height:14px;border-radius:50%;background:{TL_RED};
+              border:2px solid {TL_RED};"></span>
+        <span>&lt; -0.8%</span>
       </div>
     </div>
     """
     st.markdown(html, unsafe_allow_html=True)
+
 
 def render_current_status_grid(df: pd.DataFrame) -> None:
     """Two-row mini grid: Today P&L % and Start-of-day P&L % (carry),
@@ -2344,51 +2338,38 @@ def render_current_status_grid(df: pd.DataFrame) -> None:
         st.warning("Unable to compute Current status grid (missing today/carry/total %).")
         return
 
-    # --- series keyed by symbol
-    s_today = pd.to_numeric(z.set_index(col_sym)[col_today], errors="coerce")
-    s_carry = pd.to_numeric(z.set_index(col_sym)[col_carry], errors="coerce")
+    # --- series keyed by symbol (use total performance since entry)
     s_total = pd.to_numeric(z.set_index(col_sym)[col_total], errors="coerce")
 
-    # --- order each row independently (Green→Amber→Red)
-    order_today = _order_by_green_amber_red(s_today)
-    order_carry = _order_by_green_amber_red(s_carry)
+    # --- order by performance since entry (Green→Amber→Red)
+    order_total = _order_by_green_amber_red(s_total)
 
-    # --- display values "row-metric % (Total %)"
-    def _fmt_cell(v, sym):
+    # --- single display row
+    def _fmt_cell(v):
         try:
-            base = float(v); tot = float(s_total.get(sym, np.nan))
-            return f"{base:+.2f}% ({tot:+.2f}%)"
+            return f"{float(v):+.2f}%"
         except Exception:
             return "—"
 
-    row1_vals = [_fmt_cell(s_today.get(sym, np.nan), sym) for sym in order_today]
-    row2_vals = [_fmt_cell(s_carry.get(sym, np.nan), sym) for sym in order_carry]
+    row_vals = [_fmt_cell(s_total.get(sym, np.nan)) for sym in order_total]
+    row_df = pd.DataFrame([row_vals],
+                        index=["Performance since entry"],
+                        columns=order_total)
 
-    row1 = pd.DataFrame([row1_vals],
-                        index=["Today's performance)"],
-                        columns=order_today)
-    row2 = pd.DataFrame([row2_vals],
-                        index=["Total P&L"],
-                        columns=order_carry)
-
-    # --- per-row style helpers (return a list matching the number of columns)
-    def _style_row_by_metric(row: pd.Series, metric_series: pd.Series):
+    # --- per-row style helpers (same color logic)
+    def _style_row_by_metric(row: pd.Series):
         styles = []
         for col in row.index:
-            pct = float(metric_series.get(col, 0.0))
+            pct = float(s_total.get(col, 0.0))
             c = _tl_color_for_pct(pct)
             styles.append(f"background-color:{c}22; border:1px solid {c}66; font-weight:700;")
         return styles
 
     st.dataframe(
-        row1.style.apply(lambda r: _style_row_by_metric(r, s_today), axis=1),
+        row_df.style.apply(_style_row_by_metric, axis=1),
         use_container_width=True, hide_index=False
     )
-    st.dataframe(
-        row2.style.apply(lambda r: _style_row_by_metric(r, s_carry), axis=1),
-        use_container_width=True, hide_index=False
-    )
-    
+
 def _symbols_touched_today(api: Optional[REST]) -> set[str]:
     """Symbols with any fills since ET midnight (today)."""
     df = _pull_all_fills_df(api)
@@ -2641,7 +2622,6 @@ def _compute_open_ledger(positions: pd.DataFrame) -> dict:
         "unrl_pct": round(unrl_pct, 2),
     }
 
-
 def render_portfolio_ledger_table(positions: pd.DataFrame,
                                   realized_pnl_total: float | None = None,
                                   history_rows: pd.DataFrame | None = None) -> None:
@@ -2649,52 +2629,79 @@ def render_portfolio_ledger_table(positions: pd.DataFrame,
     Renders a compact ledger-style table:
       Columns: Cost to open positions | Open (current value) | Liquidated | P&L $ | P&L %
       Sections: Totals, Current (today), History (optional)
-    - 'Liquidated' is interpreted as realized P&L (if you pass it).
+    - 'Liquidated' = realized P&L (if provided).
     - P&L $ = Unrealized + Realized.
-    - P&L % uses cost_to_open as the denominator (typical view for open risk).
+    - P&L % uses cost_to_open as the denominator.
     """
     st.subheader("Portfolio Ledger")
 
+    # Snapshot from currently open positions
     o = _compute_open_ledger(positions)
-    realized = float(realized_pnl_total or 0.0)
-    total_pl = o["unrl"] + realized
-    total_pl_pct = (total_pl / o["cost_open"] * 100.0) if o["cost_open"] > 0 else 0.0
+    realized_now = float(realized_pnl_total or 0.0)
+    total_pl_now = o["unrl"] + realized_now
+    total_pl_pct_now = (total_pl_now / o["cost_open"] * 100.0) if o["cost_open"] > 0 else 0.0
+
+    # ---- Aggregate totals from history (if provided)
+    hist_totals = None
+    if isinstance(history_rows, pd.DataFrame) and not history_rows.empty:
+        hr = history_rows.copy()
+        for c in ["cost_open", "open_value", "realized", "pl_dollar", "pl_percent"]:
+            if c in hr.columns:
+                hr[c] = pd.to_numeric(hr[c], errors="coerce").fillna(0.0)
+
+        cost_sum = float(hr.get("cost_open", 0.0).sum())
+        open_sum = float(hr.get("open_value", 0.0).sum())
+        rlz_sum  = float(hr.get("realized", 0.0).sum())
+        pnl_sum  = float(hr.get("pl_dollar", 0.0).sum())
+        pct_sum  = (pnl_sum / cost_sum * 100.0) if cost_sum > 0 else 0.0
+
+        hist_totals = {
+            "Cost to open positions": cost_sum,
+            "Open (current value)":   open_sum,
+            "Liquidated":             rlz_sum,
+            "P&L $":                  pnl_sum,
+            "P&L %":                  pct_sum,
+        }
 
     rows = []
 
-    # Totals row (same as Current unless you pass history/realized from logs)
+    # ---- Totals row = aggregated history (fallback to current snapshot if no history)
     rows.append({
         "Section": "Totals",
         "Date": "",
-        "Cost to open positions": o["cost_open"],
-        "Open (current value)":   o["open_value"],
-        "Liquidated":             realized,      # realized P&L (if known)
-        "P&L $":                  total_pl,
-        "P&L %":                  total_pl_pct,
+        "Cost to open positions": hist_totals["Cost to open positions"] if hist_totals else o["cost_open"],
+        "Open (current value)":   hist_totals["Open (current value)"]   if hist_totals else o["open_value"],
+        "Liquidated":             hist_totals["Liquidated"]             if hist_totals else realized_now,
+        "P&L $":                  hist_totals["P&L $"]                  if hist_totals else total_pl_now,
+        "P&L %":                  hist_totals["P&L %"]                  if hist_totals else total_pl_pct_now,
     })
 
-    # Current (today)
+    # ---- Current snapshot (today)
     rows.append({
         "Section": "Current",
         "Date": _fmt_dub(datetime.now(timezone.utc)),
         "Cost to open positions": o["cost_open"],
         "Open (current value)":   o["open_value"],
-        "Liquidated":             realized,
-        "P&L $":                  total_pl,
-        "P&L %":                  total_pl_pct,
+        "Liquidated":             realized_now,
+        "P&L $":                  total_pl_now,
+        "P&L %":                  total_pl_pct_now,
     })
 
-    # Optional history rows you may pass in (columns: date, cost_open, open_value, realized, pl$, pl%)
+    # ---- Append History rows (optional)
     if isinstance(history_rows, pd.DataFrame) and not history_rows.empty:
-        for _, r in history_rows.iterrows():
+        hr = history_rows.copy()
+        for c in ["cost_open", "open_value", "realized", "pl_dollar", "pl_percent"]:
+            if c in hr.columns:
+                hr[c] = pd.to_numeric(hr[c], errors="coerce").fillna(0.0)
+        for _, r in hr.iterrows():
             rows.append({
                 "Section": "History",
                 "Date": str(r.get("date", "")),
-                "Cost to open positions": float(r.get("cost_open", 0)),
-                "Open (current value)":   float(r.get("open_value", 0)),
-                "Liquidated":             float(r.get("realized", 0)),
-                "P&L $":                  float(r.get("pl_dollar", 0)),
-                "P&L %":                  float(r.get("pl_percent", 0)),
+                "Cost to open positions": float(r.get("cost_open", 0.0)),
+                "Open (current value)":   float(r.get("open_value", 0.0)),
+                "Liquidated":             float(r.get("realized", 0.0)),
+                "P&L $":                  float(r.get("pl_dollar", 0.0)),
+                "P&L %":                  float(r.get("pl_percent", 0.0)),
             })
 
     df = pd.DataFrame(rows, columns=[
@@ -2706,9 +2713,8 @@ def render_portfolio_ledger_table(positions: pd.DataFrame,
         sty = pd.Series("", index=s.index, dtype="object")
         try:
             c = float(s.get("P&L $", 0) or 0)
-            pct = float(s.get("P&L %", 0) or 0)
         except Exception:
-            c, pct = 0.0, 0.0
+            c = 0.0
         color = "#16A34A" if c >= 0 else "#DC2626"
         sty["P&L $"] = f"color:{color}; font-weight:700;"
         sty["P&L %"] = f"color:{color}; font-weight:700;"
@@ -2739,21 +2745,23 @@ def main() -> None:
     positions = merge_tp_sl_from_alpaca_orders(positions, api)
     positions = compute_derived_metrics(positions)
 
+    st.divider()
     render_perf_and_risk_kpis(api, positions)
+    st.divider()
+    # ----- Traffic Lights
+    render_traffic_lights(positions)
+    st.divider()
+    render_color_system_legend()
+    st.divider()
+
+    # === Your portfolio (Alpaca)
+    render_portfolio_equity_chart(api)
     st.divider()
     # ----- Current status (mini-grid) + colour legend -----
     render_current_status_grid(positions)
     st.divider()
 
-    # === NEW: Alpaca “Home” equity chart + additional KPIs ===
-    render_portfolio_equity_chart(api)
-    st.divider()
-
-    # ----- Traffic Lights + Live Positions table (sorted) -----
-    render_traffic_lights(positions)
-    st.divider()
-    render_color_system_legend()
-    st.divider()
+    # Live Positions table (sorted) -----
     render_positions_table(positions)
     st.divider()
 
@@ -2768,6 +2776,35 @@ def main() -> None:
     st.divider()
     # ----- NEW: Attach your uploaded transaction history file -----
     render_transaction_history_positions(api, days=180)
+
+    # ===== Contributors / Detractors (moved and fixed) =====
+    st.divider()
+    z = compute_derived_metrics(positions).copy()
+
+    base_col = "pl_$" if "pl_$" in z.columns else (
+        "pl_today_usd" if "pl_today_usd" in z.columns else None
+    )
+
+    if base_col:
+        tmp = pd.DataFrame({
+            "Symbol": z.get("Ticker", z.get("symbol")),
+            "P&L $": pd.to_numeric(z[base_col], errors="coerce"),
+        })
+
+        winners = tmp.sort_values("P&L $", ascending=False).head(3)
+        losers = tmp.sort_values("P&L $", ascending=True).head(3)
+
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("**Top contributors (since entry)**")
+            st.table(
+                winners.assign(**{"P&L $": winners["P&L $"].map(lambda x: f"{x:,.2f}")})
+            )
+        with c2:
+            st.markdown("**Top detractors (since entry)**")
+            st.table(
+                losers.assign(**{"P&L $": losers["P&L $"].map(lambda x: f"{x:,.2f}")})
+            )
     
 if __name__ == "__main__":
     main()
