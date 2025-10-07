@@ -2679,9 +2679,8 @@ def render_portfolio_ledger_table(positions: pd.DataFrame,
     # ---- Live snapshot for "Current"
     o = _compute_open_ledger(positions)  # cost_open, open_value, unrl (sum of row P&L, sign-correct incl. shorts)
     realized_now = float(realized_pnl_total or 0.0)
-    pnl_current  = (o["open_value"] - o["cost_open"]) + realized_now
+    pnl_current  = o["unrl"] + realized_now
     pct_current  = (pnl_current / o["cost_open"] * 100.0) if o["cost_open"] > 0 else np.nan
-
     # ---- Prepare History slice (already cohort-correct)
     hist = None
     if isinstance(history_rows, pd.DataFrame) and not history_rows.empty:
