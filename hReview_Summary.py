@@ -1499,12 +1499,23 @@ def _fmt_et(ts) -> str:
         return "—:—"
 
 def _style_row_by_pl(row: pd.Series) -> pd.Series:
-    """Color Current Price, P/L $ and P/L % by row P&L sign."""
-    color = BRAND["success"] if float(row.get("Total P/L ($)", 0) or 0) >= 0 else BRAND["danger"]
+    """
+    Apply traffic-light colors to Current Price, Total P/L $, and Total P/L % 
+    following the same scheme used in render_traffic_lights():
+      🟢 ≥ 0%
+      🟡 -0.8% ≤ x < 0%
+      🔴 < -0.8%
+    """
+    try:
+        pct_val = float(row.get("Total P/L (%)", 0) or 0)
+    except Exception:
+        pct_val = 0.0
+
+    color = _tl_color_for_pct(pct_val)  # reuse the same logic
     s = pd.Series("", index=row.index, dtype="object")
     for c in ("Current Price", "Total P/L ($)", "Total P/L (%)"):
         if c in row.index:
-            s[c] = f"color: {color}; font-weight: 700;"
+            s[c] = f"color:{color}; font-weight:700;"
     return s
 
 def render_market_chip(api: REST) -> None:
@@ -2036,31 +2047,36 @@ _BAND_GREEN = "rgba(22,163,74,0.22)"
 _BAND_AMBER = "rgba(234,179,8,0.26)"
 _BAND_RED   = "rgba(220,38,38,0.24)"
 
-def _banded_gauge(percent: float, title: str, bands=(60, 80, 100), good="low") -> go.Figure:
+def _banded_gauge(percent: float, title: str, bands=(60,80,100), good="low") -> go.Figure:
     val = float(max(0.0, percent))
-    axis_max = min(200.0, max(100.0, (int(val/20.0)+1) * 20.0))
+
+    # --- Custom scaling for open-position P&L dials ---
+    if "open positions" in title.lower() or "total p/l" in title.lower():
+        axis_max = 3.0   # cap at 3 %
+    else:
+        axis_max = min(200.0, max(100.0, (int(val/20.0)+1) * 20.0))
+
     a, b, c = bands
-    steps = ([{"range":[0,a], "color":_BAND_GREEN},
+    steps = ([{"range":[0,a], "color":_BAND_RED},
               {"range":[a,b], "color":_BAND_AMBER},
-              {"range":[b,100], "color":_BAND_RED}]
-             if good=="low" else
-             [{"range":[0,a], "color":_BAND_RED},
+              {"range":[b,axis_max], "color":_BAND_GREEN}]
+             if good=="high" else
+             [{"range":[0,a], "color":_BAND_GREEN},
               {"range":[a,b], "color":_BAND_AMBER},
-              {"range":[b,100], "color":_BAND_GREEN}])
+              {"range":[b,axis_max], "color":_BAND_RED}])
 
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=min(val, axis_max),
-        title={"text": title, "font": {"size": 13}},
-        number={"suffix": "%", "font": {"size": 24}},
+        title={"text": title, "font":{"size":13}},
+        number={"suffix":"%", "font":{"size":24}},
         gauge={
-            "axis": {"range": [0, axis_max], "tickwidth": 1, "ticklen": 3, "nticks": 6, "tickfont": {"size": 9}},
-            "bar": {"color": _NEEDLE, "thickness": 0.22},
-            "bgcolor": "white", "borderwidth": 0, "steps": steps
+            "axis":{"range":[0,axis_max], "tickwidth":1, "ticklen":3, "nticks":6, "tickfont":{"size":9}},
+            "bar":{"color":_NEEDLE, "thickness":0.22},
+            "bgcolor":"white", "borderwidth":0, "steps":steps
         }
     ))
-    # ↑ more top space for the (optional) title; ↑ **extra bottom** to guarantee clearance above captions
-    fig.update_layout(height=_DIAL_H, margin=dict(l=10, r=10, t=72, b=56))
+    fig.update_layout(height=_DIAL_H, margin=dict(l=10,r=10,t=72,b=56))
     return fig
 
 
@@ -2133,9 +2149,27 @@ def render_positions_table(df: pd.DataFrame) -> None:
     z = _sort_df_green_amber_red(z, "pl_%")
 
     def _status_row(r):
-        up = (r.get("pl_$", 0.0) or 0.0) >= 0
-        dot = "🟢" if up else "🔴"
-        return f"{dot} {'UP' if up else 'DOWN'} {r.get('pl_%', np.nan):+.2f}% / {money_signed(r.get('pl_$', np.nan))}"
+        """
+        Status column with traffic-light logic:
+        🟢 ≥ 0%
+        🟡 -0.8% ≤ x < 0%
+        🔴 < -0.8%
+        """
+        try:
+            pct = float(r.get("pl_%", 0.0))
+        except Exception:
+            pct = 0.0
+
+        color = _tl_color_for_pct(pct)
+        # choose emoji consistent with color
+        if color == TL_GREEN:
+            dot, word = "🟢", "UP"
+        elif color == TL_AMBER:
+            dot, word = "🟡", "DOWN"
+        else:
+            dot, word = "🔴", "DOWN"
+
+        return f"{dot} {word} {pct:+.2f}% / {money_signed(r.get('pl_$', 0.0))}"
 
     show = pd.DataFrame({
         "Asset":         z.get("Ticker", z.get("symbol")),
@@ -2233,7 +2267,13 @@ def render_updated_dials(positions: pd.DataFrame, api: Optional[REST]) -> None:
 
     with d3:
         st.markdown("<div style='font-weight:600;margin:0 0 4px 2px;'>Total P/L % (open positions)</div>", unsafe_allow_html=True)
-        st.plotly_chart(_gauge_percent(total_pl_pct_weighted, title="", good="high", bands=(0,2,5)), use_container_width=True)
+        st.plotly_chart(
+            _gauge_percent(total_pl_pct_weighted,
+                        title="Total P/L % (open positions)",
+                        good="high",
+                        bands=(1.0, 2.0, 3.0)),   # bands relative to 3 %
+            use_container_width=True
+        )
         st.markdown("<div style='text-align:center;font-size:13px;color:#64748B;'>Dial 3: weighted open P&L %</div>", unsafe_allow_html=True)
 
     # tiny spacer to ensure nothing touches the plots
@@ -2551,8 +2591,9 @@ def build_history_rows_from_fills(api: Optional[REST],
                 avail = abs(lot["qty"])
                 take = min(avail, qty_to_close)
                 # realized P&L for this slice
-                day_realized[day] += lot_sign * (px - lot["price"]) * take
-                day_liq_notional[day] += px * take
+                open_day = lot["day"]
+                day_realized[open_day] += lot_sign * (px - lot["price"]) * take
+                day_liq_notional[open_day] += px * take
                 lot["qty"] = lot["qty"] - lot_sign * take
                 qty_to_close -= take
                 if abs(lot["qty"]) <= 1e-9:
@@ -2626,96 +2667,82 @@ def render_portfolio_ledger_table(positions: pd.DataFrame,
                                   realized_pnl_total: float | None = None,
                                   history_rows: pd.DataFrame | None = None) -> None:
     """
-    Renders a compact ledger-style table:
-      Columns: Cost to open positions | Open (current value) | Liquidated | P&L $ | P&L %
-      Sections: Totals, Current (today), History (optional)
-    - 'Liquidated' = realized P&L (if provided).
-    - P&L $ = Unrealized + Realized.
-    - P&L % uses cost_to_open as the denominator.
+    Ledger where History rows use their cohort math:
+      History P&L $ = realized(cohort) + unrealized(cohort)
+      History P&L % = History P&L $ / cost_open
+    Current row uses live snapshot:
+      Current P&L $ = (open_value - cost_open) + realized_now
+    Totals are SUMS of History cohorts across the window.
     """
     st.subheader("Portfolio Ledger")
 
-    # Snapshot from currently open positions
-    o = _compute_open_ledger(positions)
+    # ---- Live snapshot for "Current"
+    o = _compute_open_ledger(positions)  # cost_open, open_value, unrl (sum of row P&L, sign-correct incl. shorts)
     realized_now = float(realized_pnl_total or 0.0)
-    total_pl_now = o["unrl"] + realized_now
-    total_pl_pct_now = (total_pl_now / o["cost_open"] * 100.0) if o["cost_open"] > 0 else 0.0
+    pnl_current  = (o["open_value"] - o["cost_open"]) + realized_now
+    pct_current  = (pnl_current / o["cost_open"] * 100.0) if o["cost_open"] > 0 else np.nan
 
-    # ---- Aggregate totals from history (if provided)
-    hist_totals = None
+    # ---- Prepare History slice (already cohort-correct)
+    hist = None
     if isinstance(history_rows, pd.DataFrame) and not history_rows.empty:
-        hr = history_rows.copy()
-        for c in ["cost_open", "open_value", "realized", "pl_dollar", "pl_percent"]:
-            if c in hr.columns:
-                hr[c] = pd.to_numeric(hr[c], errors="coerce").fillna(0.0)
+        hist = history_rows.copy()
+        for c in ["cost_open","open_value","realized","pl_dollar","pl_percent"]:
+            if c in hist.columns:
+                hist[c] = pd.to_numeric(hist[c], errors="coerce").fillna(0.0)
 
-        cost_sum = float(hr.get("cost_open", 0.0).sum())
-        open_sum = float(hr.get("open_value", 0.0).sum())
-        rlz_sum  = float(hr.get("realized", 0.0).sum())
-        pnl_sum  = float(hr.get("pl_dollar", 0.0).sum())
-        pct_sum  = (pnl_sum / cost_sum * 100.0) if cost_sum > 0 else 0.0
+        # Totals from cohorts
+        cost_sum = float(hist["cost_open"].sum())
+        open_sum = float(hist["open_value"].sum())
+        rlz_sum  = float(hist["realized"].sum())
+        pnl_sum  = float(hist["pl_dollar"].sum())
+        pct_sum  = (pnl_sum / cost_sum * 100.0) if cost_sum > 0 else np.nan
+    else:
+        cost_sum = open_sum = rlz_sum = pnl_sum = 0.0
+        pct_sum  = np.nan
 
-        hist_totals = {
-            "Cost to open positions": cost_sum,
-            "Open (current value)":   open_sum,
-            "Liquidated":             rlz_sum,
-            "P&L $":                  pnl_sum,
-            "P&L %":                  pct_sum,
-        }
-
+    # ---- Build display rows
     rows = []
-
-    # ---- Totals row = aggregated history (fallback to current snapshot if no history)
     rows.append({
         "Section": "Totals",
         "Date": "",
-        "Cost to open positions": hist_totals["Cost to open positions"] if hist_totals else o["cost_open"],
-        "Open (current value)":   hist_totals["Open (current value)"]   if hist_totals else o["open_value"],
-        "Liquidated":             hist_totals["Liquidated"]             if hist_totals else realized_now,
-        "P&L $":                  hist_totals["P&L $"]                  if hist_totals else total_pl_now,
-        "P&L %":                  hist_totals["P&L %"]                  if hist_totals else total_pl_pct_now,
+        "Cost to open positions": cost_sum,
+        "Open (current value)":   open_sum,
+        "Liquidated":             rlz_sum,
+        "P&L $":                  pnl_sum,
+        "P&L %":                  pct_sum,
     })
 
-    # ---- Current snapshot (today)
     rows.append({
         "Section": "Current",
         "Date": _fmt_dub(datetime.now(timezone.utc)),
         "Cost to open positions": o["cost_open"],
         "Open (current value)":   o["open_value"],
         "Liquidated":             realized_now,
-        "P&L $":                  total_pl_now,
-        "P&L %":                  total_pl_pct_now,
+        "P&L $":                  pnl_current,
+        "P&L %":                  pct_current,
     })
 
-    # ---- Append History rows (optional)
-    if isinstance(history_rows, pd.DataFrame) and not history_rows.empty:
-        hr = history_rows.copy()
-        for c in ["cost_open", "open_value", "realized", "pl_dollar", "pl_percent"]:
-            if c in hr.columns:
-                hr[c] = pd.to_numeric(hr[c], errors="coerce").fillna(0.0)
-        for _, r in hr.iterrows():
+    if hist is not None:
+        for _, r in hist.iterrows():
             rows.append({
                 "Section": "History",
-                "Date": str(r.get("date", "")),
-                "Cost to open positions": float(r.get("cost_open", 0.0)),
-                "Open (current value)":   float(r.get("open_value", 0.0)),
-                "Liquidated":             float(r.get("realized", 0.0)),
-                "P&L $":                  float(r.get("pl_dollar", 0.0)),
-                "P&L %":                  float(r.get("pl_percent", 0.0)),
+                "Date": str(r.get("date","")),
+                "Cost to open positions": float(r.get("cost_open",0.0)),
+                "Open (current value)":   float(r.get("open_value",0.0)),
+                "Liquidated":             float(r.get("realized",0.0)),
+                "P&L $":                  float(r.get("pl_dollar",0.0)),   # <-- use cohort P&L
+                "P&L %":                  float(r.get("pl_percent",0.0)), # <-- use cohort %
             })
 
     df = pd.DataFrame(rows, columns=[
         "Section","Date","Cost to open positions","Open (current value)","Liquidated","P&L $","P&L %"
     ])
 
-    # Style: currency/percent formatting + green/red for P&L columns
+    # ---- Styling
     def _style_ledger(s: pd.Series) -> pd.Series:
         sty = pd.Series("", index=s.index, dtype="object")
-        try:
-            c = float(s.get("P&L $", 0) or 0)
-        except Exception:
-            c = 0.0
-        color = "#16A34A" if c >= 0 else "#DC2626"
+        v = float(s.get("P&L $", 0) or 0)
+        color = "#16A34A" if v >= 0 else "#DC2626"
         sty["P&L $"] = f"color:{color}; font-weight:700;"
         sty["P&L %"] = f"color:{color}; font-weight:700;"
         return sty
@@ -2731,7 +2758,8 @@ def render_portfolio_ledger_table(positions: pd.DataFrame,
                 .apply(_style_ledger, axis=1))
 
     st.dataframe(styled, use_container_width="stretch", hide_index=True)
-    st.caption("“Liquidated” = realized P&L (if provided). P&L $ = Unrealized + Realized. P&L % is relative to cost to open.")
+    st.caption("“Liquidated” = realized P&L (if provided). History P&L uses cohort math (realized + unrealized). Current P&L = (Open − Cost) + Realized.")
+
 
 # =============================================================================
 # Main — orchestrate sections (no duplicates)
