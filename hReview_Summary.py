@@ -811,52 +811,24 @@ def _tf_for(period: str) -> str:
     if p == "1W": return "1D"
     return "1D"
 
-def _daily_returns_from_equity(ph: pd.DataFrame, period: str) -> pd.DataFrame:
-    if ph is None or ph.empty:
-        return pd.DataFrame(columns=["date", "ret"])
-    s = ph[["ts", "equity"]].dropna().sort_values("ts").copy()
-
-    p = (period or "").upper()
-    if p in {"1D", "2D"}:
-        # bar-to-bar within day(s); snap to 5-min bins
-        s["ret"]  = s["equity"].pct_change() * 100.0
-        s["date"] = pd.to_datetime(s["ts"]).dt.floor("5min")
-    else:
-        # daily close-to-close
-        s = s.set_index("ts").resample("1D").last().dropna().reset_index()
-        s["ret"]  = s["equity"].pct_change() * 100.0
-        s["date"] = s["ts"].dt.date
-    return s[["date", "ret"]].dropna()
-
-def _daily_returns_for_symbol(api: Optional[REST], symbol: str, period: str) -> pd.DataFrame:
-    tf   = _tf_for(period)
-    days = _lookback_for(period)
-    z = _get_symbol_bars(api, symbol, tf, days=days).sort_values("ts")
-    if z.empty:
-        return pd.DataFrame(columns=["date", "ret"])
-
-    p = (period or "").upper()
-    if p in {"1D", "2D"}:
-        # minute bars → bar-to-bar % return, snap to 5-min bins
-        z["ret"]  = z["close"].pct_change() * 100.0
-        z["date"] = pd.to_datetime(z["ts"]).dt.floor("5min")
-
-        # keep last 1 or 2 US/Eastern sessions
-        et = ZoneInfo("US/Eastern")
-        z["sess"] = z["date"].dt.tz_convert(et).dt.date
-        unique_sess = sorted([d for d in z["sess"].dropna().unique()])
-        if not unique_sess:
-            return z[["date", "ret"]].dropna()
-        keep = unique_sess[-1:] if p == "1D" else (unique_sess[-2:] if len(unique_sess) >= 2 else unique_sess)
-        z = z[z["sess"].isin(keep)]
-    else:
-        # daily close-to-close
-        z = z.set_index("ts").resample("1D").last().dropna().reset_index()
-        z["ret"]  = z["close"].pct_change() * 100.0
-        z["date"] = z["ts"].dt.date
-
-    return z[["date", "ret"]].dropna()
-
+def _parse_init_from_client_id(client_order_id: str) -> tuple[float | float, float | float]:
+    """
+    Extract (init_tp, init_sl) from client_order_id formatted like:
+      QML|tp=123.45|sl=67.89|sym=ABC
+    Returns (nan, nan) if not present.
+    """
+    import math, re
+    if not client_order_id:
+        return (math.nan, math.nan)
+    s = str(client_order_id)
+    m_tp = re.search(r"\btp=([0-9]+(?:\.[0-9]+)?)", s)
+    m_sl = re.search(r"\bsl=([0-9]+(?:\.[0-9]+)?)", s)
+    try:
+        tp = float(m_tp.group(1)) if m_tp else math.nan
+        sl = float(m_sl.group(1)) if m_sl else math.nan
+        return (tp, sl)
+    except Exception:
+        return (math.nan, math.nan)
 
 def _feed_for_account(api: Optional[REST]) -> str:
     # Paper → IEX; Live → SIP. If anything fails, default to IEX (works on paper).
@@ -946,85 +918,90 @@ def _get_symbol_bars(_api: Optional[REST], symbol: str, timeframe: str, *, days:
 
     return pd.DataFrame(columns=["ts","close"])
 
+def _daily_returns_from_equity(ph: pd.DataFrame, period: str) -> pd.DataFrame:
+    """Return tidy returns with a tz-aware timestamp column 'ts' and 'ret' (%)"""
+    if ph is None or ph.empty:
+        return pd.DataFrame(columns=["ts", "ret"])
+    s = ph[["ts", "equity"]].dropna().sort_values("ts").copy()
+    s["ret"] = s["equity"].pct_change() * 100.0
+    s["ts"]  = pd.to_datetime(s["ts"], utc=True, errors="coerce")
+    return s[["ts", "ret"]].dropna()
+
+
+def _daily_returns_for_symbol(api: Optional[REST], symbol: str, period: str) -> pd.DataFrame:
+    """Symbol returns as tidy frame with 'ts' (UTC) and 'ret' (%)"""
+    tf   = _tf_for(period)
+    days = _lookback_for(period)
+    z = _get_symbol_bars(api, symbol, tf, days=days).sort_values("ts")
+    if z.empty:
+        return pd.DataFrame(columns=["ts", "ret"])
+    z["ts"]  = pd.to_datetime(z["ts"], utc=True, errors="coerce")
+    z["ret"] = z["close"].pct_change() * 100.0
+    return z[["ts", "ret"]].dropna()
+
+
 def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None:
+    import numpy as np
+    from zoneinfo import ZoneInfo
     st.markdown("**SPY vs QuantML — daily returns**")
 
-    # Local period selector just for this comparison
-    ui_period = st.radio(
-        "X-axis span",
-        options=["2D", "1M"],
-        horizontal=True,
-        label_visibility="collapsed",
-        key="spy_vs_qm_period",
-    )
+    ui_period = st.radio("X-axis span", options=["2D", "1M"], horizontal=True,
+                         label_visibility="collapsed", key="spy_vs_qm_period")
 
-    # Pull portfolio history once at the appropriate granularity
+    # Pull series
     if ui_period == "2D":
-        # 1W + 5Min gives enough bars to cover 2 sessions including premkt/pmkt
-        ph = get_portfolio_history_df(api, period="1W", timeframe="5Min")
-    else:
-        ph = get_portfolio_history_df(api, period="1M")
+        ph  = get_portfolio_history_df(api, period="1W", timeframe="5Min")
+        qm  = _daily_returns_from_equity(ph, ui_period)         # ts, ret
+        spy = _daily_returns_for_symbol(api, "SPY", ui_period)  # ts, ret
 
-    qm  = _daily_returns_from_equity(ph, ui_period)         # date, ret (pct)
-    spy = _daily_returns_for_symbol(api, "SPY", ui_period)  # date, ret (pct)
-
-    st.caption(f"⚙️ Debug: {ui_period} → QuantML rows={len(qm)}, SPY rows={len(spy)}")
-    if len(qm)  > 0: st.caption(f"QuantML dates {qm['date'].min()} → {qm['date'].max()}")
-    if len(spy) > 0: st.caption(f"SPY dates {spy['date'].min()} → {spy['date'].max()}")
-
-    if qm.empty or spy.empty:
-        st.info("SPY or portfolio data not available for this period.")
-        return
-
-    fig = go.Figure()
-
-    if ui_period == "2D":
-        # ------- 2D: align to the SAME last two US/Eastern trading sessions -------
-        et = ZoneInfo("US/Eastern")
-
-        qm1  = qm.copy()
-        spy1 = spy.copy()
-
-        # Label each timestamp by its US/Eastern calendar date (session)
-        qm1["sess"]  = pd.to_datetime(qm1["date"]).dt.tz_convert(et).dt.date
-        spy1["sess"] = pd.to_datetime(spy1["date"]).dt.tz_convert(et).dt.date
-
-        # Use SPY’s last two sessions as the reference slice
-        spy_sess = sorted([d for d in spy1["sess"].dropna().unique()])
-        if not spy_sess:
-            st.info("Could not determine SPY sessions.")
+        if qm.empty or spy.empty:
+            st.info("SPY or portfolio data not available for 2D.")
             return
-        target_sess = spy_sess[-2:] if len(spy_sess) >= 2 else spy_sess
 
-        # If QuantML’s latest session is off by a day (premkt drift), shift it to align
-        qms = qm1["sess"].dropna()
-        sps = spy1["sess"].dropna()
-        if not qms.empty and not sps.empty:
-            delta_days = (qms.max() - sps.max()).days
-            if delta_days != 0:
-                qm1["date"] = pd.to_datetime(qm1["date"]) - pd.Timedelta(days=delta_days)
-                qm1["sess"] = pd.to_datetime(qm1["date"]).dt.tz_convert(et).dt.date
-                st.caption(f"🔧 Shifted QuantML by {delta_days:+d} day(s) to align with last SPY session.")
+        # ----- Align to the SAME last two ET sessions on a single 5-min grid -----
+        et = ZoneInfo("US/Eastern")
+        spy["date_et"] = spy["ts"].dt.tz_convert(et).dt.date
+        last2 = sorted(spy["date_et"].unique())[-2:] or sorted(spy["date_et"].unique())
+        spy   = spy[spy["date_et"].isin(last2)]
 
-        # Keep only the two target sessions
-        qm1  = qm1[qm1["sess"].isin(target_sess)]
-        spy1 = spy1[spy1["sess"].isin(target_sess)]
+        # 5-min grid from SPY (authoritative)
+        grid = (spy[["ts"]].copy()
+                    .assign(ts=lambda d: d["ts"].dt.floor("5min"))
+                    .drop_duplicates()
+                    .sort_values("ts")
+                    .reset_index(drop=True))
 
-        # Outer-join so both series share the x-axis while tolerating slight timestamp gaps
-        merged = (
-            qm1.rename(columns={"ret": "QuantML"})
-               .merge(spy1.rename(columns={"ret": "SPY"}), on="date", how="outer")
-               .sort_values("date")
-        )
+        # Reindex both series to SPY grid (no forward-fill → we only keep points both have)
+        qm_g  = grid.merge(qm.rename(columns={"ret": "QuantML"}), on="ts", how="left")
+        spy_g = grid.merge(spy.rename(columns={"ret": "SPY"}),      on="ts", how="left")
+
+        merged = (qm_g.merge(spy_g[["ts","SPY"]], on="ts", how="left")
+                       .dropna(subset=["QuantML","SPY"])
+                       .sort_values("ts"))
+
+        st.caption(f"⚙️ Debug: 2D → QuantML rows={len(qm)}, SPY rows={len(spy)}; merged={len(merged)}")
+        if merged.empty:
+            st.info("No overlapping timestamps between SPY and portfolio in 2D window.")
+            return
+
+        x = merged["ts"]; y_q = merged["QuantML"]; y_s = merged["SPY"]
 
     else:
-        # ------- 1M: outer-join on date (daily close-to-close returns) -------
-        merged = (
-            qm.rename(columns={"ret": "QuantML"})
-              .merge(spy.rename(columns={"ret": "SPY"}), on="date", how="outer")
-              .sort_values("date")
-        )
-        # Optional anchor (harmless if undefined)
+        # ----- 1M: use daily close-to-close returns and keep ONLY shared business days -----
+        ph  = get_portfolio_history_df(api, period="1M")
+        qm  = (_daily_returns_from_equity(ph, ui_period)
+               .assign(date=lambda d: d["ts"].dt.date)
+               .groupby("date", as_index=False).last()
+               .rename(columns={"ret": "QuantML"}))
+        spy = (_daily_returns_for_symbol(api, "SPY", ui_period)
+               .assign(date=lambda d: d["ts"].dt.date)
+               .groupby("date", as_index=False).last()
+               .rename(columns={"ret": "SPY"}))
+
+        merged = (qm.merge(spy, on="date", how="inner")
+                    .sort_values("date"))
+
+        # Optional anchor if configured
         try:
             if 'START_1M_FROM' in globals() and START_1M_FROM:
                 merged = merged[merged["date"] >= START_1M_FROM]
@@ -1032,19 +1009,31 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
         except Exception:
             pass
 
-    # Plot
-    fig.add_trace(go.Scatter(
-        x=merged["date"], y=merged["QuantML"],
-        mode="lines", name="QuantML (daily %)",
-        line=dict(width=2, color=BRAND["accent"])
-    ))
-    fig.add_trace(go.Scatter(
-        x=merged["date"], y=merged["SPY"],
-        mode="lines", name="SPY (daily %)",
-        line=dict(width=2, color=BRAND["primary"])
-    ))
+        st.caption(f"⚙️ Debug: 1M → QuantML rows={len(qm)}, SPY rows={len(spy)}; merged={len(merged)}")
+        if merged.empty:
+            st.info("No overlapping business days between SPY and portfolio in 1M window.")
+            return
 
-    # Styling
+        x = merged["date"]; y_q = merged["QuantML"]; y_s = merged["SPY"]
+
+    # ----- Clip outliers so one bad tick doesn’t wreck the scale -----
+    def _clip_series(s: pd.Series, qlo=0.01, qhi=0.99):
+        s = pd.to_numeric(s, errors="coerce")
+        if s.notna().sum() < 5:
+            return s
+        lo, hi = np.nanquantile(s, [qlo, qhi])
+        return s.clip(lower=lo, upper=hi)
+
+    y_q = _clip_series(y_q); y_s = _clip_series(y_s)
+
+    # ----- Plot -----
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=x, y=y_q, mode="lines", name="QuantML (daily %)",
+                             line=dict(width=2, color=BRAND["accent"]),
+                             hovertemplate="%{x}<br>QuantML: %{y:.2f}%<extra></extra>"))
+    fig.add_trace(go.Scatter(x=x, y=y_s, mode="lines", name="SPY (daily %)",
+                             line=dict(width=2, color=BRAND["primary"]),
+                             hovertemplate="%{x}<br>SPY: %{y:.2f}%<extra></extra>"))
     fig.add_hline(y=0, line_width=1, line_dash="dot", line_color="rgba(0,0,0,.35)")
     fig.update_layout(
         height=260, margin=dict(l=8, r=8, t=6, b=6),
@@ -2305,57 +2294,52 @@ def _attr_or_key(obj, name, default=None):
         return obj.get(name, default)
     return default
 
-
 def _extract_bracket_prices(order_obj) -> tuple[float | float, float | float]:
-    """
-    Return (initial_tp, initial_sl) from an order object using the bracket fields
-    if present. Falls back to NaN if missing.
-    """
-    import math
+    """Return (initial_tp, initial_sl) from an order object; supports parent fields or legs; may return NaN."""
+    import math, pandas as pd
     if order_obj is None:
         return (math.nan, math.nan)
+
+    def _attr_or_key(obj, *names, default=None):
+        for n in names:
+            try:
+                v = getattr(obj, n)
+            except Exception:
+                v = None
+            if v is None and isinstance(obj, dict):
+                v = obj.get(n)
+            if v is not None:
+                return v
+        return default
 
     tp_px = math.nan
     sl_px = math.nan
 
-    # Parent bracket fields (most reliable on Alpaca)
     tp = _attr_or_key(order_obj, "take_profit")
     sl = _attr_or_key(order_obj, "stop_loss")
 
-    # TP
     if tp is not None:
-        v = _attr_or_key(tp, "limit_price", _attr_or_key(tp, "price"))
-        try:
-            tp_px = float(v)
-        except Exception:
-            pass
+        v = _attr_or_key(tp, "limit_price", "price")
+        try: tp_px = float(v)
+        except Exception: pass
 
-    # SL (prefer stop_price; if trailing, trail_price might be used)
     if sl is not None:
-        v_stop  = _attr_or_key(sl, "stop_price")
-        v_trail = _attr_or_key(sl, "trail_price")
-        v = v_stop if v_stop is not None else v_trail
-        try:
-            sl_px = float(v)
-        except Exception:
-            pass
+        v = _attr_or_key(sl, "stop_price", "trail_price")
+        try: sl_px = float(v)
+        except Exception: pass
 
-    # If parent lacks fields, try newest leg on parent object (rare)
     if (not pd.notna(tp_px)) or (not pd.notna(sl_px)):
         legs = _attr_or_key(order_obj, "legs", []) or []
         for leg in legs:
-            ltype = str(_attr_or_key(leg, "type", "")).lower()
-            if ("limit" in ltype) and (not pd.notna(tp_px)):
-                v = _attr_or_key(leg, "limit_price", _attr_or_key(leg, "price"))
-                try: tp_px = float(v)
-                except: pass
-            if any(k in ltype for k in ("stop", "trailing")) and (not pd.notna(sl_px)):
-                v = _attr_or_key(leg, "stop_price", _attr_or_key(leg, "trail_price"))
-                try: sl_px = float(v)
-                except: pass
+            ltype = str(_attr_or_key(leg, "type", "order_type", default="")).lower()
+            if "limit" in ltype and not pd.notna(tp_px):
+                try: tp_px = float(_attr_or_key(leg, "limit_price", "price"))
+                except Exception: pass
+            if ("stop" in ltype or "trailing" in ltype) and not pd.notna(sl_px):
+                try: sl_px = float(_attr_or_key(leg, "stop_price", "trail_price", "price"))
+                except Exception: pass
 
     return (tp_px, sl_px)
-
 
 @st.cache_data(ttl=90, show_spinner=False)
 def _current_open_lot_map(_api: Optional[REST]) -> dict[str, dict]:
@@ -2385,15 +2369,14 @@ def _initial_tp_sl_lookup(_api: Optional[REST], positions: pd.DataFrame) -> dict
     """
     Build {SYM: {"init_tp": float|nan, "init_sl": float|nan}} for the currently open lot,
     by locating the entry order (via first fill at/after lot open) and reading its bracket.
+    Falls back to the *nearest* submitted order by timestamp if fills lack order_id.
     """
+    import math, pandas as pd
     if _api is None or positions is None or positions.empty:
         return {}
 
-    # When each open lot started
-    open_map = _current_open_lot_map(_api)
-
-    # Fills with order_id (already in file)
-    fills = _load_fills_dataframe(_api, days=180)  # returns 'time' + 'order_id'
+    open_map = _current_open_lot_map(_api)  # {SYM: {"open_ts": ..., "side": ...}}
+    fills = _load_fills_dataframe(_api, days=180)
     if fills is None:
         fills = pd.DataFrame(columns=["symbol", "time", "order_id"])
 
@@ -2407,27 +2390,31 @@ def _initial_tp_sl_lookup(_api: Optional[REST], positions: pd.DataFrame) -> dict
         sub = fills[(fills["symbol"].astype(str).str.upper() == sym)]
         if pd.notna(lot_ts):
             sub = sub[sub["time"] >= lot_ts]
-
         sub = sub.sort_values("time").head(1)
+
         order_obj = None
         if not sub.empty:
             oid = str(sub["order_id"].iloc[0]) if "order_id" in sub.columns else None
             if oid and oid != "None":
                 order_obj = _get_order_by_id_robust(_api, oid)
 
-        # Fallback: pick the submitted order nearest to open_ts
+        # Fallback: choose the order closest to lot open_ts
         if order_obj is None:
             try:
-                try:
-                    orders = _api.list_orders(status="all", nested=True, limit=500)
-                except TypeError:
-                    orders = _api.list_orders(status="all", limit=500)
+                def _attr_or_key(obj, name, alt=None):
+                    try: v = getattr(obj, name)
+                    except Exception: v = None
+                    if v is None and isinstance(obj, dict):
+                        v = obj.get(name if alt is None else alt)
+                    return v
+
+                orders = _api.list_orders(status="all", limit=500)  # nested=True optional
                 cand = []
-                for o in orders or []:
+                for o in (orders or []):
                     osym = (getattr(o, "symbol", None) or getattr(o, "asset_symbol", None) or "").upper()
                     if osym != sym:
                         continue
-                    ots = _attr_or_key(o, "submitted_at", _attr_or_key(o, "created_at"))
+                    ots = _attr_or_key(o, "submitted_at") or _attr_or_key(o, "created_at")
                     ts = pd.to_datetime(str(ots), utc=True, errors="coerce")
                     if pd.isna(ts):
                         continue
@@ -2437,10 +2424,25 @@ def _initial_tp_sl_lookup(_api: Optional[REST], positions: pd.DataFrame) -> dict
             except Exception:
                 order_obj = None
 
-        init_tp, init_sl = _extract_bracket_prices(order_obj)
-        out[sym] = {"init_tp": init_tp, "init_sl": init_sl}
-    return out
+        init_tp, init_sl = (math.nan, math.nan)
+        if order_obj is not None:
+            init_tp, init_sl = _extract_bracket_prices(order_obj)
 
+            # Final fallback: parse from client_order_id (QML|tp=..|sl=..|sym=..)
+            if not pd.notna(init_tp) or not pd.notna(init_sl):
+                try:
+                    cid = getattr(order_obj, "client_order_id", None)
+                    tp_cid, sl_cid = _parse_init_from_client_id(cid)
+                    if pd.notna(tp_cid) and not pd.notna(init_tp):
+                        init_tp = tp_cid
+                    if pd.notna(sl_cid) and not pd.notna(init_sl):
+                        init_sl = sl_cid
+                except Exception:
+                    pass
+
+        out[sym] = {"init_tp": init_tp, "init_sl": init_sl}
+
+    return out
 
 def _last_exit_update_et(_api: Optional[REST], sym: str, side_long_short: str) -> str:
     """
@@ -2469,12 +2471,13 @@ def _last_exit_update_et(_api: Optional[REST], sym: str, side_long_short: str) -
     except Exception:
         return ts.strftime("%Y-%m-%d %H:%M:%S %Z")
 
-
 def _open_exits_df(_api) -> pd.DataFrame:
     """
-    Flat table of open legs: symbol, side, leg_type (limit/stop), limit_price, stop_price, submitted_at, status.
-    Leading underscore on _api avoids Streamlit hashing the REST client (prevents UnhashableParamError).
+    Flat table of *open* exit legs: symbol, side (closing side), leg_type (limit/stop/stop_limit/trailing_stop),
+    limit_price, stop_price, trail_price, trail_percent, submitted_at, status.
     """
+    import numpy as np, pandas as pd
+
     orders = _list_open_orders(_api)
     if not orders:
         return pd.DataFrame()
@@ -2489,44 +2492,36 @@ def _open_exits_df(_api) -> pd.DataFrame:
                     pass
         return pd.NaT
 
-    def _price(o, kind):
-        if kind == "limit":
-            return float(getattr(o, "limit_price", getattr(o, "price", np.nan)) or np.nan)
-        return float(getattr(o, "stop_price", getattr(o, "price", np.nan)) or np.nan)
+    def _closing_side(parent_side: str) -> str:
+        return "buy" if str(parent_side).lower() == "sell" else "sell"
 
     rows = []
     for o in orders or []:
         sym  = (getattr(o, "symbol", None) or getattr(o, "asset_symbol", None) or "").upper()
-        parent_side = (getattr(o, "side", None) or "").lower()  # e.g., 'buy' or 'sell' for the entry
-        legs = getattr(o, "legs", None) or []
+        if not sym:
+            continue
+        parent_side = (getattr(o, "side", None) or "").lower()  # entry side
+        legs = list(getattr(o, "legs", None) or [])
 
-        # Helper: closing side is opposite of parent (for bracket legs)
-        def _closing_side(pside: str) -> str:
-            return "buy" if str(pside).lower() == "sell" else "sell"
-
-        for leg in ([o] + list(legs)):
+        # ------------- collect legs that are still open -------------
+        for leg in ([o] + legs):
             ltype = (getattr(leg, "type", None) or getattr(leg, "order_type", None) or "").lower()
             lstat = (getattr(leg, "status", None) or "").lower()
             if lstat and lstat not in _OPEN_STATES:
                 continue
 
-            # Classify leg
-            is_stop  = ltype.startswith("stop")
-            is_limit = ("limit" in ltype) or ("take_profit" in ltype)
-
-            # Prefer leg.side; if missing on bracket legs, infer the closing side
             raw_leg_side = (getattr(leg, "side", None) or "").lower()
-            side = raw_leg_side if raw_leg_side else (_closing_side(parent_side) if (is_stop or is_limit) else parent_side)
+            side = raw_leg_side if raw_leg_side else (
+                _closing_side(parent_side) if ("limit" in ltype or "take_profit" in ltype or ltype.startswith("stop")) else parent_side
+            )
 
-            # Prices
             def _price(obj, kind):
                 if kind == "limit":
                     return float(getattr(obj, "limit_price", getattr(obj, "price", np.nan)) or np.nan)
                 return float(getattr(obj, "stop_price",  getattr(obj, "price", np.nan)) or np.nan)
 
-            # --- in _open_exits_df() right before rows.append({...}) ---
             is_stop     = ltype.startswith("stop")
-            is_trailing = ("trail" in ltype) or ("trailing" in ltype)   # NEW
+            is_trailing = ("trail" in ltype) or ("trailing" in ltype)
             is_limit    = ("limit" in ltype) or ("take_profit" in ltype)
 
             rows.append({
@@ -2535,14 +2530,13 @@ def _open_exits_df(_api) -> pd.DataFrame:
                 "leg_type": ("trailing_stop" if is_trailing else ("stop" if is_stop else ("limit" if is_limit else ltype))),
                 "limit_price": _price(leg, "limit"),
                 "stop_price":  _price(leg, "stop"),
-                # NEW: capture trailing fields if present
                 "trail_price":  float(getattr(leg, "trail_price",  np.nan) or np.nan),
                 "trail_percent":float(getattr(leg, "trail_percent",np.nan) or np.nan),
                 "submitted_at": _ts(leg),
                 "status": lstat or (getattr(o, "status", None) or "").lower(),
             })
 
-        # Fallback: Some Alpaca bracket orders keep TP/SL on the parent (no legs)
+        # ------------- fallback: some brackets keep TP/SL only on parent -------------
         if not legs:
             def _get_attr_or_key(obj, name):
                 try:
@@ -2555,43 +2549,32 @@ def _open_exits_df(_api) -> pd.DataFrame:
 
             tp_obj = getattr(o, "take_profit", None)
             sl_obj = getattr(o, "stop_loss", None)
-            close_side = "buy" if parent_side == "sell" else "sell"
+            close_side = _closing_side(parent_side)
             parent_status = (getattr(o, "status", None) or "").lower()
             parent_ts = _ts(o)
 
             if tp_obj is not None:
                 tp_px = _get_attr_or_key(tp_obj, "limit_price") or _get_attr_or_key(tp_obj, "price")
-                tp_px = float(tp_px) if tp_px is not None else np.nan
                 rows.append({
-                    "symbol": sym,
-                    "side": close_side,
-                    "leg_type": "limit",
-                    "limit_price": tp_px,
-                    "stop_price":  np.nan,
-                    "trail_price":  np.nan,
-                    "trail_percent":np.nan,
-                    "submitted_at": parent_ts,
-                    "status": parent_status,
+                    "symbol": sym, "side": close_side, "leg_type": "limit",
+                    "limit_price": float(tp_px) if tp_px is not None else np.nan,
+                    "stop_price": np.nan, "trail_price": np.nan, "trail_percent": np.nan,
+                    "submitted_at": parent_ts, "status": parent_status,
                 })
 
             if sl_obj is not None:
                 stop_px = _get_attr_or_key(sl_obj, "stop_price")
-                # For stop_limit, also capture limit_price
                 stop_limit_px = _get_attr_or_key(sl_obj, "limit_price")
                 trail_px = _get_attr_or_key(sl_obj, "trail_price")
                 trail_pct = _get_attr_or_key(sl_obj, "trail_percent")
-                # Determine leg_type for SL
-                leg_t = "trailing_stop" if (trail_px is not None or trail_pct is not None) else ("stop_limit" if stop_limit_px is not None else "stop")
+                leg_t = "trailing_stop" if (trail_px is not None and trail_px != "") else ("stop_limit" if stop_limit_px is not None else "stop")
                 rows.append({
-                    "symbol": sym,
-                    "side": close_side,
-                    "leg_type": leg_t,
+                    "symbol": sym, "side": close_side, "leg_type": leg_t,
                     "limit_price": float(stop_limit_px) if stop_limit_px is not None else np.nan,
                     "stop_price":  float(stop_px) if stop_px is not None else np.nan,
                     "trail_price":  float(trail_px) if trail_px is not None else np.nan,
                     "trail_percent":float(trail_pct) if trail_pct is not None else np.nan,
-                    "submitted_at": parent_ts,
-                    "status": parent_status,
+                    "submitted_at": parent_ts, "status": parent_status,
                 })
 
     df = pd.DataFrame(rows)
@@ -2600,24 +2583,32 @@ def _open_exits_df(_api) -> pd.DataFrame:
     return df
 
 def _pick_tp_sl_for(sym: str, side_long_short: str, exits_df: pd.DataFrame) -> tuple[float, float]:
-    """LONG → TP = sell LIMIT, SL = sell STOP; SHORT → TP = buy LIMIT, SL = buy STOP (keep newest)."""
+    """
+    LONG  -> want closing side = 'sell' (TP is sell LIMIT, SL is sell STOP/STOP_LIMIT/TRAILING_STOP)
+    SHORT -> want closing side = 'buy'
+    """
+    import numpy as np, pandas as pd
     if exits_df is None or exits_df.empty or not sym:
         return (np.nan, np.nan)
 
-    # --- in _pick_tp_sl_for() ---
     want_side = "sell" if str(side_long_short).strip().lower() == "long" else "buy"
-    d = exits_df[(exits_df["symbol"].str.upper() == str(sym).upper()) & (exits_df["side"] == want_side)]
+    d = exits_df[
+        (exits_df["symbol"].astype(str).str.upper() == str(sym).upper()) &
+        (exits_df["side"].astype(str).str.lower() == want_side)
+    ]
     if d.empty:
         return (np.nan, np.nan)
 
-    tp = np.nan; sl = np.nan
-    lim = d[d["leg_type"] == "limit"].sort_values("submitted_at").tail(1)
+    # TP: newest LIMIT
+    tp = np.nan
+    lim = d[d["leg_type"].eq("limit")].sort_values("submitted_at").tail(1)
     if not lim.empty:
         v = lim["limit_price"].iloc[0]
         tp = float(v) if pd.notna(v) else np.nan
 
-    # Accept stop, stop_limit or trailing_stop for SL
-    stp = d[d["leg_type"].isin(["stop","stop_limit","trailing_stop"])].sort_values("submitted_at").tail(1)
+    # SL: newest STOP / STOP_LIMIT / TRAILING_STOP (prefer stop_price, else trail_price)
+    sl = np.nan
+    stp = d[d["leg_type"].isin(["stop", "stop_limit", "trailing_stop"])].sort_values("submitted_at").tail(1)
     if not stp.empty:
         v_stop  = stp["stop_price"].iloc[0]  if "stop_price"  in stp.columns else np.nan
         v_trail = stp["trail_price"].iloc[0] if "trail_price" in stp.columns else np.nan
@@ -2625,9 +2616,10 @@ def _pick_tp_sl_for(sym: str, side_long_short: str, exits_df: pd.DataFrame) -> t
 
     return (tp, sl)
 
-
 def merge_tp_sl_from_alpaca_orders(positions: pd.DataFrame, api) -> pd.DataFrame:
-    """Attach TP/SL columns from broker open orders (resilient if empty)."""
+    """Attach TP/SL columns from broker open orders (no crash if none exist)."""
+    import numpy as np, pandas as pd
+
     out = positions.copy() if positions is not None else pd.DataFrame()
     if out is None or out.empty or api is None:
         for c in ("TP", "SL", "tp_price", "sl_price"):
@@ -2636,12 +2628,13 @@ def merge_tp_sl_from_alpaca_orders(positions: pd.DataFrame, api) -> pd.DataFrame
         return out
 
     exits = _open_exits_df(api)
+
+    # Normalize symbol/side cols
     sym_col = "Ticker" if "Ticker" in out.columns else ("symbol" if "symbol" in out.columns else None)
     if not sym_col:
-        for c in ("TP", "SL", "tp_price", "sl_price"):
-            if c not in out.columns:
-                out[c] = np.nan
-        return out
+        out["Ticker"] = out.get("Ticker", out.get("symbol", ""))
+        sym_col = "Ticker"
+    out[sym_col] = out[sym_col].astype(str).str.upper()
 
     side_col = "Side" if "Side" in out.columns else ("Trade Action" if "Trade Action" in out.columns else None)
     if side_col:
@@ -2660,7 +2653,6 @@ def merge_tp_sl_from_alpaca_orders(positions: pd.DataFrame, api) -> pd.DataFrame
     out["tp_price"] = out.get("tp_price").combine_first(out["TP"]) if "tp_price" in out else out["TP"]
     out["sl_price"] = out.get("sl_price").combine_first(out["SL"]) if "sl_price" in out else out["SL"]
     return out
-
 
 # =============================================================================
 # Dials (3 core)
@@ -3262,66 +3254,79 @@ def _pull_fills_df(_api: Optional[REST], days: int = 7) -> pd.DataFrame:
     df["ts"] = pd.to_datetime(df["ts"], utc=True, errors="coerce")
     return df.sort_values("ts")
 
-
 def build_history_rows_from_fills(api: Optional[REST],
                                   positions: pd.DataFrame | None,
                                   days: int = 5) -> tuple[pd.DataFrame, float]:
     """
-    FIFO lot tracker per symbol:
-      - 'Cost to open positions' (notional added) per day
-      - 'Liquidated'  = realized P&L for portions closed that day
-      - 'Open (current value)' for that day's remaining lots (valued at *current* price)
-      - 'P&L $'       = realized (that day) + unrealized on remaining lots from that day
-      - 'P&L %'       = P&L $ / day_cost_open
+    Cohort-by-open-day ledger (original behaviour) + calendar-day activity rows:
+      - If a day had only closes (no opens), we still emit a row using *close-day* realized P&L.
+      - Cohort math is preserved for days that opened exposure.
+
     Returns (history_df, realized_total_lastN).
     """
     fills = _pull_fills_df(api, days=days)
     if fills.empty:
         return pd.DataFrame(), 0.0
 
-    # current prices for open lots valuation
+    # Current prices for valuing any leftover cohort lots
     curr_px = {}
     if positions is not None and not positions.empty:
         sym_col = "Ticker" if "Ticker" in positions.columns else "symbol"
         for _, r in positions.iterrows():
             s = str(r.get(sym_col, "")).upper()
             if s:
-                try: curr_px[s] = float(r.get("current_price"))
-                except Exception: pass
+                try:
+                    curr_px[s] = float(r.get("current_price"))
+                except Exception:
+                    pass
 
-    lots = defaultdict(deque)               # symbol -> deque of open lots: {'day','qty'(signed),'price'}
-    day_cost_open = defaultdict(float)
-    day_liq_notional = defaultdict(float)
-    day_realized = defaultdict(float)
+    from collections import defaultdict, deque
+    lots = defaultdict(deque)           # symbol -> deque of open lots: {'day','qty'(signed), 'price'}
+    day_cost_open   = defaultdict(float)  # keyed by OPEN day
+    day_liq_notional= defaultdict(float)  # keyed by OPEN day
+    day_realized    = defaultdict(float)  # keyed by OPEN day (cohort)
+    # NEW: realized by CLOSE (calendar) day — to surface “previous days” with only closes
+    day_realized_close = defaultdict(float)
 
-    for _, r in fills.iterrows():
-        sym, side, qty, px, day = r["symbol"], r["side"], float(r["qty"]), float(r["price"]), r["date"]
+    # Iterate fills in time order
+    for _, r in fills.sort_values("ts").iterrows():
+        sym  = r["symbol"]
+        side = r["side"]                   # 'buy' or 'sell'
+        qty  = float(r["qty"])
+        px   = float(r["price"])
+        day  = r["date"]                   # this is the *calendar day of the fill* (close day for this trade)
+
         change = qty if side == "buy" else -qty
         prev_qty = sum(l["qty"] for l in lots[sym])
         new_qty  = prev_qty + change
-        inc_exp  = (abs(new_qty) > abs(prev_qty))  # moving away from zero → opening/add
+        opens_more = (abs(new_qty) > abs(prev_qty))  # moving away from zero → open/add
 
-        if inc_exp:
+        if opens_more:
             lots[sym].append({"day": day, "qty": change, "price": px})
             day_cost_open[day] += abs(change) * px
         else:
-            # closing exposure: FIFO across lots
+            # closing exposure against FIFO open lots
             qty_to_close = abs(change)
             while qty_to_close > 1e-9 and lots[sym]:
                 lot = lots[sym][0]
                 lot_sign = 1.0 if lot["qty"] > 0 else -1.0
                 avail = abs(lot["qty"])
                 take = min(avail, qty_to_close)
-                # realized P&L for this slice
+
                 open_day = lot["day"]
-                day_realized[open_day] += lot_sign * (px - lot["price"]) * take
+                realized_slice = lot_sign * (px - lot["price"]) * take
+                # Book to OPEN day (cohort) — original behaviour
+                day_realized[open_day] += realized_slice
                 day_liq_notional[open_day] += px * take
+                # ALSO book to CLOSE day (calendar) — to ensure the date shows
+                day_realized_close[day] += realized_slice
+
                 lot["qty"] = lot["qty"] - lot_sign * take
                 qty_to_close -= take
                 if abs(lot["qty"]) <= 1e-9:
                     lots[sym].popleft()
 
-    # leftover lots → unrealized by original open day
+    # Leftover lots → unrealized by their original OPEN day (cohort view)
     day_open_val = defaultdict(float)
     day_unrl_pnl = defaultdict(float)
     for sym, dq in lots.items():
@@ -3335,27 +3340,41 @@ def build_history_rows_from_fills(api: Optional[REST],
                 day_open_val[d] += q_abs * cp
                 day_unrl_pnl[d] += sign * (cp - entry) * q_abs
 
-    # assemble last N days (descending)
-    all_days = sorted(set(list(day_cost_open.keys()) + list(day_open_val.keys()) + list(day_realized.keys())))
+    # Assemble rows for the last N days:
+    # - union of (cohort OPEN days) and (calendar CLOSE days with activity)
+    cohort_days = set(day_cost_open.keys()) | set(day_open_val.keys()) | set(day_realized.keys())
+    close_days  = set(day_realized_close.keys())
+    all_days    = sorted(cohort_days | close_days)
     cutoff = (datetime.now(timezone.utc).date() - timedelta(days=days))
+
     rows = []
     for d in sorted([x for x in all_days if x >= cutoff], reverse=True):
         cost_open = day_cost_open.get(d, 0.0)
         open_val  = day_open_val.get(d, 0.0)
-        realized  = day_realized.get(d, 0.0)
-        pl_d      = realized + day_unrl_pnl.get(d, 0.0)
-        pl_pct    = (pl_d / cost_open * 100.0) if cost_open > 0 else 0.0
+        # Prefer cohort P&L when there was an OPEN that day; otherwise show close-day realized only
+        if d in cohort_days:
+            rlz_cohort = day_realized.get(d, 0.0)
+            unrl_cohort = day_unrl_pnl.get(d, 0.0)
+            pl_d = rlz_cohort + unrl_cohort
+            pl_pct = (pl_d / cost_open * 100.0) if cost_open > 0 else 0.0
+            realized_show = rlz_cohort
+        else:
+            # close-only day: no open cost/value context — show realized only, leave others 0
+            realized_show = day_realized_close.get(d, 0.0)
+            pl_d = realized_show
+            pl_pct = 0.0
+
         rows.append({
             "date": d.strftime("%d-%b-%y"),
             "cost_open": round(cost_open, 2),
             "open_value": round(open_val, 2),
-            "realized": round(realized, 2),
+            "realized": round(realized_show, 2),
             "pl_dollar": round(pl_d, 2),
             "pl_percent": round(pl_pct, 2),
         })
 
     hist_df = pd.DataFrame(rows, columns=["date","cost_open","open_value","realized","pl_dollar","pl_percent"])
-    realized_total = float(sum(day_realized.values()))
+    realized_total = float(sum(day_realized.values()))  # keep the cohort definition for totals
     return hist_df, realized_total
 
 
@@ -3528,7 +3547,8 @@ def main() -> None:
     st.divider()
 
     # ----- Portfolio Ledger (existing) -----
-    hist_df, realized_total = build_history_rows_from_fills(api, positions, days=5)
+    hist_days = st.slider("History window (days)", min_value=5, max_value=60, value=14, step=1)
+    hist_df, realized_total = build_history_rows_from_fills(api, positions, days=int(hist_days))
     render_portfolio_ledger_table(positions, realized_pnl_total=realized_total, history_rows=hist_df)
 
     st.divider()
