@@ -1,0 +1,1330 @@
+2025-10-06 19:31:39,220 | INFO | Writing logs to 7.Trading\tp_extender_ATR_2025-10-06_19-31-39.log
+2025-10-06 19:31:39,221 | INFO | ⚙️ Applying TP_EXTEND_PROFILE='aggressive' overrides
+2025-10-06 19:31:39,222 | INFO | ARGV → fATR_trading.py
+2025-10-06 19:31:39,222 | INFO | 🔧 Using config file: D:\QuantML\VS_QuantMLV6\config.py
+2025-10-06 19:31:39,222 | INFO | CFG → mode=atr, pct_trigger=0.0100, pct_step=0.0050, atr_trigger=0.40, atr_step=0.20, max_mult=2.50, interval=60s
+2025-10-06 19:31:39,222 | INFO | ARGS → mode=None, pct_trigger=None, pct_step=None, atr_trigger=None, atr_step=None, max_mult=None, interval=None
+2025-10-06 19:31:39,223 | INFO | ✅ EFFECTIVE → mode=atr (config), pct_trigger=0.0080, pct_step=0.0040, atr_trigger=0.30, atr_step=0.15, max_mult=3.00, interval=60s
+2025-10-06 19:31:40,505 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:31:40,878 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:31:41,814 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:31:41,904 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:31:42,089 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.31 delta=0.31 cur_tp=28.0476 new_tp=27.976713 capped=False step_type=ATR atr_step=0.15 pct_move=1.0832 move_atr=0.656
+2025-10-06 19:31:42,272 | WARNING | No open TP order found for INVH (SHORT) — cannot amend TP.
+2025-10-06 19:31:42,371 | INFO | 🆕 Created TP for INVH SHORT → 27.97
+2025-10-06 19:31:42,462 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:31:42,553 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:31:42,645 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:31:42,837 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.041786
+2025-10-06 19:31:42,929 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:31:43,117 | INFO | └─ VTRS: pct_move=0.2461 atr_trigger=0.3 move_atr=0.0995 reason=trigger_not_met
+2025-10-06 19:31:43,301 | INFO | └─ WBD: pct_move=0.03 atr_trigger=0.3 move_atr=0.0067 reason=trigger_not_met
+2025-10-06 19:31:43,391 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:31:43,391 | INFO | 📈 Cycle result: extended=1, skipped=11
+2025-10-06 19:31:43,483 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:32:44,562 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:32:44,744 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:32:45,716 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:32:45,804 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:32:45,987 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.31 delta=0.31 cur_tp=27.97 new_tp=27.899113 capped=False step_type=ATR atr_step=0.15 pct_move=1.0832 move_atr=0.656
+2025-10-06 19:32:45,987 | INFO | └─ INVH: reason=cooldown_skip since_sec=63 cooldown_min=5
+2025-10-06 19:32:46,075 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:32:46,162 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:32:46,255 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:32:46,436 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.041786
+2025-10-06 19:32:46,523 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:32:46,704 | INFO | └─ VTRS: pct_move=0.2461 atr_trigger=0.3 move_atr=0.0995 reason=trigger_not_met
+2025-10-06 19:32:46,889 | INFO | └─ WBD: pct_move=0.03 atr_trigger=0.3 move_atr=0.0067 reason=trigger_not_met
+2025-10-06 19:32:46,979 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:32:46,980 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 19:32:47,073 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:33:48,092 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:33:48,275 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:33:49,178 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:33:49,268 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:33:49,449 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.3 delta=0.32 cur_tp=27.97 new_tp=27.899113 capped=False step_type=ATR atr_step=0.15 pct_move=1.1181 move_atr=0.6771
+2025-10-06 19:33:49,449 | INFO | └─ INVH: reason=cooldown_skip since_sec=127 cooldown_min=5
+2025-10-06 19:33:49,549 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:33:49,637 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:33:49,726 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:33:49,907 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.041786
+2025-10-06 19:33:49,996 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:33:50,177 | INFO | └─ VTRS: pct_move=0.2461 atr_trigger=0.3 move_atr=0.0995 reason=trigger_not_met
+2025-10-06 19:33:50,360 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.014286
+2025-10-06 19:33:50,450 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:33:50,452 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 19:33:50,545 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:34:51,603 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:34:51,787 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:34:52,725 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:34:52,812 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:34:52,994 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.28 delta=0.34 cur_tp=27.97 new_tp=27.899113 capped=False step_type=ATR atr_step=0.15 pct_move=1.188 move_atr=0.7195
+2025-10-06 19:34:52,994 | INFO | └─ INVH: reason=cooldown_skip since_sec=190 cooldown_min=5
+2025-10-06 19:34:53,082 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:34:53,175 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:34:53,266 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:34:53,446 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.041786
+2025-10-06 19:34:53,535 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:34:53,721 | INFO | └─ VTRS: pct_move=0.2461 atr_trigger=0.3 move_atr=0.0995 reason=trigger_not_met
+2025-10-06 19:34:53,905 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.014286
+2025-10-06 19:34:53,993 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:34:53,993 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 19:34:54,085 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:35:55,052 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:35:55,238 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:35:56,138 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:35:56,227 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:35:56,416 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.29 delta=0.33 cur_tp=27.97 new_tp=27.899113 capped=False step_type=ATR atr_step=0.15 pct_move=1.153 move_atr=0.6983
+2025-10-06 19:35:56,418 | INFO | └─ INVH: reason=cooldown_skip since_sec=254 cooldown_min=5
+2025-10-06 19:35:56,511 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:35:56,602 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:35:56,693 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:35:56,879 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.041786
+2025-10-06 19:35:56,970 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:35:57,153 | INFO | └─ VTRS: pct_move=0.1969 atr_trigger=0.3 move_atr=0.0796 reason=trigger_not_met
+2025-10-06 19:35:57,338 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.019286
+2025-10-06 19:35:57,426 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:35:57,427 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 19:35:57,520 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:36:58,495 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:36:58,683 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:36:59,585 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:36:59,675 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:36:59,865 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.29 delta=0.33 cur_tp=27.97 new_tp=27.899113 capped=False step_type=ATR atr_step=0.15 pct_move=1.153 move_atr=0.6983
+2025-10-06 19:37:00,143 | INFO | ⬆️ Replaced TP for INVH SHORT → 27.89
+2025-10-06 19:37:00,233 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:37:00,333 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:37:00,424 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:37:00,607 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.041786
+2025-10-06 19:37:00,710 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:37:00,890 | INFO | └─ VTRS: pct_move=0.1969 atr_trigger=0.3 move_atr=0.0796 reason=trigger_not_met
+2025-10-06 19:37:01,074 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.024286
+2025-10-06 19:37:01,164 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:37:01,165 | INFO | 📈 Cycle result: extended=1, skipped=11
+2025-10-06 19:37:01,259 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:38:02,228 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:38:02,413 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:38:03,283 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:38:03,374 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:38:03,557 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.29 delta=0.33 cur_tp=27.89 new_tp=27.819113 capped=False step_type=ATR atr_step=0.15 pct_move=1.153 move_atr=0.6983
+2025-10-06 19:38:03,558 | INFO | └─ INVH: reason=cooldown_skip since_sec=63 cooldown_min=5
+2025-10-06 19:38:03,647 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:38:03,740 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:38:03,828 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:38:04,008 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.071786
+2025-10-06 19:38:04,099 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:38:04,283 | INFO | └─ VTRS: pct_move=0.1969 atr_trigger=0.3 move_atr=0.0796 reason=trigger_not_met
+2025-10-06 19:38:04,467 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.084286
+2025-10-06 19:38:04,556 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:38:04,557 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 19:38:04,651 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:39:05,646 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:39:05,852 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:39:06,740 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:39:06,829 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:39:07,012 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.275 delta=0.345 cur_tp=27.89 new_tp=27.819113 capped=False step_type=ATR atr_step=0.15 pct_move=1.2055 move_atr=0.73
+2025-10-06 19:39:07,013 | INFO | └─ INVH: reason=cooldown_skip since_sec=126 cooldown_min=5
+2025-10-06 19:39:07,105 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:39:07,209 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:39:07,300 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:39:07,512 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.066786
+2025-10-06 19:39:07,603 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:39:07,792 | INFO | └─ VTRS: pct_move=0.0984 atr_trigger=0.3 move_atr=0.0398 reason=trigger_not_met
+2025-10-06 19:39:07,981 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.064286
+2025-10-06 19:39:08,075 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:39:08,076 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 19:39:08,167 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:40:09,168 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:40:09,361 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:40:10,247 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:40:10,433 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:40:10,619 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.29 delta=0.33 cur_tp=27.89 new_tp=27.819113 capped=False step_type=ATR atr_step=0.15 pct_move=1.153 move_atr=0.6983
+2025-10-06 19:40:10,621 | INFO | └─ INVH: reason=cooldown_skip since_sec=190 cooldown_min=5
+2025-10-06 19:40:10,713 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:40:10,803 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:40:10,894 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:40:11,082 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.066786
+2025-10-06 19:40:11,171 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:40:11,351 | INFO | └─ VTRS: pct_move=0.0984 atr_trigger=0.3 move_atr=0.0398 reason=trigger_not_met
+2025-10-06 19:40:11,532 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.074286
+2025-10-06 19:40:11,621 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:40:11,621 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 19:40:11,712 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:41:12,692 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:41:12,880 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:41:13,755 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:41:13,844 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:41:14,028 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.29 delta=0.33 cur_tp=27.89 new_tp=27.819113 capped=False step_type=ATR atr_step=0.15 pct_move=1.153 move_atr=0.6983
+2025-10-06 19:41:14,029 | INFO | └─ INVH: reason=cooldown_skip since_sec=253 cooldown_min=5
+2025-10-06 19:41:14,121 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:41:14,243 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:41:14,334 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:41:14,516 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.066786
+2025-10-06 19:41:14,605 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:41:14,807 | INFO | └─ VTRS: pct_move=0.0984 atr_trigger=0.3 move_atr=0.0398 reason=trigger_not_met
+2025-10-06 19:41:14,994 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.094286
+2025-10-06 19:41:15,083 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:41:15,084 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 19:41:15,178 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:42:16,190 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:42:16,374 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:42:17,288 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:42:17,377 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:42:17,564 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.29 delta=0.33 cur_tp=27.89 new_tp=27.819113 capped=False step_type=ATR atr_step=0.15 pct_move=1.153 move_atr=0.6983
+2025-10-06 19:42:17,838 | INFO | ⬆️ Replaced TP for INVH SHORT → 27.81
+2025-10-06 19:42:17,927 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:42:18,015 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:42:18,105 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:42:18,290 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.026786
+2025-10-06 19:42:18,383 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:42:18,575 | INFO | └─ VTRS: pct_move=0.0984 atr_trigger=0.3 move_atr=0.0398 reason=trigger_not_met
+2025-10-06 19:42:18,764 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.094286
+2025-10-06 19:42:18,859 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:42:18,861 | INFO | 📈 Cycle result: extended=1, skipped=11
+2025-10-06 19:42:18,957 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:43:19,979 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:43:20,170 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:43:21,066 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:43:21,154 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:43:21,340 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.275 delta=0.345 cur_tp=27.81 new_tp=27.739113 capped=False step_type=ATR atr_step=0.15 pct_move=1.2055 move_atr=0.73
+2025-10-06 19:43:21,341 | INFO | └─ INVH: reason=cooldown_skip since_sec=63 cooldown_min=5
+2025-10-06 19:43:21,433 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:43:21,521 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:43:21,613 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:43:21,800 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.026786
+2025-10-06 19:43:21,893 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:43:22,079 | INFO | └─ VTRS: pct_move=0.0984 atr_trigger=0.3 move_atr=0.0398 reason=trigger_not_met
+2025-10-06 19:43:22,287 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.079286
+2025-10-06 19:43:22,375 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:43:22,376 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 19:43:22,467 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:44:23,446 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:44:23,636 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:44:24,513 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:44:24,602 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:44:24,786 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.28 delta=0.34 cur_tp=27.81 new_tp=27.739113 capped=False step_type=ATR atr_step=0.15 pct_move=1.188 move_atr=0.7195
+2025-10-06 19:44:24,787 | INFO | └─ INVH: reason=cooldown_skip since_sec=126 cooldown_min=5
+2025-10-06 19:44:24,878 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:44:24,969 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:44:25,061 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:44:25,244 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.026786
+2025-10-06 19:44:25,335 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:44:25,519 | INFO | └─ VTRS: pct_move=0.0984 atr_trigger=0.3 move_atr=0.0398 reason=trigger_not_met
+2025-10-06 19:44:25,703 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.084286
+2025-10-06 19:44:25,794 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:44:25,795 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 19:44:25,886 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:45:26,908 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:45:27,099 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:45:27,984 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:45:28,072 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:45:28,260 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.29 delta=0.33 cur_tp=27.81 new_tp=27.739113 capped=False step_type=ATR atr_step=0.15 pct_move=1.153 move_atr=0.6983
+2025-10-06 19:45:28,261 | INFO | └─ INVH: reason=cooldown_skip since_sec=190 cooldown_min=5
+2025-10-06 19:45:28,353 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:45:28,442 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:45:28,532 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:45:28,712 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.021786
+2025-10-06 19:45:28,801 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:45:28,984 | INFO | └─ VTRS: pct_move=0.0984 atr_trigger=0.3 move_atr=0.0398 reason=trigger_not_met
+2025-10-06 19:45:29,165 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.074286
+2025-10-06 19:45:29,254 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:45:29,256 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 19:45:29,494 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:46:30,504 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:46:30,690 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:46:31,601 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:46:31,689 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:46:31,872 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.29 delta=0.33 cur_tp=27.81 new_tp=27.739113 capped=False step_type=ATR atr_step=0.15 pct_move=1.153 move_atr=0.6983
+2025-10-06 19:46:31,873 | INFO | └─ INVH: reason=cooldown_skip since_sec=254 cooldown_min=5
+2025-10-06 19:46:31,962 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:46:32,052 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:46:32,142 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:46:32,329 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.011786
+2025-10-06 19:46:32,421 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:46:32,607 | INFO | └─ VTRS: pct_move=0.1476 atr_trigger=0.3 move_atr=0.0597 reason=trigger_not_met
+2025-10-06 19:46:32,792 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.064286
+2025-10-06 19:46:32,882 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:46:32,882 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 19:46:32,975 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:47:33,977 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:47:34,163 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:47:35,070 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:47:35,159 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:47:35,343 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.29 delta=0.33 cur_tp=27.81 new_tp=27.739113 capped=False step_type=ATR atr_step=0.15 pct_move=1.153 move_atr=0.6983
+2025-10-06 19:47:35,623 | INFO | ⬆️ Replaced TP for INVH SHORT → 27.73
+2025-10-06 19:47:35,714 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:47:35,806 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:47:35,901 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:47:36,090 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.011786
+2025-10-06 19:47:36,184 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:47:36,368 | INFO | └─ VTRS: pct_move=0.0984 atr_trigger=0.3 move_atr=0.0398 reason=trigger_not_met
+2025-10-06 19:47:36,551 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.034286
+2025-10-06 19:47:36,640 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:47:36,641 | INFO | 📈 Cycle result: extended=1, skipped=11
+2025-10-06 19:47:36,732 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:48:37,726 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:48:37,909 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:48:38,785 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:48:38,876 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:48:39,065 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.27 delta=0.35 cur_tp=27.73 new_tp=27.659113 capped=False step_type=ATR atr_step=0.15 pct_move=1.2229 move_atr=0.7406
+2025-10-06 19:48:39,065 | INFO | └─ INVH: reason=cooldown_skip since_sec=63 cooldown_min=5
+2025-10-06 19:48:39,159 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:48:39,250 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:48:39,341 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:48:39,527 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.001786
+2025-10-06 19:48:39,618 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:48:39,800 | INFO | └─ VTRS: pct_move=0.1476 atr_trigger=0.3 move_atr=0.0597 reason=trigger_not_met
+2025-10-06 19:48:39,986 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.044286
+2025-10-06 19:48:40,083 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:48:40,084 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 19:48:40,177 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:49:41,159 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:49:41,345 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:49:42,288 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:49:42,391 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:49:42,579 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.28 delta=0.34 cur_tp=27.73 new_tp=27.659113 capped=False step_type=ATR atr_step=0.15 pct_move=1.188 move_atr=0.7195
+2025-10-06 19:49:42,579 | INFO | └─ INVH: reason=cooldown_skip since_sec=126 cooldown_min=5
+2025-10-06 19:49:42,671 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:49:42,762 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:49:42,854 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:49:43,045 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.001786
+2025-10-06 19:49:43,138 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:49:43,324 | INFO | └─ VTRS: pct_move=0.1476 atr_trigger=0.3 move_atr=0.0597 reason=trigger_not_met
+2025-10-06 19:49:43,510 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.049286
+2025-10-06 19:49:43,602 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:49:43,602 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 19:49:43,694 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:50:44,703 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:50:44,900 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:50:45,791 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:50:45,881 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:50:46,064 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.28 delta=0.34 cur_tp=27.73 new_tp=27.659113 capped=False step_type=ATR atr_step=0.15 pct_move=1.188 move_atr=0.7195
+2025-10-06 19:50:46,064 | INFO | └─ INVH: reason=cooldown_skip since_sec=190 cooldown_min=5
+2025-10-06 19:50:46,161 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:50:46,252 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:50:46,343 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:50:46,532 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.001786
+2025-10-06 19:50:46,624 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:50:46,811 | INFO | └─ VTRS: pct_move=0.1476 atr_trigger=0.3 move_atr=0.0597 reason=trigger_not_met
+2025-10-06 19:50:47,026 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.044286
+2025-10-06 19:50:47,119 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:50:47,119 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 19:50:47,210 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:51:48,188 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:51:48,375 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:51:49,265 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:51:49,373 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:51:49,567 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.265 delta=0.355 cur_tp=27.73 new_tp=27.659113 capped=False step_type=ATR atr_step=0.15 pct_move=1.2404 move_atr=0.7512
+2025-10-06 19:51:49,568 | INFO | └─ INVH: reason=cooldown_skip since_sec=253 cooldown_min=5
+2025-10-06 19:51:49,662 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:51:49,755 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:51:49,849 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:51:50,038 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.021786
+2025-10-06 19:51:50,130 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:51:50,315 | INFO | └─ VTRS: pct_move=0.0984 atr_trigger=0.3 move_atr=0.0398 reason=trigger_not_met
+2025-10-06 19:51:50,500 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.034286
+2025-10-06 19:51:50,590 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:51:50,591 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 19:51:50,686 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:52:51,678 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:52:51,866 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:52:52,743 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:52:52,834 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:52:53,020 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.265 delta=0.355 cur_tp=27.73 new_tp=27.659113 capped=False step_type=ATR atr_step=0.15 pct_move=1.2404 move_atr=0.7512
+2025-10-06 19:52:53,304 | INFO | ⬆️ Replaced TP for INVH SHORT → 27.65
+2025-10-06 19:52:53,452 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:52:53,614 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:52:53,714 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:52:53,895 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.021786
+2025-10-06 19:52:53,986 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:52:54,173 | INFO | └─ VTRS: pct_move=0.0984 atr_trigger=0.3 move_atr=0.0398 reason=trigger_not_met
+2025-10-06 19:52:54,361 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.034286
+2025-10-06 19:52:54,454 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:52:54,455 | INFO | 📈 Cycle result: extended=1, skipped=11
+2025-10-06 19:52:54,548 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:53:55,540 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:53:55,730 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:53:56,599 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:53:56,688 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:53:56,871 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.29 delta=0.33 cur_tp=27.65 new_tp=27.579113 capped=False step_type=ATR atr_step=0.15 pct_move=1.153 move_atr=0.6983
+2025-10-06 19:53:56,871 | INFO | └─ INVH: reason=cooldown_skip since_sec=63 cooldown_min=5
+2025-10-06 19:53:56,963 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:53:57,053 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:53:57,144 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:53:57,335 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.016786
+2025-10-06 19:53:57,426 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:53:57,615 | INFO | └─ VTRS: pct_move=0.0984 atr_trigger=0.3 move_atr=0.0398 reason=trigger_not_met
+2025-10-06 19:53:57,801 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.034286
+2025-10-06 19:53:57,893 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:53:57,893 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 19:53:57,983 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:54:58,967 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:54:59,210 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:55:00,112 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:55:00,203 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:55:00,442 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.3 delta=0.32 cur_tp=27.65 new_tp=27.579113 capped=False step_type=ATR atr_step=0.15 pct_move=1.1181 move_atr=0.6771
+2025-10-06 19:55:00,444 | INFO | └─ INVH: reason=cooldown_skip since_sec=127 cooldown_min=5
+2025-10-06 19:55:00,539 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:55:00,631 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:55:00,731 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:55:00,918 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.001786
+2025-10-06 19:55:01,009 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:55:01,203 | INFO | └─ VTRS: pct_move=0.0984 atr_trigger=0.3 move_atr=0.0398 reason=trigger_not_met
+2025-10-06 19:55:01,387 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.034286
+2025-10-06 19:55:01,477 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:55:01,478 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 19:55:01,596 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:56:02,552 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:56:02,770 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:56:03,647 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:56:03,737 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:56:03,924 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.3 delta=0.32 cur_tp=27.65 new_tp=27.579113 capped=False step_type=ATR atr_step=0.15 pct_move=1.1181 move_atr=0.6771
+2025-10-06 19:56:03,925 | INFO | └─ INVH: reason=cooldown_skip since_sec=190 cooldown_min=5
+2025-10-06 19:56:04,019 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:56:04,113 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:56:04,204 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:56:04,386 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.001786
+2025-10-06 19:56:04,480 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:56:04,665 | INFO | └─ VTRS: reason=unfavorable_or_flat delta=0.0
+2025-10-06 19:56:04,846 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.034286
+2025-10-06 19:56:04,937 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:56:04,938 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 19:56:05,030 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:57:06,015 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:57:06,199 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:57:07,082 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:57:07,174 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:57:07,359 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.28 delta=0.34 cur_tp=27.65 new_tp=27.579113 capped=False step_type=ATR atr_step=0.15 pct_move=1.188 move_atr=0.7195
+2025-10-06 19:57:07,360 | INFO | └─ INVH: reason=cooldown_skip since_sec=254 cooldown_min=5
+2025-10-06 19:57:07,456 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:57:07,547 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:57:07,637 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:57:07,826 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.001786
+2025-10-06 19:57:07,917 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:57:08,098 | INFO | └─ VTRS: reason=unfavorable_or_flat delta=0.0
+2025-10-06 19:57:08,284 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.029286
+2025-10-06 19:57:08,375 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:57:08,375 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 19:57:08,635 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:58:09,647 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:58:09,833 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:58:10,701 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:58:10,790 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:58:10,974 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.28 delta=0.34 cur_tp=27.65 new_tp=27.579113 capped=False step_type=ATR atr_step=0.15 pct_move=1.188 move_atr=0.7195
+2025-10-06 19:58:11,248 | INFO | ⬆️ Replaced TP for INVH SHORT → 27.57
+2025-10-06 19:58:11,343 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:58:11,436 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:58:11,528 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:58:11,715 | INFO | └─ PSKY: pct_move=0.0432 atr_trigger=0.3 move_atr=0.008 reason=trigger_not_met
+2025-10-06 19:58:11,808 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:58:11,994 | INFO | └─ VTRS: reason=unfavorable_or_flat delta=0.0
+2025-10-06 19:58:12,176 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.024286
+2025-10-06 19:58:12,267 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:58:12,267 | INFO | 📈 Cycle result: extended=1, skipped=11
+2025-10-06 19:58:12,357 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 19:59:13,348 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 19:59:13,538 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 19:59:14,421 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:59:14,512 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:59:14,701 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.275 delta=0.345 cur_tp=27.57 new_tp=27.499113 capped=False step_type=ATR atr_step=0.15 pct_move=1.2055 move_atr=0.73
+2025-10-06 19:59:14,702 | INFO | └─ INVH: reason=cooldown_skip since_sec=63 cooldown_min=5
+2025-10-06 19:59:14,795 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:59:14,892 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:59:14,984 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:59:15,170 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.001786
+2025-10-06 19:59:15,260 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:59:15,440 | INFO | └─ VTRS: reason=unfavorable_or_flat delta=0.0
+2025-10-06 19:59:15,623 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.039286
+2025-10-06 19:59:15,714 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 19:59:15,716 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 19:59:15,811 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:00:16,837 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:00:17,024 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:00:17,940 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:00:18,031 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:00:18,218 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.275 delta=0.345 cur_tp=27.57 new_tp=27.499113 capped=False step_type=ATR atr_step=0.15 pct_move=1.2055 move_atr=0.73
+2025-10-06 20:00:18,218 | INFO | └─ INVH: reason=cooldown_skip since_sec=126 cooldown_min=5
+2025-10-06 20:00:18,307 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:00:18,398 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:00:18,491 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:00:18,678 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.051786
+2025-10-06 20:00:18,804 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:00:19,030 | INFO | └─ VTRS: reason=unfavorable_or_flat delta=0.0
+2025-10-06 20:00:19,243 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.054286
+2025-10-06 20:00:19,338 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:00:19,339 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:00:19,432 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:01:20,433 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:01:20,628 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:01:21,542 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:01:21,632 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:01:21,813 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.28 delta=0.34 cur_tp=27.57 new_tp=27.499113 capped=False step_type=ATR atr_step=0.15 pct_move=1.188 move_atr=0.7195
+2025-10-06 20:01:21,815 | INFO | └─ INVH: reason=cooldown_skip since_sec=190 cooldown_min=5
+2025-10-06 20:01:21,905 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:01:21,995 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:01:22,089 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:01:22,276 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.051786
+2025-10-06 20:01:22,368 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:01:22,556 | INFO | └─ VTRS: reason=unfavorable_or_flat delta=-0.005
+2025-10-06 20:01:22,775 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.059286
+2025-10-06 20:01:22,868 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:01:22,868 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:01:22,958 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:02:23,955 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:02:24,144 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:02:25,065 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:02:25,176 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:02:25,367 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.28 delta=0.34 cur_tp=27.57 new_tp=27.499113 capped=False step_type=ATR atr_step=0.15 pct_move=1.188 move_atr=0.7195
+2025-10-06 20:02:25,368 | INFO | └─ INVH: reason=cooldown_skip since_sec=254 cooldown_min=5
+2025-10-06 20:02:25,463 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:02:25,557 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:02:25,649 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:02:25,835 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.046786
+2025-10-06 20:02:25,928 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:02:26,111 | INFO | └─ VTRS: reason=unfavorable_or_flat delta=-0.01
+2025-10-06 20:02:26,294 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.059286
+2025-10-06 20:02:26,384 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:02:26,385 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:02:26,475 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:03:27,476 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:03:27,665 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:03:28,541 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:03:28,632 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:03:28,819 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.255 delta=0.365 cur_tp=27.57 new_tp=27.499113 capped=False step_type=ATR atr_step=0.15 pct_move=1.2753 move_atr=0.7724
+2025-10-06 20:03:29,097 | INFO | ⬆️ Replaced TP for INVH SHORT → 27.49
+2025-10-06 20:03:29,192 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:03:29,283 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:03:29,372 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:03:29,556 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.046786
+2025-10-06 20:03:29,645 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:03:29,828 | INFO | └─ VTRS: reason=unfavorable_or_flat delta=-0.01
+2025-10-06 20:03:30,015 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.059286
+2025-10-06 20:03:30,115 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:03:30,116 | INFO | 📈 Cycle result: extended=1, skipped=11
+2025-10-06 20:03:30,220 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:04:31,199 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:04:31,382 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:04:32,257 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:04:32,347 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:04:32,528 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.26 delta=0.36 cur_tp=27.49 new_tp=27.419113 capped=False step_type=ATR atr_step=0.15 pct_move=1.2579 move_atr=0.7618
+2025-10-06 20:04:32,529 | INFO | └─ INVH: reason=cooldown_skip since_sec=63 cooldown_min=5
+2025-10-06 20:04:32,620 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:04:32,712 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:04:32,806 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:04:32,993 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.056786
+2025-10-06 20:04:33,085 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:04:33,271 | INFO | └─ VTRS: reason=unfavorable_or_flat delta=0.0
+2025-10-06 20:04:33,455 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.059286
+2025-10-06 20:04:33,547 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:04:33,548 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:04:33,641 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:05:34,639 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:05:34,826 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:05:35,777 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:05:35,865 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:05:36,046 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.26 delta=0.36 cur_tp=27.49 new_tp=27.419113 capped=False step_type=ATR atr_step=0.15 pct_move=1.2579 move_atr=0.7618
+2025-10-06 20:05:36,047 | INFO | └─ INVH: reason=cooldown_skip since_sec=126 cooldown_min=5
+2025-10-06 20:05:36,143 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:05:36,235 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:05:36,328 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:05:36,514 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.056786
+2025-10-06 20:05:36,606 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:05:36,792 | INFO | └─ VTRS: pct_move=0.0492 atr_trigger=0.3 move_atr=0.0199 reason=trigger_not_met
+2025-10-06 20:05:36,977 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.059286
+2025-10-06 20:05:37,068 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:05:37,068 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:05:37,160 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:06:38,142 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:06:38,333 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:06:39,249 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:06:39,338 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:06:39,530 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.26 delta=0.36 cur_tp=27.49 new_tp=27.419113 capped=False step_type=ATR atr_step=0.15 pct_move=1.2579 move_atr=0.7618
+2025-10-06 20:06:39,531 | INFO | └─ INVH: reason=cooldown_skip since_sec=190 cooldown_min=5
+2025-10-06 20:06:39,624 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:06:39,716 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:06:39,809 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:06:39,994 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.056786
+2025-10-06 20:06:40,084 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:06:40,271 | INFO | └─ VTRS: pct_move=0.0492 atr_trigger=0.3 move_atr=0.0199 reason=trigger_not_met
+2025-10-06 20:06:40,464 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.054286
+2025-10-06 20:06:40,558 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:06:40,559 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:06:40,650 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:07:41,616 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:07:41,798 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:07:42,680 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:07:42,771 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:07:42,959 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.26 delta=0.36 cur_tp=27.49 new_tp=27.419113 capped=False step_type=ATR atr_step=0.15 pct_move=1.2579 move_atr=0.7618
+2025-10-06 20:07:42,961 | INFO | └─ INVH: reason=cooldown_skip since_sec=253 cooldown_min=5
+2025-10-06 20:07:43,054 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:07:43,145 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:07:43,235 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:07:43,418 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.086786
+2025-10-06 20:07:43,509 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:07:43,690 | INFO | └─ VTRS: pct_move=0.0492 atr_trigger=0.3 move_atr=0.0199 reason=trigger_not_met
+2025-10-06 20:07:43,873 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.049286
+2025-10-06 20:07:43,965 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:07:43,966 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:07:44,074 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:08:45,060 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:08:45,240 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:08:46,139 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:08:46,228 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:08:46,418 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.26 delta=0.36 cur_tp=27.49 new_tp=27.419113 capped=False step_type=ATR atr_step=0.15 pct_move=1.2579 move_atr=0.7618
+2025-10-06 20:08:46,690 | INFO | ⬆️ Replaced TP for INVH SHORT → 27.41
+2025-10-06 20:08:46,780 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:08:46,870 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:08:46,960 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:08:47,144 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.076786
+2025-10-06 20:08:47,236 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:08:47,422 | INFO | └─ VTRS: pct_move=0.0492 atr_trigger=0.3 move_atr=0.0199 reason=trigger_not_met
+2025-10-06 20:08:47,609 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.044286
+2025-10-06 20:08:47,701 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:08:47,701 | INFO | 📈 Cycle result: extended=1, skipped=11
+2025-10-06 20:08:47,793 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:09:48,776 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:09:48,962 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:09:49,840 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:09:49,930 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:09:50,113 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.27 delta=0.35 cur_tp=27.41 new_tp=27.339113 capped=False step_type=ATR atr_step=0.15 pct_move=1.2229 move_atr=0.7406
+2025-10-06 20:09:50,113 | INFO | └─ INVH: reason=cooldown_skip since_sec=63 cooldown_min=5
+2025-10-06 20:09:50,205 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:09:50,296 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:09:50,386 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:09:50,572 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.066786
+2025-10-06 20:09:50,663 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:09:50,848 | INFO | └─ VTRS: pct_move=0.0492 atr_trigger=0.3 move_atr=0.0199 reason=trigger_not_met
+2025-10-06 20:09:51,029 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.044286
+2025-10-06 20:09:51,118 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:09:51,118 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:09:51,208 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:10:52,163 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:10:52,356 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:10:53,254 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:10:53,345 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:10:53,536 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.25 delta=0.37 cur_tp=27.41 new_tp=27.339113 capped=False step_type=ATR atr_step=0.15 pct_move=1.2928 move_atr=0.7829
+2025-10-06 20:10:53,538 | INFO | └─ INVH: reason=cooldown_skip since_sec=126 cooldown_min=5
+2025-10-06 20:10:53,634 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:10:53,725 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:10:53,817 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:10:54,003 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.056786
+2025-10-06 20:10:54,092 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:10:54,275 | INFO | └─ VTRS: pct_move=0.0492 atr_trigger=0.3 move_atr=0.0199 reason=trigger_not_met
+2025-10-06 20:10:54,460 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.034286
+2025-10-06 20:10:54,548 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:10:54,548 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:10:54,639 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:11:55,619 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:11:55,807 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:11:56,686 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:11:56,777 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:11:56,963 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.25 delta=0.37 cur_tp=27.41 new_tp=27.339113 capped=False step_type=ATR atr_step=0.15 pct_move=1.2928 move_atr=0.7829
+2025-10-06 20:11:56,965 | INFO | └─ INVH: reason=cooldown_skip since_sec=190 cooldown_min=5
+2025-10-06 20:11:57,057 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:11:57,152 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:11:57,240 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:11:57,424 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.056786
+2025-10-06 20:11:57,514 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:11:57,699 | INFO | └─ VTRS: reason=unfavorable_or_flat delta=0.0
+2025-10-06 20:11:57,884 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.014286
+2025-10-06 20:11:57,975 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:11:57,976 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:11:58,074 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:12:59,088 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:12:59,271 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:13:00,164 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:13:00,253 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:13:00,437 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.26 delta=0.36 cur_tp=27.41 new_tp=27.339113 capped=False step_type=ATR atr_step=0.15 pct_move=1.2579 move_atr=0.7618
+2025-10-06 20:13:00,437 | INFO | └─ INVH: reason=cooldown_skip since_sec=253 cooldown_min=5
+2025-10-06 20:13:00,539 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:13:00,629 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:13:00,718 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:13:00,902 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.036786
+2025-10-06 20:13:01,106 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:13:01,311 | INFO | └─ VTRS: reason=unfavorable_or_flat delta=0.0
+2025-10-06 20:13:01,535 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.014286
+2025-10-06 20:13:01,731 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:13:01,732 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:13:01,832 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:14:02,804 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:14:03,000 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:14:03,892 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:14:04,000 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:14:04,186 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.26 delta=0.36 cur_tp=27.41 new_tp=27.339113 capped=False step_type=ATR atr_step=0.15 pct_move=1.2579 move_atr=0.7618
+2025-10-06 20:14:04,470 | INFO | ⬆️ Replaced TP for INVH SHORT → 27.33
+2025-10-06 20:14:04,574 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:14:04,668 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:14:04,761 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:14:04,946 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.036786
+2025-10-06 20:14:05,038 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:14:05,220 | INFO | └─ VTRS: pct_move=0.1969 atr_trigger=0.3 move_atr=0.0796 reason=trigger_not_met
+2025-10-06 20:14:05,409 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.029286
+2025-10-06 20:14:05,499 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:14:05,500 | INFO | 📈 Cycle result: extended=1, skipped=11
+2025-10-06 20:14:05,591 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:15:06,588 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:15:06,774 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:15:07,687 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:15:07,781 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:15:07,971 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.26 delta=0.36 cur_tp=27.33 new_tp=27.259113 capped=False step_type=ATR atr_step=0.15 pct_move=1.2579 move_atr=0.7618
+2025-10-06 20:15:07,972 | INFO | └─ INVH: reason=cooldown_skip since_sec=63 cooldown_min=5
+2025-10-06 20:15:08,066 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:15:08,158 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:15:08,250 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:15:08,435 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.041786
+2025-10-06 20:15:08,526 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:15:08,710 | INFO | └─ VTRS: pct_move=0.1969 atr_trigger=0.3 move_atr=0.0796 reason=trigger_not_met
+2025-10-06 20:15:08,921 | INFO | └─ WBD: pct_move=0.1872 atr_trigger=0.3 move_atr=0.042 reason=trigger_not_met
+2025-10-06 20:15:09,016 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:15:09,017 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:15:09,112 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:16:10,083 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:16:10,267 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:16:11,142 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:16:11,232 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:16:11,428 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.255 delta=0.365 cur_tp=27.33 new_tp=27.259113 capped=False step_type=ATR atr_step=0.15 pct_move=1.2753 move_atr=0.7724
+2025-10-06 20:16:11,428 | INFO | └─ INVH: reason=cooldown_skip since_sec=126 cooldown_min=5
+2025-10-06 20:16:11,516 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:16:11,605 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:16:11,695 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:16:11,880 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.041786
+2025-10-06 20:16:11,972 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:16:12,160 | INFO | └─ VTRS: pct_move=0.1969 atr_trigger=0.3 move_atr=0.0796 reason=trigger_not_met
+2025-10-06 20:16:12,347 | INFO | └─ WBD: pct_move=0.1872 atr_trigger=0.3 move_atr=0.042 reason=trigger_not_met
+2025-10-06 20:16:12,438 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:16:12,439 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:16:12,536 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:17:13,507 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:17:13,695 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:17:14,588 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:17:14,682 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:17:14,868 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.255 delta=0.365 cur_tp=27.33 new_tp=27.259113 capped=False step_type=ATR atr_step=0.15 pct_move=1.2753 move_atr=0.7724
+2025-10-06 20:17:14,868 | INFO | └─ INVH: reason=cooldown_skip since_sec=190 cooldown_min=5
+2025-10-06 20:17:14,959 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:17:15,054 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:17:15,146 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:17:15,335 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.041786
+2025-10-06 20:17:15,429 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:17:15,617 | INFO | └─ VTRS: pct_move=0.1969 atr_trigger=0.3 move_atr=0.0796 reason=trigger_not_met
+2025-10-06 20:17:15,809 | INFO | └─ WBD: pct_move=0.1872 atr_trigger=0.3 move_atr=0.042 reason=trigger_not_met
+2025-10-06 20:17:15,903 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:17:15,904 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:17:16,001 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:18:17,021 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:18:17,213 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:18:18,202 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:18:18,299 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:18:18,485 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.26 delta=0.36 cur_tp=27.33 new_tp=27.259113 capped=False step_type=ATR atr_step=0.15 pct_move=1.2579 move_atr=0.7618
+2025-10-06 20:18:18,486 | INFO | └─ INVH: reason=cooldown_skip since_sec=254 cooldown_min=5
+2025-10-06 20:18:18,580 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:18:18,673 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:18:18,766 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:18:18,955 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.031786
+2025-10-06 20:18:19,048 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:18:19,236 | INFO | └─ VTRS: pct_move=0.3445 atr_trigger=0.3 move_atr=0.1393 reason=trigger_not_met
+2025-10-06 20:18:19,422 | INFO | └─ WBD: pct_move=0.1872 atr_trigger=0.3 move_atr=0.042 reason=trigger_not_met
+2025-10-06 20:18:19,513 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:18:19,513 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:18:19,610 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:19:20,618 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:19:20,807 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:19:21,732 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:19:21,830 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:19:22,016 | INFO | └─ INVH: dir=SHORT entry=28.62 live=28.25 delta=0.37 cur_tp=27.33 new_tp=27.259113 capped=False step_type=ATR atr_step=0.15 pct_move=1.2928 move_atr=0.7829
+2025-10-06 20:19:22,299 | INFO | ⬆️ Replaced TP for INVH SHORT → 27.25
+2025-10-06 20:19:22,392 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:19:22,483 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:19:22,573 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:19:22,759 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.041786
+2025-10-06 20:19:22,851 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:19:23,037 | INFO | └─ VTRS: pct_move=0.3445 atr_trigger=0.3 move_atr=0.1393 reason=trigger_not_met
+2025-10-06 20:19:23,226 | INFO | └─ WBD: pct_move=0.1872 atr_trigger=0.3 move_atr=0.042 reason=trigger_not_met
+2025-10-06 20:19:23,322 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:19:23,323 | INFO | 📈 Cycle result: extended=1, skipped=11
+2025-10-06 20:19:23,418 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:20:24,405 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:20:24,597 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:20:25,495 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:20:25,585 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:20:25,769 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:20:25,859 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:20:25,950 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:20:26,046 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:20:26,234 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.036786
+2025-10-06 20:20:26,328 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:20:26,517 | INFO | └─ VTRS: pct_move=0.3445 atr_trigger=0.3 move_atr=0.1393 reason=trigger_not_met
+2025-10-06 20:20:26,708 | INFO | └─ WBD: pct_move=0.0824 atr_trigger=0.3 move_atr=0.0185 reason=trigger_not_met
+2025-10-06 20:20:26,798 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:20:26,799 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:20:26,894 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:21:27,901 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:21:28,092 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:21:29,001 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:21:29,091 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:21:29,276 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:21:29,366 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:21:29,457 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:21:29,551 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:21:29,739 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.031786
+2025-10-06 20:21:29,831 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:21:30,021 | INFO | └─ VTRS: pct_move=0.3937 atr_trigger=0.3 move_atr=0.1592 reason=trigger_not_met
+2025-10-06 20:21:30,226 | INFO | └─ WBD: pct_move=0.03 atr_trigger=0.3 move_atr=0.0067 reason=trigger_not_met
+2025-10-06 20:21:30,316 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:21:30,316 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:21:30,410 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:22:31,414 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:22:31,601 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:22:32,498 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:22:32,588 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:22:32,776 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:22:32,870 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:22:32,962 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:22:33,054 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:22:33,244 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.031786
+2025-10-06 20:22:33,337 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:22:33,529 | INFO | └─ VTRS: pct_move=0.3937 atr_trigger=0.3 move_atr=0.1592 reason=trigger_not_met
+2025-10-06 20:22:33,748 | INFO | └─ WBD: pct_move=0.03 atr_trigger=0.3 move_atr=0.0067 reason=trigger_not_met
+2025-10-06 20:22:33,846 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:22:33,847 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:22:33,939 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:23:34,965 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:23:35,151 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:23:36,064 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:23:36,156 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:23:36,356 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:23:36,448 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:23:36,541 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:23:36,634 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:23:36,819 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.031786
+2025-10-06 20:23:36,910 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:23:37,099 | INFO | └─ VTRS: pct_move=0.3937 atr_trigger=0.3 move_atr=0.1592 reason=trigger_not_met
+2025-10-06 20:23:37,285 | INFO | └─ WBD: pct_move=0.0824 atr_trigger=0.3 move_atr=0.0185 reason=trigger_not_met
+2025-10-06 20:23:37,381 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:23:37,383 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:23:37,476 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:24:38,458 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:24:38,643 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:24:39,547 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:24:39,637 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:24:39,826 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:24:39,919 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:24:40,010 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:24:40,103 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:24:40,287 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.026786
+2025-10-06 20:24:40,384 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:24:40,574 | INFO | └─ VTRS: pct_move=0.3937 atr_trigger=0.3 move_atr=0.1592 reason=trigger_not_met
+2025-10-06 20:24:40,763 | INFO | └─ WBD: pct_move=0.0824 atr_trigger=0.3 move_atr=0.0185 reason=trigger_not_met
+2025-10-06 20:24:40,857 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:24:40,858 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:24:40,954 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:25:41,954 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:25:42,145 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:25:43,064 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:25:43,155 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:25:43,351 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:25:43,445 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:25:43,538 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:25:43,630 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:25:43,818 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.036786
+2025-10-06 20:25:43,911 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:25:44,101 | INFO | └─ VTRS: pct_move=0.3445 atr_trigger=0.3 move_atr=0.1393 reason=trigger_not_met
+2025-10-06 20:25:44,291 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.004286
+2025-10-06 20:25:44,383 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:25:44,383 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:25:44,475 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:26:45,444 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:26:45,634 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:26:46,522 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:26:46,614 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:26:46,805 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:26:46,899 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:26:46,996 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:26:47,091 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:26:47,283 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.036786
+2025-10-06 20:26:47,379 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:26:47,565 | INFO | └─ VTRS: pct_move=0.3445 atr_trigger=0.3 move_atr=0.1393 reason=trigger_not_met
+2025-10-06 20:26:47,748 | INFO | └─ WBD: pct_move=0.1348 atr_trigger=0.3 move_atr=0.0302 reason=trigger_not_met
+2025-10-06 20:26:47,840 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:26:47,841 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:26:47,934 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:27:48,887 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:27:49,078 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:27:49,943 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:27:50,036 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:27:50,229 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:27:50,332 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:27:50,426 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:27:50,522 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:27:50,706 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.036786
+2025-10-06 20:27:50,798 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:27:50,983 | INFO | └─ VTRS: pct_move=0.3445 atr_trigger=0.3 move_atr=0.1393 reason=trigger_not_met
+2025-10-06 20:27:51,171 | INFO | └─ WBD: pct_move=0.1348 atr_trigger=0.3 move_atr=0.0302 reason=trigger_not_met
+2025-10-06 20:27:51,268 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:27:51,269 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:27:51,362 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:28:52,345 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:28:52,570 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:28:53,470 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:28:53,564 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:28:53,752 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:28:53,846 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:28:53,939 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:28:54,034 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:28:54,224 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.036786
+2025-10-06 20:28:54,319 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:28:54,514 | INFO | └─ VTRS: pct_move=0.3445 atr_trigger=0.3 move_atr=0.1393 reason=trigger_not_met
+2025-10-06 20:28:54,706 | INFO | └─ WBD: pct_move=0.03 atr_trigger=0.3 move_atr=0.0067 reason=trigger_not_met
+2025-10-06 20:28:54,800 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:28:54,800 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:28:54,892 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:29:55,891 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:29:56,081 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:29:56,952 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:29:57,047 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:29:57,233 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:29:57,329 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:29:57,422 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:29:57,517 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:29:57,708 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.036786
+2025-10-06 20:29:57,804 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:29:57,995 | INFO | └─ VTRS: pct_move=0.3445 atr_trigger=0.3 move_atr=0.1393 reason=trigger_not_met
+2025-10-06 20:29:58,183 | INFO | └─ WBD: pct_move=0.03 atr_trigger=0.3 move_atr=0.0067 reason=trigger_not_met
+2025-10-06 20:29:58,282 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:29:58,283 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:29:58,378 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:30:59,365 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:30:59,554 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:31:00,453 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:31:00,555 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:31:00,749 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:31:00,844 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:31:00,938 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:31:01,031 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:31:01,223 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.036786
+2025-10-06 20:31:01,318 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:31:01,509 | INFO | └─ VTRS: pct_move=0.3937 atr_trigger=0.3 move_atr=0.1592 reason=trigger_not_met
+2025-10-06 20:31:01,701 | INFO | └─ WBD: pct_move=0.0824 atr_trigger=0.3 move_atr=0.0185 reason=trigger_not_met
+2025-10-06 20:31:01,794 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:31:01,794 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:31:01,886 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:32:03,078 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:32:03,263 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:32:04,299 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:32:04,389 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:32:04,576 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:32:04,665 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:32:04,756 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:32:04,844 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:32:05,028 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.031786
+2025-10-06 20:32:05,117 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:32:05,301 | INFO | └─ VTRS: pct_move=0.3937 atr_trigger=0.3 move_atr=0.1592 reason=trigger_not_met
+2025-10-06 20:32:05,485 | INFO | └─ WBD: pct_move=0.0824 atr_trigger=0.3 move_atr=0.0185 reason=trigger_not_met
+2025-10-06 20:32:05,575 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:32:05,576 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:32:05,671 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:33:06,636 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:33:06,819 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:33:07,683 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:33:07,780 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:33:07,973 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:33:08,069 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:33:08,158 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:33:08,250 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:33:08,431 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.056786
+2025-10-06 20:33:08,522 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:33:08,704 | INFO | └─ VTRS: pct_move=0.3937 atr_trigger=0.3 move_atr=0.1592 reason=trigger_not_met
+2025-10-06 20:33:08,893 | INFO | └─ WBD: pct_move=0.1348 atr_trigger=0.3 move_atr=0.0302 reason=trigger_not_met
+2025-10-06 20:33:08,984 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:33:08,985 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:33:09,227 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:34:10,190 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:34:10,386 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:34:11,283 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:34:11,376 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:34:11,558 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:34:11,648 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:34:11,739 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:34:11,829 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:34:12,016 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.056786
+2025-10-06 20:34:12,108 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:34:12,295 | INFO | └─ VTRS: pct_move=0.3937 atr_trigger=0.3 move_atr=0.1592 reason=trigger_not_met
+2025-10-06 20:34:12,477 | INFO | └─ WBD: pct_move=0.1872 atr_trigger=0.3 move_atr=0.042 reason=trigger_not_met
+2025-10-06 20:34:12,566 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:34:12,566 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:34:12,657 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:35:13,635 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:35:13,823 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:35:14,708 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:35:14,797 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:35:14,983 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:35:15,077 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:35:15,168 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:35:15,259 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:35:15,445 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.051786
+2025-10-06 20:35:15,536 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:35:15,720 | INFO | └─ VTRS: pct_move=0.3445 atr_trigger=0.3 move_atr=0.1393 reason=trigger_not_met
+2025-10-06 20:35:15,902 | INFO | └─ WBD: pct_move=0.2134 atr_trigger=0.3 move_atr=0.0478 reason=trigger_not_met
+2025-10-06 20:35:15,994 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:35:15,994 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:35:16,084 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:36:17,075 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:36:17,329 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:36:18,282 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:36:18,372 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:36:18,557 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:36:18,648 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:36:18,737 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:36:18,827 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:36:19,012 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.046786
+2025-10-06 20:36:19,102 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:36:19,284 | INFO | └─ VTRS: pct_move=0.3445 atr_trigger=0.3 move_atr=0.1393 reason=trigger_not_met
+2025-10-06 20:36:19,480 | INFO | └─ WBD: pct_move=0.2396 atr_trigger=0.3 move_atr=0.0537 reason=trigger_not_met
+2025-10-06 20:36:19,572 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:36:19,572 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:36:19,666 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:37:20,669 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:37:20,853 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:37:21,762 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:37:21,852 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:37:22,039 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:37:22,138 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:37:22,245 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:37:22,335 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:37:22,517 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.046786
+2025-10-06 20:37:22,608 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:37:22,799 | INFO | └─ VTRS: pct_move=0.2953 atr_trigger=0.3 move_atr=0.1194 reason=trigger_not_met
+2025-10-06 20:37:22,995 | INFO | └─ WBD: pct_move=0.2134 atr_trigger=0.3 move_atr=0.0478 reason=trigger_not_met
+2025-10-06 20:37:23,087 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:37:23,088 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:37:23,183 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:38:24,185 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:38:24,372 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:38:25,294 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:38:25,383 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:38:25,565 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:38:25,655 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:38:25,746 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:38:25,837 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:38:31,024 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.061786
+2025-10-06 20:38:31,114 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:38:31,296 | INFO | └─ VTRS: pct_move=0.2953 atr_trigger=0.3 move_atr=0.1194 reason=trigger_not_met
+2025-10-06 20:38:31,481 | INFO | └─ WBD: pct_move=0.1872 atr_trigger=0.3 move_atr=0.042 reason=trigger_not_met
+2025-10-06 20:38:31,570 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:38:31,570 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:38:31,665 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:39:32,697 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:39:32,882 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:39:33,777 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:39:33,870 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:39:34,055 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:39:34,148 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:39:34,254 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:39:34,343 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:39:34,533 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.081786
+2025-10-06 20:39:34,626 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:39:34,811 | INFO | └─ VTRS: pct_move=0.2953 atr_trigger=0.3 move_atr=0.1194 reason=trigger_not_met
+2025-10-06 20:39:34,997 | INFO | └─ WBD: pct_move=0.1872 atr_trigger=0.3 move_atr=0.042 reason=trigger_not_met
+2025-10-06 20:39:35,092 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:39:35,094 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:39:35,190 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:40:36,189 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:40:36,373 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:40:37,296 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:40:37,385 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:40:37,571 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:40:37,660 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:40:37,751 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:40:37,840 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:40:38,028 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.076786
+2025-10-06 20:40:38,122 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:40:38,309 | INFO | └─ VTRS: pct_move=0.2953 atr_trigger=0.3 move_atr=0.1194 reason=trigger_not_met
+2025-10-06 20:40:38,517 | INFO | └─ WBD: pct_move=0.1872 atr_trigger=0.3 move_atr=0.042 reason=trigger_not_met
+2025-10-06 20:40:38,613 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:40:38,614 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:40:38,748 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:41:39,755 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:41:39,955 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:41:40,870 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:41:40,960 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:41:41,154 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:41:41,245 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:41:41,340 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:41:41,431 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:41:41,619 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.066786
+2025-10-06 20:41:41,714 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:41:41,902 | INFO | └─ VTRS: pct_move=0.2953 atr_trigger=0.3 move_atr=0.1194 reason=trigger_not_met
+2025-10-06 20:41:42,165 | INFO | └─ WBD: pct_move=0.161 atr_trigger=0.3 move_atr=0.0361 reason=trigger_not_met
+2025-10-06 20:41:42,270 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:41:42,270 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:41:42,362 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:42:43,378 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:42:43,569 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:42:44,487 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:42:44,577 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:42:44,763 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:42:44,854 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:42:44,947 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:42:45,038 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:42:45,224 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.071786
+2025-10-06 20:42:45,316 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:42:45,504 | INFO | └─ VTRS: pct_move=0.3445 atr_trigger=0.3 move_atr=0.1393 reason=trigger_not_met
+2025-10-06 20:42:45,697 | INFO | └─ WBD: pct_move=0.1348 atr_trigger=0.3 move_atr=0.0302 reason=trigger_not_met
+2025-10-06 20:42:45,786 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:42:45,786 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:42:45,879 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:43:46,823 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:43:47,012 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:43:47,872 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:43:47,962 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:43:48,147 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:43:48,240 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:43:48,330 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:43:48,423 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:43:48,607 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.056786
+2025-10-06 20:43:48,697 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:43:48,882 | INFO | └─ VTRS: pct_move=0.3445 atr_trigger=0.3 move_atr=0.1393 reason=trigger_not_met
+2025-10-06 20:43:49,065 | INFO | └─ WBD: pct_move=0.1872 atr_trigger=0.3 move_atr=0.042 reason=trigger_not_met
+2025-10-06 20:43:49,157 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:43:49,158 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:43:49,701 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:44:50,686 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:44:50,879 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:44:51,769 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:44:51,860 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:44:52,045 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:44:52,136 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:44:52,229 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:44:52,320 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:44:52,506 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.046786
+2025-10-06 20:44:52,597 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:44:52,784 | INFO | └─ VTRS: pct_move=0.3445 atr_trigger=0.3 move_atr=0.1393 reason=trigger_not_met
+2025-10-06 20:44:52,967 | INFO | └─ WBD: pct_move=0.2396 atr_trigger=0.3 move_atr=0.0537 reason=trigger_not_met
+2025-10-06 20:44:53,058 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:44:53,059 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:44:53,152 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:45:54,112 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:45:54,304 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:45:55,194 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:45:55,285 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:45:55,471 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:45:55,563 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:45:55,656 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:45:55,747 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:45:55,933 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.041786
+2025-10-06 20:45:56,027 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:45:56,210 | INFO | └─ VTRS: pct_move=0.3445 atr_trigger=0.3 move_atr=0.1393 reason=trigger_not_met
+2025-10-06 20:45:56,393 | INFO | └─ WBD: pct_move=0.2921 atr_trigger=0.3 move_atr=0.0655 reason=trigger_not_met
+2025-10-06 20:45:56,496 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:45:56,497 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:45:56,590 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:46:57,565 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:46:57,762 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:46:58,669 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:46:58,760 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:46:58,945 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:46:59,035 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:46:59,125 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:46:59,225 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:46:59,413 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.031786
+2025-10-06 20:46:59,505 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:46:59,688 | INFO | └─ VTRS: pct_move=0.3445 atr_trigger=0.3 move_atr=0.1393 reason=trigger_not_met
+2025-10-06 20:46:59,874 | INFO | └─ WBD: pct_move=0.2921 atr_trigger=0.3 move_atr=0.0655 reason=trigger_not_met
+2025-10-06 20:46:59,965 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:46:59,965 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:47:00,057 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:48:01,040 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:48:01,232 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:48:02,101 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:48:02,191 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:48:02,384 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:48:02,473 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:48:02,562 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:48:02,653 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:48:02,840 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.031786
+2025-10-06 20:48:02,933 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:48:03,122 | INFO | └─ VTRS: pct_move=0.2953 atr_trigger=0.3 move_atr=0.1194 reason=trigger_not_met
+2025-10-06 20:48:03,311 | INFO | └─ WBD: pct_move=0.2921 atr_trigger=0.3 move_atr=0.0655 reason=trigger_not_met
+2025-10-06 20:48:03,404 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:48:03,405 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:48:03,499 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:49:04,474 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:49:04,717 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:49:05,616 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:49:05,705 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:49:05,891 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:49:05,980 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:49:06,072 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:49:06,168 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:49:06,361 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.021786
+2025-10-06 20:49:06,452 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:49:06,636 | INFO | └─ VTRS: pct_move=0.3445 atr_trigger=0.3 move_atr=0.1393 reason=trigger_not_met
+2025-10-06 20:49:06,833 | INFO | └─ WBD: pct_move=0.3445 atr_trigger=0.3 move_atr=0.0772 reason=trigger_not_met
+2025-10-06 20:49:06,922 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:49:06,923 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:49:07,020 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:50:07,976 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:50:08,162 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:50:09,038 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:50:09,130 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:50:09,319 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:50:09,409 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:50:09,500 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:50:09,592 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:50:09,782 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.036786
+2025-10-06 20:50:09,877 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:50:10,061 | INFO | └─ VTRS: pct_move=0.2953 atr_trigger=0.3 move_atr=0.1194 reason=trigger_not_met
+2025-10-06 20:50:10,243 | INFO | └─ WBD: pct_move=0.4493 atr_trigger=0.3 move_atr=0.1007 reason=trigger_not_met
+2025-10-06 20:50:10,333 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:50:10,334 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:50:10,424 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:51:11,432 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:51:11,627 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:51:12,490 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:51:12,589 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:51:12,781 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:51:12,877 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:51:12,968 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:51:13,060 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:51:13,241 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.036786
+2025-10-06 20:51:13,332 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:51:13,521 | INFO | └─ VTRS: pct_move=0.3445 atr_trigger=0.3 move_atr=0.1393 reason=trigger_not_met
+2025-10-06 20:51:13,708 | INFO | └─ WBD: pct_move=0.5542 atr_trigger=0.3 move_atr=0.1242 reason=trigger_not_met
+2025-10-06 20:51:13,797 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:51:13,798 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:51:13,892 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:52:14,891 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:52:15,075 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:52:15,994 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:52:16,086 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:52:16,274 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:52:16,367 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:52:16,458 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:52:16,548 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:52:16,736 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.061786
+2025-10-06 20:52:16,826 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:52:17,014 | INFO | └─ VTRS: pct_move=0.3445 atr_trigger=0.3 move_atr=0.1393 reason=trigger_not_met
+2025-10-06 20:52:17,218 | INFO | └─ WBD: pct_move=0.528 atr_trigger=0.3 move_atr=0.1183 reason=trigger_not_met
+2025-10-06 20:52:17,316 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:52:17,317 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:52:17,412 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:53:18,411 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:53:18,594 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:53:19,497 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:53:19,591 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:53:19,772 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:53:19,864 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:53:19,957 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:53:20,049 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:53:20,235 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.086786
+2025-10-06 20:53:20,326 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:53:20,513 | INFO | └─ VTRS: pct_move=0.3937 atr_trigger=0.3 move_atr=0.1592 reason=trigger_not_met
+2025-10-06 20:53:20,699 | INFO | └─ WBD: pct_move=0.3183 atr_trigger=0.3 move_atr=0.0713 reason=trigger_not_met
+2025-10-06 20:53:20,796 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:53:20,797 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:53:20,890 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:54:21,850 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:54:22,039 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:54:22,920 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:54:23,009 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:54:23,194 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:54:23,285 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:54:23,376 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:54:23,468 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:54:23,655 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.096786
+2025-10-06 20:54:23,747 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:54:23,933 | INFO | └─ VTRS: pct_move=0.2461 atr_trigger=0.3 move_atr=0.0995 reason=trigger_not_met
+2025-10-06 20:54:24,117 | INFO | └─ WBD: pct_move=0.2921 atr_trigger=0.3 move_atr=0.0655 reason=trigger_not_met
+2025-10-06 20:54:24,211 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:54:24,212 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:54:24,304 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:55:25,300 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:55:25,490 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:55:26,404 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:55:26,495 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:55:26,683 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:55:26,782 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:55:26,875 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:55:26,974 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:55:27,161 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.116786
+2025-10-06 20:55:27,258 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:55:27,441 | INFO | └─ VTRS: pct_move=0.1969 atr_trigger=0.3 move_atr=0.0796 reason=trigger_not_met
+2025-10-06 20:55:27,629 | INFO | └─ WBD: pct_move=0.3183 atr_trigger=0.3 move_atr=0.0713 reason=trigger_not_met
+2025-10-06 20:55:27,719 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:55:27,720 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:55:27,810 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:56:28,806 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:56:28,993 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:56:29,868 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:56:29,958 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:56:30,145 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:56:30,236 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:56:30,328 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:56:30,418 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:56:30,603 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.101786
+2025-10-06 20:56:30,692 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:56:30,874 | INFO | └─ VTRS: pct_move=0.2461 atr_trigger=0.3 move_atr=0.0995 reason=trigger_not_met
+2025-10-06 20:56:31,058 | INFO | └─ WBD: pct_move=0.03 atr_trigger=0.3 move_atr=0.0067 reason=trigger_not_met
+2025-10-06 20:56:31,150 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:56:31,151 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:56:31,245 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:57:32,230 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:57:32,417 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:57:33,344 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:57:33,434 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:57:33,618 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:57:33,708 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:57:33,799 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:57:33,891 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:57:34,074 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.126786
+2025-10-06 20:57:34,168 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:57:34,406 | INFO | └─ VTRS: pct_move=0.3445 atr_trigger=0.3 move_atr=0.1393 reason=trigger_not_met
+2025-10-06 20:57:34,634 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.024286
+2025-10-06 20:57:34,745 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:57:34,746 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:57:34,843 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:58:35,835 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:58:36,025 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:58:36,928 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:58:37,022 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:58:37,208 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:58:37,301 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:58:37,393 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:58:37,486 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:58:37,674 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.086786
+2025-10-06 20:58:37,766 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:58:37,955 | INFO | └─ VTRS: pct_move=0.3445 atr_trigger=0.3 move_atr=0.1393 reason=trigger_not_met
+2025-10-06 20:58:38,141 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.029286
+2025-10-06 20:58:38,230 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:58:38,231 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:58:38,326 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 20:59:39,349 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 20:59:39,540 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 20:59:40,448 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:59:40,538 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:59:40,728 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 20:59:40,821 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:59:40,925 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:59:41,020 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:59:41,207 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.106786
+2025-10-06 20:59:41,298 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:59:41,484 | INFO | └─ VTRS: pct_move=0.3937 atr_trigger=0.3 move_atr=0.1592 reason=trigger_not_met
+2025-10-06 20:59:41,668 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.014286
+2025-10-06 20:59:41,759 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 20:59:41,760 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 20:59:41,854 | INFO | 🕑 Sleeping 60 sec…
+2025-10-06 21:00:42,855 | INFO | 🔍 Scanning 12 open positions: AMCR, CAG, FDS, INVH, JNJ, KVUE, L, PSKY, VLTO, VTRS …
+2025-10-06 21:00:43,039 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.95 new_tp=7.9 min_abs=0.05 min_rel=0.001
+2025-10-06 21:00:43,971 | INFO | └─ CAG: reason=no_atr_hint_in_atr_mode
+2025-10-06 21:00:44,061 | INFO | └─ FDS: reason=no_atr_hint_in_atr_mode
+2025-10-06 21:00:44,249 | INFO | └─ INVH: reason=tp_step_too_small cur_tp=27.25 new_tp=27.20226 min_abs=0.05 min_rel=0.001
+2025-10-06 21:00:44,340 | INFO | └─ JNJ: reason=no_atr_hint_in_atr_mode
+2025-10-06 21:00:44,435 | INFO | └─ KVUE: reason=no_atr_hint_in_atr_mode
+2025-10-06 21:00:44,528 | INFO | └─ L: reason=no_atr_hint_in_atr_mode
+2025-10-06 21:00:44,712 | INFO | └─ PSKY: reason=unfavorable_or_flat delta=-0.096786
+2025-10-06 21:00:44,802 | INFO | └─ VLTO: reason=no_atr_hint_in_atr_mode
+2025-10-06 21:00:44,989 | INFO | └─ VTRS: pct_move=0.2953 atr_trigger=0.3 move_atr=0.1194 reason=trigger_not_met
+2025-10-06 21:00:45,184 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.014286
+2025-10-06 21:00:45,277 | INFO | └─ XEL: reason=no_atr_hint_in_atr_mode
+2025-10-06 21:00:45,277 | INFO | 📈 Cycle result: extended=0, skipped=12
+2025-10-06 21:00:45,370 | INFO | 🔔 Market closed — stopping monitor loop.
+2025-10-06 21:00:45,372 | INFO | ✅ Monitor loop finished.

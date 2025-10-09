@@ -1,0 +1,8 @@
+{
+  "ENSEMBLE_TIED": 0.55,
+  "prob_threshold": 0.51,
+  "rsi_threshold_long": 43,
+  "rsi_threshold_short": 57,
+  "macd_hist_long": 0.08,
+  "macd_hist_short": -0.16
+}
