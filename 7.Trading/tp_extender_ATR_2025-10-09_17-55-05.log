@@ -1,0 +1,31 @@
+2025-10-09 17:55:05,929 | INFO | Writing logs to 7.Trading\tp_extender_ATR_2025-10-09_17-55-05.log
+2025-10-09 17:55:05,930 | INFO | ⚙️ Applying TP_EXTEND_PROFILE='aggressive' overrides
+2025-10-09 17:55:05,931 | INFO | ARGV → fATR_trading.py
+2025-10-09 17:55:05,931 | INFO | 🔧 Using config file: D:\QuantML\VS_QuantML_PROD\config.py
+2025-10-09 17:55:05,931 | INFO | CFG → mode=atr, pct_trigger=0.0100, pct_step=0.0050, atr_trigger=0.25, atr_step=0.20, max_mult=2.50, interval=60s
+2025-10-09 17:55:05,931 | INFO | ARGS → mode=None, pct_trigger=None, pct_step=None, atr_trigger=None, atr_step=None, max_mult=None, interval=None
+2025-10-09 17:55:05,931 | INFO | ✅ EFFECTIVE → mode=atr (config), pct_trigger=0.0080, pct_step=0.0040, atr_trigger=0.30, atr_step=0.15, max_mult=3.00, interval=60s
+2025-10-09 17:55:10,886 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 17:55:11,678 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 17:55:12,341 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.847099 min_abs=0.03 min_rel=0.0008
+2025-10-09 17:55:12,994 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-2.824445
+2025-10-09 17:55:13,676 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.35
+2025-10-09 17:55:14,340 | INFO | └─ HPQ: pct_move=0.1052 atr_trigger=0.3 move_atr=0.0451 reason=trigger_not_met
+2025-10-09 17:55:15,006 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 17:55:15,665 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-10.297333
+2025-10-09 17:55:16,326 | INFO | └─ VTRS: pct_move=0.604 atr_trigger=0.3 move_atr=0.2438 reason=trigger_not_met
+2025-10-09 17:55:17,007 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.098098
+2025-10-09 17:55:18,780 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 17:55:18,870 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 17:56:23,635 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 17:56:24,213 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 17:56:24,878 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.847099 min_abs=0.03 min_rel=0.0008
+2025-10-09 17:56:25,536 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 17:56:26,217 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.35
+2025-10-09 17:56:26,886 | INFO | └─ HPQ: pct_move=0.1052 atr_trigger=0.3 move_atr=0.0451 reason=trigger_not_met
+2025-10-09 17:56:27,551 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 17:56:28,224 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-10.297333
+2025-10-09 17:56:28,882 | INFO | └─ VTRS: pct_move=0.604 atr_trigger=0.3 move_atr=0.2438 reason=trigger_not_met
+2025-10-09 17:56:29,552 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.073098
+2025-10-09 17:56:31,306 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 17:56:31,398 | INFO | 🕑 Sleeping 60 sec…
