@@ -997,6 +997,11 @@ def _daily_returns_for_symbol(api: Optional[REST], symbol: str, period: str) -> 
     return z[["ts", "ret"]].dropna()
 
 def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None:
+    """
+    SPY vs QuantML — daily returns
+    Top: intraday lines (2D) or 1M close-to-close lines
+    Bottom: grouped bars of close-of-business daily returns (QuantML vs SPY) using same colours.
+    """
     import numpy as np
     from zoneinfo import ZoneInfo
 
@@ -1013,7 +1018,7 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
     et = ZoneInfo("US/Eastern")
 
     if ui_period == "2D":
-        # ---- Intraday (market hours only), two most-recent ET sessions ----
+        # ---- Intraday (market hours only), last two ET sessions ----
         lookback_days = _lookback_for("2D")
 
         # QuantML equity → try 1W/5Min, then 1D/5Min, then with extended_hours=False
@@ -1072,7 +1077,7 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
             st.info("No overlapping timestamps in market-hours window.")
             return
 
-        # Plot per session (avoid bridging overnight gaps)
+        # ── Top LINE CHART (intraday, split by session) ─────────────────────
         fig = go.Figure()
         for d, g in merged.groupby("date_et", sort=True):
             fig.add_trace(go.Scatter(
@@ -1095,7 +1100,14 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
                           xaxis_title=None, yaxis_title="Daily return (%)",
                           legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0))
         st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
-        return
+
+        # ── Bottom BAR CHART (daily close-of-business return summary) ───────
+        daily_summary = (
+            merged.groupby("date_et", as_index=False)[["QuantML", "SPY"]].mean()
+        )
+        x_dates = daily_summary["date_et"]
+        y_q = daily_summary["QuantML"]
+        y_s = daily_summary["SPY"]
 
     else:
         # ---- 1-month view (close-to-close daily returns) ----
@@ -1119,39 +1131,96 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
             st.info("No overlapping business days between SPY and portfolio in 1M window.")
             return
 
+        # ── Top LINE CHART (daily) ───────────────────────────────────────────
         x   = merged["date"]
         y_q = merged["QuantML"]
         y_s = merged["SPY"]
 
+        # Clip outliers for nicer line plot
+        def _clip(s, qlo=0.01, qhi=0.99):
+            s = pd.to_numeric(s, errors="coerce")
+            if s.notna().sum() < 5: return s
+            lo, hi = np.nanquantile(s, [qlo, qhi])
+            return s.clip(lo, hi)
 
-    # ---- Clip outliers ----
-    def _clip(s, qlo=0.01, qhi=0.99):
-        s = pd.to_numeric(s, errors="coerce")
-        if s.notna().sum() < 5: return s
-        lo, hi = np.nanquantile(s, [qlo, qhi])
-        return s.clip(lo, hi)
-    y_q = _clip(y_q); y_s = _clip(y_s)
+        y_q_clip = _clip(y_q); y_s_clip = _clip(y_s)
 
-    # ---- Plot ----
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=x, y=y_q, mode="lines", name="QuantML (daily %)",
-        line=dict(width=2, color=BRAND["accent"]),
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=x, y=y_q_clip, mode="lines", name="QuantML (daily %)",
+            line=dict(width=2, color=BRAND["accent"]),
+            hovertemplate="%{x}<br>QuantML % %{y:.2f}<extra></extra>"
+        ))
+        fig.add_trace(go.Scatter(
+            x=x, y=y_s_clip, mode="lines", name="SPY (daily %)",
+            line=dict(width=2, color=BRAND["primary"]),
+            hovertemplate="%{x}<br>SPY % %{y:.2f}<extra></extra>"
+        ))
+        fig.add_hline(y=0, line_width=1, line_dash="dot", line_color="rgba(0,0,0,.35)")
+        fig.update_layout(
+            height=260, margin=dict(l=8, r=8, t=6, b=6),
+            xaxis_title=None, yaxis_title="Daily return (%)",
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0)
+        )
+        st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
+
+        # ── Bottom BAR CHART (daily close-of-business) ───────────────────────
+        x_dates = merged["date"]
+        y_q = merged["QuantML"]
+        y_s = merged["SPY"]
+
+    # === Shared BAR CHART build (for both modes) =============================
+    bar_fig = go.Figure()
+    bar_fig.add_trace(go.Bar(
+        x=x_dates, y=y_q,
+        name="QuantML (daily %)",
+        marker_color=BRAND["accent"],
+        opacity=0.88,
         hovertemplate="%{x}<br>QuantML % %{y:.2f}<extra></extra>"
     ))
-    fig.add_trace(go.Scatter(
-        x=x, y=y_s, mode="lines", name="SPY (daily %)",
-        line=dict(width=2, color=BRAND["primary"]),
+    bar_fig.add_trace(go.Bar(
+        x=x_dates, y=y_s,
+        name="SPY (daily %)",
+        marker_color=BRAND["primary"],
+        opacity=0.88,
         hovertemplate="%{x}<br>SPY % %{y:.2f}<extra></extra>"
     ))
-    fig.add_hline(y=0, line_width=1, line_dash="dot", line_color="rgba(0,0,0,.35)")
-    fig.update_layout(
-        height=260, margin=dict(l=8, r=8, t=6, b=6),
-        xaxis_title=None, yaxis_title="Daily return (%)",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0)
-    )
-    st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
 
+    # polish
+    bar_fig.update_traces(marker_line_width=1.2, marker_line_color="rgba(0,0,0,0.25)")
+    bar_fig.update_layout(
+        barmode="group",
+        bargap=0.25,
+        height=260,
+        margin=dict(l=8, r=8, t=6, b=6),
+        xaxis_title=None,
+        yaxis_title="Daily return (%)",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0),
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+        font=dict(size=12),
+        yaxis=dict(zeroline=True, zerolinewidth=1, zerolinecolor="rgba(0,0,0,0.3)"),
+    )
+
+    # annotate the outperformer each day
+    try:
+        for i in range(len(x_dates)):
+            better = "QuantML" if float(y_q.iloc[i]) > float(y_s.iloc[i]) else "SPY"
+            color = BRAND["accent"] if better == "QuantML" else BRAND["primary"]
+            bar_fig.add_annotation(
+                x=x_dates.iloc[i],
+                y=max(float(y_q.iloc[i] or 0), float(y_s.iloc[i] or 0)) * 1.05
+                  if np.isfinite(max(float(y_q.iloc[i] or 0), float(y_s.iloc[i] or 0)))
+                  else 0,
+                text=better,
+                showarrow=False,
+                font=dict(color=color, size=11)
+            )
+    except Exception:
+        # If anything is non-finite, skip annotations quietly
+        pass
+
+    st.plotly_chart(bar_fig, use_container_width=True, config=PLOTLY_CONFIG)
 
 # ===================== Alpaca Portfolio History =====================
 @st.cache_data(ttl=60, show_spinner=False)
@@ -2115,13 +2184,14 @@ def pull_account_snapshot(api: Optional[REST]) -> dict:
     data["margin_util_pct"] = (mm / e * 100.0) if (mm and e and e > 0) else None
     return data
 
-# ===================== Extra KPIs + Contributors/Detractors =====================
 def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> None:
     """
-    KPIs: Day P&L ($/% from equity curve) and Today total P&L ($/% from positions intraday),
-    plus top contributors/detractors. (Exposure/MTD/QTD/YTD computed but not shown.)
+    Performance KPIs row:
+      • Portfolio P&L today (% and $) from Alpaca equity curve
+      • Open Positions P&L today (% and $) from position-level intraday P&L
+      • Compact caption comparing QuantML intraday vs SPY intraday
     """
-    # ===== Intraday equity curve (for Day P&L $/% and the % base) =====
+    # ===== Intraday equity curve (Portfolio P&L today) =====
     intraday = get_portfolio_history_df(api, period="1D")
     day_pl_usd = day_pl_pct = np.nan
     start_equity = np.nan
@@ -2131,84 +2201,106 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
         day_pl_usd   = last_equity - start_equity
         day_pl_pct   = (day_pl_usd / start_equity * 100.0) if start_equity > 0 else np.nan
 
-    # ===== Today total P&L from open positions (sum of intraday P&L across positions) =====
+    # ===== Open positions P&L today (sum across positions) =====
     today_total_pl_usd = np.nan
     today_total_pl_pct = np.nan
     if positions is not None and not positions.empty:
         z = compute_derived_metrics(positions).copy()
 
-        # Try multiple possible intraday P&L columns
+        # Prefer an intraday $ column if available
         intraday_cols_usd = [
-            "pl_today_usd",                # from compute_derived_metrics()
+            "pl_today_usd",                # computed by compute_derived_metrics()
             "unrealized_intraday_pl",      # Alpaca field
-            "intraday_pl_usd",
+            "intraday_pl_usd",             # any custom alias
         ]
         c_today_usd = next((c for c in intraday_cols_usd if c in z.columns), None)
 
-        if c_today_usd is None:
-            # Fallback: (current - prev close) * qty if those fields exist
-            if {"current_price", "prev_close", "qty"}.issubset(set(z.columns)):
-                today_vec = (pd.to_numeric(z["current_price"], errors="coerce")
-                            - pd.to_numeric(z["prev_close"],  errors="coerce")) \
-                            * pd.to_numeric(z["qty"], errors="coerce")
-                today_total_pl_usd = float(np.nansum(today_vec.to_numpy()))
-            else:
-                today_total_pl_usd = np.nan
-        else:
+        if c_today_usd is None and {"current_price","prev_close","qty"}.issubset(z.columns):
+            # Fallback: (current - prev close) * qty
+            today_vec = (pd.to_numeric(z["current_price"], errors="coerce")
+                        - pd.to_numeric(z["prev_close"],  errors="coerce")) \
+                        * pd.to_numeric(z["qty"], errors="coerce")
+            today_total_pl_usd = float(np.nansum(today_vec.to_numpy()))
+        elif c_today_usd is not None:
             today_total_pl_usd = float(pd.to_numeric(z[c_today_usd], errors="coerce").sum())
 
         if start_equity and np.isfinite(start_equity) and start_equity > 0 and np.isfinite(today_total_pl_usd):
             today_total_pl_pct = float(today_total_pl_usd / start_equity * 100.0)
 
-    # ===== (Optional) Exposure & leverage from account snapshot — computed but not shown =====
-    acct = pull_account_snapshot(api)
-    equity   = float(acct.get("equity") or 0.0)
-    long_mv  = float(acct.get("long_market_value")  or 0.0)
-    short_mv = float(acct.get("short_market_value") or 0.0)
-    gross = abs(long_mv) + abs(short_mv)
-    net   = long_mv + short_mv
-    leverage = (gross / equity * 100.0) if equity > 0 else np.nan
+    # ===== Optional: SPY intraday (for caption) =====
+    spy_intraday_pct = np.nan
+    try:
+        et = ZoneInfo("US/Eastern")
+    except Exception:
+        et = timezone.utc
 
-    # ===== (Optional) Rolling returns — computed but not shown =====
-    rolls = compute_period_returns(api)
-    mtd, qtd, ytd = rolls.get("MTD", np.nan), rolls.get("QTD", np.nan), rolls.get("YTD", np.nan)
+    try:
+        # Robust: 5m (fallback 1m→5m), last 2–3 sessions
+        spy_5 = _symbol_returns_5min_robust(api, "SPY", days=3)
+        if not spy_5.empty:
+            spy_5["ts"] = spy_5["ts"].dt.tz_convert(et)
+            # Regular session window
+            mopen, mclose = pd.to_datetime("09:30").time(), pd.to_datetime("16:00").time()
+            spy_5 = spy_5[(spy_5["ts"].dt.time >= mopen) & (spy_5["ts"].dt.time <= mclose)]
+            # Today (ET)
+            today_et = datetime.now(et).date()
+            tday = spy_5[spy_5["ts"].dt.date == today_et]
+            if not tday.empty:
+                # Compound intraday returns for the day
+                spy_intraday_pct = (np.prod(1.0 + tday["ret"].astype(float).to_numpy()/100.0) - 1.0) * 100.0
+    except Exception:
+        pass  # keep NaN on any data issue
 
-    # ===== Top movers today by $ P&L =====
-    winners = losers = pd.DataFrame()
-    if positions is not None and not positions.empty:
-        z = compute_derived_metrics(positions).copy()
-        base_col = "pl_today_usd" if "pl_today_usd" in z.columns else ("pl_$" if "pl_$" in z.columns else None)
-        if base_col:
-            tmp = pd.DataFrame({
-                "Symbol": z.get("Ticker", z.get("symbol")),
-                "P&L $": pd.to_numeric(z[base_col], errors="coerce"),
-            })
-            winners = tmp.sort_values("P&L $", ascending=False).head(3)
-            losers  = tmp.sort_values("P&L $", ascending=True).head(3)
-
-        # ===== KPI cards in requested order (swapped + renamed) =====
+    # ====================== KPI CARDS ======================
     c1, c2, c3, c4 = st.columns(4)
 
-    # Portfolio-level P&L (previously Day P&L)
+    # Portfolio-level (from equity curve)
     with c1:
-        _kpi_card("Today Portfolio P&L %",
-                  f"{(day_pl_pct if np.isfinite(day_pl_pct) else 0):+.2f}%",
-                  "pos" if (day_pl_pct or 0) >= 0 else "neg")
+        tone = "pos" if (day_pl_pct or 0) >= 0 else "neg"
+        arrow = "▲" if tone == "pos" else "▼"
+        _kpi_card("📈 Portfolio P&L (Today, %)",
+                  f"{arrow} {(day_pl_pct if np.isfinite(day_pl_pct) else 0):+.2f}%",
+                  tone)
 
     with c2:
-        _kpi_card("Today Portfolio P&L $", money(day_pl_usd),
-                  "pos" if (day_pl_usd or 0) >= 0 else "neg")
+        tone = "pos" if (day_pl_usd or 0) >= 0 else "neg"
+        arrow = "▲" if tone == "pos" else "▼"
+        _kpi_card("💰 Portfolio P&L (Today, $)",
+                  f"{arrow} {money(day_pl_usd)}",
+                  tone)
 
+    # Open positions (sum of intraday)
     with c3:
-        _kpi_card("Today Open Positions P&L %",
-                  f"{(today_total_pl_pct if np.isfinite(today_total_pl_pct) else 0):+.2f}%",
-                  "pos" if (today_total_pl_pct or 0) >= 0 else "neg")
+        tone = "pos" if (today_total_pl_pct or 0) >= 0 else "neg"
+        arrow = "▲" if tone == "pos" else "▼"
+        _kpi_card("🟢 Open Positions P&L (Today, %)",
+                  f"{arrow} {(today_total_pl_pct if np.isfinite(today_total_pl_pct) else 0):+.2f}%",
+                  tone)
 
-    # Open positions intraday P&L (previously Today total P&L)
     with c4:
-        _kpi_card("Today Open Positions P&L $", money(today_total_pl_usd),
-                  "pos" if (today_total_pl_usd or 0) >= 0 else "neg")
-        
+        tone = "pos" if (today_total_pl_usd or 0) >= 0 else "neg"
+        arrow = "▲" if tone == "pos" else "▼"
+        _kpi_card("💹 Open Positions P&L (Today, $)",
+                  f"{arrow} {money(today_total_pl_usd)}",
+                  tone)
+
+    # ====================== Compact caption ======================
+    # QuantML vs SPY intraday snapshot (uses brand colours)
+    # ====================== Compact caption (larger) ======================
+    qm_txt = f"<span style='color:{BRAND['accent']};font-weight:800;font-size:1.6rem;'>QuantML {day_pl_pct:+.2f}%</span>" \
+             if np.isfinite(day_pl_pct) else f"<span style='color:{BRAND['accent']};font-weight:800;font-size:1.6rem;'>QuantML —</span>"
+    spy_txt = f"<span style='color:{BRAND['primary']};font-weight:800;font-size:1.6rem;'>SPY {spy_intraday_pct:+.2f}%</span>" \
+              if np.isfinite(spy_intraday_pct) else f"<span style='color:{BRAND['primary']};font-weight:800;font-size:1.6rem;'>SPY —</span>"
+
+    st.markdown(
+        f"""
+        <div style='text-align:center;margin-top:12px;margin-bottom:4px;'>
+            {qm_txt} &nbsp;&nbsp;vs&nbsp;&nbsp; {spy_txt}<br>
+            <span style='font-size:1.1rem;color:#64748B;'>(intraday, regular session only)</span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 def render_broker_balances(acct: dict) -> None:
     st.subheader("Broker Balance & Buying Power (Alpaca)")
