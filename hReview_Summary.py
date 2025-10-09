@@ -56,6 +56,16 @@ BRAND = {
     "warning": "#EAB308",
     "danger":  "#DC2626",
 }
+# Global Plotly viewer config (used by all charts)
+PLOTLY_CONFIG = {
+    "displayModeBar": False,   # hide toolbar
+    "responsive": True,
+    "scrollZoom": False,
+    "doubleClick": "reset",    # double-click to reset axes
+    # You can add export options if you like:
+    # "toImageButtonOptions": {"format": "png", "filename": "quantml_chart", "scale": 2},
+}
+
 # --- Traffic Light thresholds (percent points, not decimals) ---
 TL_THRESH_PCT = 0.10   # ±0.10% band -> amber
 TL_GREEN = BRAND["success"]
@@ -117,17 +127,24 @@ except Exception:
 
 # ===================== Sorting + Drawdown helpers =====================
 
-def _traffic_group(value: float, thr: float = TL_THRESH_PCT) -> int:
-    """0 = green (>= +thr), 1 = amber (-thr..+thr), 2 = red (<= -thr)"""
+def _traffic_group(value: float) -> int:
+    """
+    Map to groups using the SAME thresholds as _tl_color_for_pct():
+      0 = green (≥ 0%)
+      1 = amber ( -0.8% ≤ x < 0% )
+      2 = red   ( < -0.8% )
+    """
     try:
         v = float(value)
     except Exception:
         v = 0.0
-    if v >= thr:
+
+    col = _tl_color_for_pct(v)   # uses the central thresholds
+    if col == TL_GREEN:
         return 0
-    if v <= -thr:
-        return 2
-    return 1
+    if col == TL_AMBER:
+        return 1
+    return 2  # TL_RED or anything else
 
 def _default_timeframe_for_period(period: str) -> str:
     """
@@ -148,13 +165,17 @@ def _normalize_period(period: str) -> str:
     return {"1Y": "1A"}.get(period, period)  # pass-through for others incl. "all"
 
 def _order_by_green_amber_red(series: pd.Series) -> list[str]:
-    """Return index labels ordered: green (desc), amber (|x| asc), red (asc)."""
+    """Return symbols ordered: Green → Amber → Red.
+       Within-group rules:
+         • Green  (grp=0): sort high → low
+         • Amber  (grp=1): sort by |x| ascending (closest to 0 first)
+         • Red    (grp=2): sort low → high
+    """
     v = pd.to_numeric(series, errors="coerce").fillna(0.0)
-    grp = v.apply(_traffic_group)  # 0,1,2
+    grp = v.apply(_traffic_group)  # 0=green, 1=amber, 2=red
     within = np.where(grp.eq(0), -v, np.where(grp.eq(2), v, v.abs()))
     tmp = pd.DataFrame({"sym": v.index, "grp": grp, "within": within})
-    tmp = tmp.sort_values(["grp", "within"])
-    return tmp["sym"].tolist()
+    return tmp.sort_values(["grp", "within"])["sym"].tolist()
 
 # ========= Position Transaction History (per open-date per ticker) =========
 from collections import defaultdict, deque
@@ -234,6 +255,34 @@ def _live_positions_map(api: Optional[REST]) -> dict:
         except Exception:
             pass
     return out
+
+def _fetch_fills_paged(_api: REST, *, after_iso: str | None = None, until_iso: str | None = None) -> list:
+    """
+    Fetch ALL FILL activities between [after_iso, until_iso] using Alpaca pagination.
+    Returns a flat list of activity objects.
+    """
+    if _api is None:
+        return []
+    items, token = [], None
+    kw = {"activity_types": "FILL"}
+    if after_iso: kw["after"] = after_iso
+    if until_iso: kw["until"] = until_iso
+    while True:
+        try:
+            res = _api.get_activities(page_token=token, **kw) if token else _api.get_activities(**kw)
+        except TypeError:
+            # older SDK signature
+            res = _api.get_account_activities("FILL", page_token=token, **{k:v for k,v in kw.items() if v})
+        except Exception:
+            break
+        if not res:
+            break
+        items.extend(res)
+        # page_token lives on the *last* item in many SDKs
+        token = getattr(res[-1], "id", None) or getattr(res[-1], "activity_id", None)
+        if not token or len(res) < 100:  # heuristic: last page
+            break
+    return items
 
 
 def _tp_sl_for_history(api: Optional[REST]) -> pd.DataFrame:
@@ -443,37 +492,6 @@ def _style_adaptive_atr(row: pd.Series) -> pd.Series:
 
     return s
 
-def _load_fills_dataframe(api, days: int) -> pd.DataFrame:
-    """
-    Pull account activities (FILL) for the last `days` days and normalize.
-    Works with Alpaca v2 REST `get_activities('FILL')`.
-    """
-    end = datetime.now(timezone.utc)
-    start = end - pd.Timedelta(days=days)
-    acts = api.get_activities(activity_types="FILL", after=start.isoformat(), until=end.isoformat())
-
-    rows = []
-    for a in acts:
-        # a has: symbol, side, qty, price, cum_qty, transaction_time, leaves_qty, order_id, id, ...
-        rows.append({
-            "symbol": a.symbol,
-            "time": _to_dt(a.transaction_time),
-            "side": str(a.side).lower(),             # 'buy'/'sell' for equities (or 'sell_short' on some brokers)
-            "qty": float(a.qty),                     # always positive in activities
-            "price": float(a.price),
-            "order_id": getattr(a, "order_id", None),
-            "id": getattr(a, "id", None),
-            "commission": float(getattr(a, "net_amount", 0.0)) * 0.0,  # placeholder if you don’t have fees field
-            "fee": float(getattr(a, "fee", 0.0)) if hasattr(a, "fee") else 0.0,
-        })
-    df = pd.DataFrame(rows).sort_values(["symbol", "time"]).reset_index(drop=True)
-    if df.empty:
-        return df
-
-    # Normalize side to signed quantity: buys increase long, sells decrease long (or cover short)
-    # Use +qty for buys, -qty for sells
-    df["signed_qty"] = np.where(df["side"].str.contains("buy"), df["qty"], -df["qty"])
-    return df
 
 def build_position_transaction_history(api, days: int = 180) -> pd.DataFrame:
     """
@@ -939,55 +957,102 @@ def _daily_returns_for_symbol(api: Optional[REST], symbol: str, period: str) -> 
     z["ret"] = z["close"].pct_change() * 100.0
     return z[["ts", "ret"]].dropna()
 
-
 def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None:
     import numpy as np
     from zoneinfo import ZoneInfo
+
     st.markdown("**SPY vs QuantML — daily returns**")
 
-    ui_period = st.radio("X-axis span", options=["2D", "1M"], horizontal=True,
-                         label_visibility="collapsed", key="spy_vs_qm_period")
+    ui_period = st.radio(
+        "X-axis span",
+        options=["2D", "1M"],
+        horizontal=True,
+        label_visibility="collapsed",
+        key="spy_vs_qm_period"
+    )
 
-    # Pull series
+    et = ZoneInfo("US/Eastern")
+
     if ui_period == "2D":
+        # ---- Fetch intraday 5-min data ----
         ph  = get_portfolio_history_df(api, period="1W", timeframe="5Min")
-        qm  = _daily_returns_from_equity(ph, ui_period)         # ts, ret
-        spy = _daily_returns_for_symbol(api, "SPY", ui_period)  # ts, ret
-
+        qm  = _daily_returns_from_equity(ph, ui_period)         # QuantML: ts,ret
+        spy = _daily_returns_for_symbol(api, "SPY", ui_period)  # SPY: ts,ret
         if qm.empty or spy.empty:
             st.info("SPY or portfolio data not available for 2D.")
             return
 
-        # ----- Align to the SAME last two ET sessions on a single 5-min grid -----
-        et = ZoneInfo("US/Eastern")
-        spy["date_et"] = spy["ts"].dt.tz_convert(et).dt.date
-        last2 = sorted(spy["date_et"].unique())[-2:] or sorted(spy["date_et"].unique())
-        spy   = spy[spy["date_et"].isin(last2)]
+        # ---- Convert to Eastern time ----
+        qm["ts"]  = qm["ts"].dt.tz_convert(et)
+        spy["ts"] = spy["ts"].dt.tz_convert(et)
 
-        # 5-min grid from SPY (authoritative)
-        grid = (spy[["ts"]].copy()
-                    .assign(ts=lambda d: d["ts"].dt.floor("5min"))
-                    .drop_duplicates()
-                    .sort_values("ts")
-                    .reset_index(drop=True))
+        # ---- Market-hours filter (09:30–16:00 ET) ----
+        mopen, mclose = pd.to_datetime("09:30").time(), pd.to_datetime("16:00").time()
+        spy = spy[(spy["ts"].dt.time >= mopen) & (spy["ts"].dt.time <= mclose)]
+        qm  = qm[(qm["ts"].dt.time  >= mopen) & (qm["ts"].dt.time  <= mclose)]
 
-        # Reindex both series to SPY grid (no forward-fill → we only keep points both have)
+        # ---- Keep the last two ET sessions ----
+        spy["date_et"] = spy["ts"].dt.date
+        last2 = sorted(spy["date_et"].unique())[-2:]
+        spy = spy[spy["date_et"].isin(last2)]
+
+        qm["date_et"] = qm["ts"].dt.date
+        # If QuantML’s newest day is ahead (pre-market), overlay onto prev SPY day
+        if qm["date_et"].max() > spy["date_et"].max():
+            qm["ts"] -= pd.Timedelta(days=1)
+            qm["date_et"] = qm["ts"].dt.date
+            st.caption("🔧 QuantML pre-market shifted to overlay previous SPY session.")
+
+        # ---- Align on SPY 5-min grid, then keep only rows where both exist ----
+        grid = (spy[["ts"]]
+                .assign(ts=lambda d: d["ts"].dt.floor("5min"))
+                .drop_duplicates()
+                .sort_values("ts"))
         qm_g  = grid.merge(qm.rename(columns={"ret": "QuantML"}), on="ts", how="left")
         spy_g = grid.merge(spy.rename(columns={"ret": "SPY"}),      on="ts", how="left")
-
         merged = (qm_g.merge(spy_g[["ts","SPY"]], on="ts", how="left")
                        .dropna(subset=["QuantML","SPY"])
+                       .assign(date_et=lambda d: d["ts"].dt.date)
                        .sort_values("ts"))
 
-        st.caption(f"⚙️ Debug: 2D → QuantML rows={len(qm)}, SPY rows={len(spy)}; merged={len(merged)}")
+        st.caption(f"⚙️ Debug: 2D → QuantML rows={len(qm)} SPY rows={len(spy)} merged={len(merged)}")
         if merged.empty:
-            st.info("No overlapping timestamps between SPY and portfolio in 2D window.")
+            st.info("No overlapping timestamps in market-hours window.")
             return
 
-        x = merged["ts"]; y_q = merged["QuantML"]; y_s = merged["SPY"]
+        # ---- Plot: one trace per session to prevent bridges between days ----
+        fig = go.Figure()
+
+        for d, g in merged.groupby("date_et", sort=True):
+            fig.add_trace(go.Scatter(
+                x=g["ts"], y=g["QuantML"], mode="lines", name=f"QuantML (daily %) · {d}",
+                line=dict(width=2, color=BRAND["accent"]), connectgaps=False,
+                hovertemplate="%{x}<br>QuantML % %{y:.2f}<extra></extra>"
+            ))
+            fig.add_trace(go.Scatter(
+                x=g["ts"], y=g["SPY"], mode="lines", name=f"SPY (daily %) · {d}",
+                line=dict(width=2, color=BRAND["primary"]), connectgaps=False,
+                hovertemplate="%{x}<br>SPY % %{y:.2f}<extra></extra>"
+            ))
+
+        fig.add_hline(y=0, line_width=1, line_dash="dot", line_color="rgba(0,0,0,.35)")
+
+        # Hide weekends AND overnight 16:00→09:30 so there’s no visual “ramp”
+        fig.update_xaxes(rangebreaks=[
+            dict(bounds=["sat", "mon"]),
+            dict(pattern="hour", bounds=[16, 9.5])  # 4pm → 9:30am ET
+        ])
+
+        fig.update_layout(
+            height=260, margin=dict(l=8, r=8, t=6, b=6),
+            xaxis_title=None, yaxis_title="Daily return (%)",
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0)
+        )
+        st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
+        return
 
     else:
-        # ----- 1M: use daily close-to-close returns and keep ONLY shared business days -----
+        # ---- 1-month view (close-to-close daily returns) ----
         ph  = get_portfolio_history_df(api, period="1M")
         qm  = (_daily_returns_from_equity(ph, ui_period)
                .assign(date=lambda d: d["ts"].dt.date)
@@ -997,50 +1062,43 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
                .assign(date=lambda d: d["ts"].dt.date)
                .groupby("date", as_index=False).last()
                .rename(columns={"ret": "SPY"}))
-
-        merged = (qm.merge(spy, on="date", how="inner")
-                    .sort_values("date"))
-
-        # Optional anchor if configured
-        try:
-            if 'START_1M_FROM' in globals() and START_1M_FROM:
-                merged = merged[merged["date"] >= START_1M_FROM]
-                st.caption(f"Anchored 1M window from {START_1M_FROM}.")
-        except Exception:
-            pass
-
-        st.caption(f"⚙️ Debug: 1M → QuantML rows={len(qm)}, SPY rows={len(spy)}; merged={len(merged)}")
+        merged = qm.merge(spy, on="date", how="inner").sort_values("date")
+        if 'START_1M_FROM' in globals() and START_1M_FROM:
+            merged = merged[merged["date"] >= START_1M_FROM]
+            st.caption(f"Anchored 1M window from {START_1M_FROM}.")
+        st.caption(f"⚙️ Debug: 1M → QuantML rows={len(qm)} SPY rows={len(spy)} merged={len(merged)}")
         if merged.empty:
             st.info("No overlapping business days between SPY and portfolio in 1M window.")
             return
-
         x = merged["date"]; y_q = merged["QuantML"]; y_s = merged["SPY"]
 
-    # ----- Clip outliers so one bad tick doesn’t wreck the scale -----
-    def _clip_series(s: pd.Series, qlo=0.01, qhi=0.99):
+    # ---- Clip outliers ----
+    def _clip(s, qlo=0.01, qhi=0.99):
         s = pd.to_numeric(s, errors="coerce")
-        if s.notna().sum() < 5:
-            return s
+        if s.notna().sum() < 5: return s
         lo, hi = np.nanquantile(s, [qlo, qhi])
-        return s.clip(lower=lo, upper=hi)
+        return s.clip(lo, hi)
+    y_q = _clip(y_q); y_s = _clip(y_s)
 
-    y_q = _clip_series(y_q); y_s = _clip_series(y_s)
-
-    # ----- Plot -----
+    # ---- Plot ----
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=x, y=y_q, mode="lines", name="QuantML (daily %)",
-                             line=dict(width=2, color=BRAND["accent"]),
-                             hovertemplate="%{x}<br>QuantML: %{y:.2f}%<extra></extra>"))
-    fig.add_trace(go.Scatter(x=x, y=y_s, mode="lines", name="SPY (daily %)",
-                             line=dict(width=2, color=BRAND["primary"]),
-                             hovertemplate="%{x}<br>SPY: %{y:.2f}%<extra></extra>"))
+    fig.add_trace(go.Scatter(
+        x=x, y=y_q, mode="lines", name="QuantML (daily %)",
+        line=dict(width=2, color=BRAND["accent"]),
+        hovertemplate="%{x}<br>QuantML % %{y:.2f}<extra></extra>"
+    ))
+    fig.add_trace(go.Scatter(
+        x=x, y=y_s, mode="lines", name="SPY (daily %)",
+        line=dict(width=2, color=BRAND["primary"]),
+        hovertemplate="%{x}<br>SPY % %{y:.2f}<extra></extra>"
+    ))
     fig.add_hline(y=0, line_width=1, line_dash="dot", line_color="rgba(0,0,0,.35)")
     fig.update_layout(
         height=260, margin=dict(l=8, r=8, t=6, b=6),
         xaxis_title=None, yaxis_title="Daily return (%)",
         legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0)
     )
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
 
 
 # ===================== Alpaca Portfolio History =====================
@@ -1497,66 +1555,64 @@ except Exception:
 
 @st.cache_data(ttl=300, show_spinner=False)
 def _pull_all_fills_df(_api: Optional[REST], start: datetime | None = None) -> pd.DataFrame:
-    """
-    Pull ALL FILL activities since `start` (default: 2000-01-01), robust to old/new Alpaca SDKs.
-    Returns columns: ts (UTC), symbol, side, qty, price, fee.
-    """
-    cols = ["ts", "symbol", "side", "qty", "price", "fee"]
-    if _api is None:
-        return pd.DataFrame(columns=cols)
-
-    # go far back by default
-    if start is None:
-        start = datetime(2000, 1, 1, tzinfo=timezone.utc)
-    after_iso = start.isoformat()
-
-    acts = []
-    # try the different SDK signatures
-    try:
-        acts = _api.get_activities(activity_types="FILL", after=after_iso)
-    except TypeError:
-        try:
-            acts = _api.get_activities("FILL", after=after_iso)
-        except Exception:
-            try:
-                acts = _api.get_account_activities("FILL", after=after_iso)
-            except Exception:
-                acts = []
+    """All FILLs since `start` (default 2000-01-01), with fees, paginated."""
+    cols = ["ts","symbol","side","qty","price","fee"]
+    if _api is None: return pd.DataFrame(columns=cols)
+    if start is None: start = datetime(2000, 1, 1, tzinfo=timezone.utc)
+    acts = _fetch_fills_paged(_api, after_iso=start.isoformat())
 
     rows = []
     for a in acts or []:
-        sym  = (getattr(a, "symbol", None) or getattr(a, "asset_symbol", None) or "").upper()
-        side = (getattr(a, "side", "") or "").lower()  # 'buy' or 'sell'
+        sym  = (getattr(a,"symbol",None) or getattr(a,"asset_symbol",None) or "").upper()
+        side = (getattr(a,"side","") or "").lower()
+        def _fee(obj):
+            for k in ("commission","commissions","fee","fees","trade_fees","transaction_fees"):
+                v = getattr(obj,k,None)
+                if v is not None:
+                    try: return float(v)
+                    except: pass
+            return 0.0
         try:
-            price = float(getattr(a, "price", getattr(a, "fill_price", 0.0)) or 0.0)
-            qty   = float(getattr(a, "qty",   getattr(a, "quantity", 0.0)) or 0.0)
+            price = float(getattr(a,"price", getattr(a,"fill_price",0.0)) or 0.0)
+            qty   = float(getattr(a,"qty",   getattr(a,"quantity",0.0)) or 0.0)
+            fee   = float(_fee(a))
         except Exception:
-            price, qty = 0.0, 0.0
-
-        # commission/fees (best‑effort across SDKs)
-        fee = None
-        for name in ("commission", "commissions", "fee", "fees", "trade_fees", "transaction_fees"):
-            v = getattr(a, name, None)
-            if v is not None:
-                try:
-                    fee = float(v)
-                    break
-                except Exception:
-                    pass
-        fee = float(fee if fee is not None else 0.0)
-
-        ts = getattr(a, "transaction_time", getattr(a, "timestamp", getattr(a, "date", None)))
+            price, qty, fee = 0.0, 0.0, 0.0
+        ts = getattr(a,"transaction_time", getattr(a,"timestamp", getattr(a,"date",None)))
         ts = pd.to_datetime(str(ts), utc=True, errors="coerce")
-        if pd.isna(ts) or not sym or qty <= 0 or price <= 0:
+        if pd.isna(ts) or not sym or qty <= 0 or price <= 0: 
             continue
         rows.append({"ts": ts, "symbol": sym, "side": side, "qty": qty, "price": price, "fee": fee})
-
-    if not rows:
-        return pd.DataFrame(columns=cols)
-
-    df = pd.DataFrame(rows)
+    if not rows: return pd.DataFrame(columns=cols)
+    df = pd.DataFrame(rows).sort_values("ts").reset_index(drop=True)
     df["ts"] = pd.to_datetime(df["ts"], utc=True, errors="coerce")
-    return df.sort_values("ts").reset_index(drop=True)
+    return df
+
+def _load_fills_dataframe(api, days: int) -> pd.DataFrame:
+    """
+    Paginated fills for last `days`, normalized for lot construction (keeps order_id when present).
+    """
+    end = datetime.now(timezone.utc)
+    start = end - timedelta(days=days+2)
+    acts = _fetch_fills_paged(api, after_iso=start.isoformat(), until_iso=end.isoformat())
+
+    rows = []
+    for a in acts or []:
+        rows.append({
+            "symbol": (getattr(a,"symbol",None) or getattr(a,"asset_symbol",None) or "").upper(),
+            "time":   pd.to_datetime(str(getattr(a,"transaction_time", getattr(a,"timestamp", getattr(a,"date", None)))), utc=True, errors="coerce"),
+            "side":   str(getattr(a,"side","")).lower(),
+            "qty":    float(getattr(a,"qty", getattr(a,"quantity",0.0)) or 0.0),
+            "price":  float(getattr(a,"price", getattr(a,"fill_price",0.0)) or 0.0),
+            "order_id": getattr(a, "order_id", None),
+            "id":       getattr(a, "id", None),
+            "fee":     float(getattr(a, "fee", 0.0) or 0.0),
+        })
+    df = pd.DataFrame(rows).dropna(subset=["time"])
+    if df.empty: return df
+    df = df.sort_values(["symbol","time"]).reset_index(drop=True)
+    df["signed_qty"] = np.where(df["side"].str.contains("buy"), df["qty"], -df["qty"])
+    return df
 
 def _fills_for_lot_window(fills: pd.DataFrame,
                           symbol: str,
@@ -1881,7 +1937,7 @@ def render_portfolio_equity_chart(api: Optional[REST]) -> dict:
     if yrange:
         fig.update_yaxes(range=yrange)
 
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
 
     # Quick stats from the plotted series
     chg_pct = float(df["ret_pct"].iloc[-1]) if len(df) else float("nan")
@@ -2115,7 +2171,7 @@ def render_broker_balances(acct: dict) -> None:
     if acct.get("margin_util_pct") is not None:
         st.plotly_chart(_banded_gauge(float(acct["margin_util_pct"]), "Margin Utilization",
                                       bands=(25, 50, 100), good="low"),
-                        width="stretch")
+                        use_container_width=True, config=PLOTLY_CONFIG)
         st.caption("= Maintenance margin ÷ equity. Lower is safer.")
 
 # =============================================================================
@@ -2251,36 +2307,83 @@ def _list_open_orders(_api):
     except Exception:
         return []
 
-@st.cache_data(ttl=15, show_spinner=False)
 # ===================== Adaptive ATR — helpers =====================
-
+# ✅ safe to cache: returns plain dicts, not Alpaca Entity objects
 @st.cache_data(ttl=120, show_spinner=False)
 def _get_order_by_id_robust(_api: Optional[REST], order_id: str):
-    """Best-effort fetch of a single order object by ID (works across Alpaca SDK variants)."""
+    """Fetch one order and return a plain-JSON-like dict (pickle-safe for Streamlit cache)."""
     if _api is None or not order_id:
         return None
+
+    def _g(obj, *names):
+        for n in names:
+            try:
+                v = getattr(obj, n)
+            except Exception:
+                v = None
+            if v is not None:
+                return v
+        return None
+
+    def _plain_order(obj):
+        if obj is None:
+            return None
+        d = {
+            "id": _g(obj, "id"),
+            "client_order_id": _g(obj, "client_order_id"),
+            "symbol": _g(obj, "symbol", "asset_symbol"),
+            "side": _g(obj, "side"),
+            "type": _g(obj, "type", "order_type"),
+            "order_class": _g(obj, "order_class"),
+            "status": _g(obj, "status"),
+            "limit_price": _g(obj, "limit_price", "price"),
+            "stop_price": _g(obj, "stop_price"),
+            "submitted_at": _g(obj, "submitted_at", "created_at", "timestamp"),
+        }
+        tp = _g(obj, "take_profit")
+        sl = _g(obj, "stop_loss")
+        legs = _g(obj, "legs") or []
+
+        if tp is not None:
+            d["take_profit"] = {"limit_price": _g(tp, "limit_price", "price")}
+        if sl is not None:
+            d["stop_loss"] = {
+                "stop_price": _g(sl, "stop_price"),
+                "limit_price": _g(sl, "limit_price"),
+                "trail_price": _g(sl, "trail_price"),
+                "trail_percent": _g(sl, "trail_percent"),
+            }
+        # Recurse legs to plain dicts too
+        d["legs"] = [_plain_order(l) for l in legs] if legs else []
+        return d
+
+    # --- fetch with fallbacks ---
+    o = None
     try:
-        return _api.get_order(order_id)               # modern SDK
+        o = _api.get_order(order_id)
     except TypeError:
         try:
-            return _api.get_order_by_id(order_id)     # older variants
+            o = _api.get_order_by_id(order_id)
         except Exception:
-            pass
+            o = None
     except Exception:
-        pass
-    # Fallback: scan recent orders
-    try:
-        try:
-            orders = _api.list_orders(status="all", nested=True, limit=500)
-        except TypeError:
-            orders = _api.list_orders(status="all", limit=500)
-        for o in orders or []:
-            if str(getattr(o, "id", "")) == str(order_id):
-                return o
-    except Exception:
-        return None
-    return None
+        o = None
 
+    if o is None:
+        # Fallback: scan recent orders and match by id
+        try:
+            try:
+                orders = _api.list_orders(status="all", nested=True, limit=500)
+            except TypeError:
+                orders = _api.list_orders(status="all", limit=500)
+            for cand in orders or []:
+                if str(_g(cand, "id")) == str(order_id):
+                    o = cand
+                    break
+        except Exception:
+            o = None
+
+    return _plain_order(o)
 
 def _attr_or_key(obj, name, default=None):
     """Get attribute or dict key."""
@@ -2873,12 +2976,12 @@ def render_updated_dials(positions: pd.DataFrame, api: Optional[REST]) -> None:
 
     with d1:
         st.markdown("<div style='font-weight:600;margin:0 0 4px 2px;'>% of stocks up today</div>", unsafe_allow_html=True)
-        st.plotly_chart(_gauge_percent(up_today_pct, title="", good="high", bands=(40,60,80)), width="stretch")
+        st.plotly_chart(_gauge_percent(up_today_pct, title="", good="high", bands=(40,60,80)), use_container_width=True, config=PLOTLY_CONFIG)
         st.markdown("<div style='text-align:center;font-size:13px;color:#64748B;'>Dial 1: positive intraday P&L</div>", unsafe_allow_html=True)
 
     with d2:
         st.markdown("<div style='font-weight:600;margin:0 0 4px 2px;'># open since start of day</div>", unsafe_allow_html=True)
-        st.plotly_chart(_gauge_count(still_open_since_sod, max(1, npos), title=""), width="stretch")
+        st.plotly_chart(_gauge_count(still_open_since_sod, max(1, npos), title=""), use_container_width=True, config=PLOTLY_CONFIG)
         st.markdown("<div style='text-align:center;font-size:13px;color:#64748B;'>Dial 2: untouched by fills today</div>", unsafe_allow_html=True)
 
     with d3:
@@ -2888,7 +2991,7 @@ def render_updated_dials(positions: pd.DataFrame, api: Optional[REST]) -> None:
                         title="Total P/L % (open positions)",
                         good="high",
                         bands=(1.0, 2.0, 3.0)),   # bands relative to 3 %
-            width="stretch"
+            use_container_width=True, config=PLOTLY_CONFIG
         )
         st.markdown("<div style='text-align:center;font-size:13px;color:#64748B;'>Dial 3: weighted open P&L %</div>", unsafe_allow_html=True)
 
@@ -2997,7 +3100,7 @@ def render_current_status_grid(df: pd.DataFrame) -> None:
     # --- series keyed by symbol (use total performance since entry)
     s_total = pd.to_numeric(z.set_index(col_sym)[col_total], errors="coerce")
 
-    # --- order by performance since entry (Green→Amber→Red)
+# --- order by performance since entry (Green→Amber→Red)
     order_total = _order_by_green_amber_red(s_total)
 
     # --- single display row
@@ -3212,25 +3315,10 @@ from datetime import datetime, timedelta, timezone
 def _pull_fills_df(_api: Optional[REST], days: int = 7) -> pd.DataFrame:
     """Account activities → FILLs for the past N days (ascending)."""
     cols = ["ts","date","symbol","side","qty","price"]
-    if _api is None:
-        return pd.DataFrame(columns=cols)
+    if _api is None: return pd.DataFrame(columns=cols)
 
-    # Timezone-aware 'after' so Alpaca honors the filter
     after = (datetime.now(timezone.utc) - timedelta(days=days+2)).isoformat()
-
-    acts = []
-    try:
-        acts = _api.get_activities(activity_types="FILL", after=after)
-    except TypeError:
-        try:
-            acts = _api.get_activities("FILL", after=after)
-        except Exception:
-            acts = []
-    except Exception:
-        try:
-            acts = _api.get_account_activities("FILL", after=after)
-        except Exception:
-            acts = []
+    acts  = _fetch_fills_paged(_api, after_iso=after)
 
     rows = []
     for a in acts or []:
@@ -3238,7 +3326,7 @@ def _pull_fills_df(_api: Optional[REST], days: int = 7) -> pd.DataFrame:
         side = (getattr(a, "side", "") or "").lower()
         try:
             price = float(getattr(a, "price", getattr(a, "fill_price", 0.0)) or 0.0)
-            qty   = float(getattr(a, "qty", getattr(a, "quantity", 0.0)) or 0.0)
+            qty   = float(getattr(a, "qty",   getattr(a, "quantity", 0.0)) or 0.0)
         except Exception:
             price, qty = 0.0, 0.0
         ts = getattr(a, "transaction_time", getattr(a, "timestamp", getattr(a, "date", None)))
@@ -3246,13 +3334,11 @@ def _pull_fills_df(_api: Optional[REST], days: int = 7) -> pd.DataFrame:
         if pd.isna(ts) or not sym or qty <= 0 or price <= 0:
             continue
         rows.append({"ts": ts, "date": ts.date(), "symbol": sym, "side": side, "qty": qty, "price": price})
-
-    if not rows:
-        return pd.DataFrame(columns=cols)
-
-    df = pd.DataFrame(rows)
+    if not rows: return pd.DataFrame(columns=cols)
+    df = pd.DataFrame(rows).sort_values("ts")
     df["ts"] = pd.to_datetime(df["ts"], utc=True, errors="coerce")
-    return df.sort_values("ts")
+    return df
+
 
 def build_history_rows_from_fills(api: Optional[REST],
                                   positions: pd.DataFrame | None,
