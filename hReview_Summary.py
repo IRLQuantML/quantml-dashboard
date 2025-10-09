@@ -127,6 +127,20 @@ except Exception:
 
 # ===================== Sorting + Drawdown helpers =====================
 
+def _ensure_ts_and_date(df: pd.DataFrame | None) -> pd.DataFrame:
+    """
+    Return df with datetime 'ts' and a 'date' (ts.date) column.
+    If df is None/empty, return an empty frame with the right columns so .dt never crashes.
+    """
+    import pandas as pd
+    if df is None or df.empty:
+        return pd.DataFrame(columns=["ts", "ret", "date"])
+    z = df.copy()
+    z["ts"] = pd.to_datetime(z["ts"], utc=True, errors="coerce")
+    z["date"] = z["ts"].dt.date
+    return z
+
+
 def _traffic_group(value: float) -> int:
     """
     Map to groups using the SAME thresholds as _tl_color_for_pct():
@@ -165,17 +179,24 @@ def _normalize_period(period: str) -> str:
     return {"1Y": "1A"}.get(period, period)  # pass-through for others incl. "all"
 
 def _order_by_green_amber_red(series: pd.Series) -> list[str]:
-    """Return symbols ordered: Green → Amber → Red.
-       Within-group rules:
-         • Green  (grp=0): sort high → low
-         • Amber  (grp=1): sort by |x| ascending (closest to 0 first)
-         • Red    (grp=2): sort low → high
+    """Order symbols: Green → Amber → Red.
+       Within each group:
+         • Green (≥0%):        high → low
+         • Amber (-0.8% to <0): |x| ascending (closest to 0 first)
+         • Red   (< -0.8%):    descending by value (biggest loss first)
     """
     v = pd.to_numeric(series, errors="coerce").fillna(0.0)
     grp = v.apply(_traffic_group)  # 0=green, 1=amber, 2=red
-    within = np.where(grp.eq(0), -v, np.where(grp.eq(2), v, v.abs()))
-    tmp = pd.DataFrame({"sym": v.index, "grp": grp, "within": within})
-    return tmp.sort_values(["grp", "within"])["sym"].tolist()
+
+    # same ‘within’ ranking as Traffic Lights
+    within = np.select(
+        [grp.eq(0),        grp.eq(1),  grp.eq(2)],
+        [-v,               v.abs(),    -v],
+        default=v,
+    )
+
+    tmp = pd.DataFrame({"sym": v.index, "grp": grp, "__within": within})
+    return tmp.sort_values(["grp", "__within"])["sym"].tolist()
 
 # ========= Position Transaction History (per open-date per ticker) =========
 from collections import defaultdict, deque
@@ -936,6 +957,24 @@ def _get_symbol_bars(_api: Optional[REST], symbol: str, timeframe: str, *, days:
 
     return pd.DataFrame(columns=["ts","close"])
 
+def _symbol_returns_5min_robust(api: Optional[REST], symbol: str, *, days: int = 5) -> pd.DataFrame:
+    """
+    Try 5Min first; if empty, pull 1Min and resample to 5Min.
+    Always returns tidy ['ts','ret'] in UTC (%).
+    """
+    z = _get_symbol_bars(api, symbol, "5Min", days=days).sort_values("ts")
+    if z.empty:
+        z = _get_symbol_bars(api, symbol, "1Min", days=days).sort_values("ts")
+        if not z.empty:
+            z = (z.set_index("ts").resample("5min").last().dropna().reset_index())
+
+    if z.empty:
+        return pd.DataFrame(columns=["ts", "ret"])
+
+    z["ts"]  = pd.to_datetime(z["ts"], utc=True, errors="coerce")
+    z["ret"] = z["close"].pct_change() * 100.0
+    return z[["ts", "ret"]].dropna()
+
 def _daily_returns_from_equity(ph: pd.DataFrame, period: str) -> pd.DataFrame:
     """Return tidy returns with a tz-aware timestamp column 'ts' and 'ret' (%)"""
     if ph is None or ph.empty:
@@ -974,36 +1013,49 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
     et = ZoneInfo("US/Eastern")
 
     if ui_period == "2D":
-        # ---- Fetch intraday 5-min data ----
-        ph  = get_portfolio_history_df(api, period="1W", timeframe="5Min")
-        qm  = _daily_returns_from_equity(ph, ui_period)         # QuantML: ts,ret
-        spy = _daily_returns_for_symbol(api, "SPY", ui_period)  # SPY: ts,ret
+        # ---- Intraday (market hours only), two most-recent ET sessions ----
+        lookback_days = _lookback_for("2D")
+
+        # QuantML equity → try 1W/5Min, then 1D/5Min, then with extended_hours=False
+        ph = get_portfolio_history_df(api, period="1W", timeframe="5Min")
+        if ph.empty:
+            ph = get_portfolio_history_df(api, period="1D", timeframe="5Min")
+        if ph.empty:
+            ph = get_portfolio_history_df(api, period="1W", timeframe="5Min", extended_hours=False)
+
+        qm = _daily_returns_from_equity(ph, ui_period)     # ['ts','ret'] (%)
+
+        # SPY robust intraday fetch (5Min with 1Min→5Min resample fallback)
+        spy = _symbol_returns_5min_robust(api, "SPY", days=lookback_days)
+
+        # Early diagnostics
+        st.caption(f"⚙️ Debug: 2D raw → qm={len(qm)} spy={len(spy)}")
+
         if qm.empty or spy.empty:
             st.info("SPY or portfolio data not available for 2D.")
             return
 
-        # ---- Convert to Eastern time ----
+        # ---- Convert to ET & keep regular session only ----
         qm["ts"]  = qm["ts"].dt.tz_convert(et)
         spy["ts"] = spy["ts"].dt.tz_convert(et)
 
-        # ---- Market-hours filter (09:30–16:00 ET) ----
         mopen, mclose = pd.to_datetime("09:30").time(), pd.to_datetime("16:00").time()
         spy = spy[(spy["ts"].dt.time >= mopen) & (spy["ts"].dt.time <= mclose)]
         qm  = qm[(qm["ts"].dt.time  >= mopen) & (qm["ts"].dt.time  <= mclose)]
 
-        # ---- Keep the last two ET sessions ----
+        # Keep the last two ET sessions based on SPY calendar
         spy["date_et"] = spy["ts"].dt.date
         last2 = sorted(spy["date_et"].unique())[-2:]
         spy = spy[spy["date_et"].isin(last2)]
 
         qm["date_et"] = qm["ts"].dt.date
-        # If QuantML’s newest day is ahead (pre-market), overlay onto prev SPY day
         if qm["date_et"].max() > spy["date_et"].max():
+            # Overlay pre-market day onto prior SPY session
             qm["ts"] -= pd.Timedelta(days=1)
             qm["date_et"] = qm["ts"].dt.date
             st.caption("🔧 QuantML pre-market shifted to overlay previous SPY session.")
 
-        # ---- Align on SPY 5-min grid, then keep only rows where both exist ----
+        # Align to SPY 5-min grid and only compare where both exist
         grid = (spy[["ts"]]
                 .assign(ts=lambda d: d["ts"].dt.floor("5min"))
                 .drop_duplicates()
@@ -1015,62 +1067,62 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
                        .assign(date_et=lambda d: d["ts"].dt.date)
                        .sort_values("ts"))
 
-        st.caption(f"⚙️ Debug: 2D → QuantML rows={len(qm)} SPY rows={len(spy)} merged={len(merged)}")
+        st.caption(f"⚙️ Debug: 2D merged={len(merged)} (qm={len(qm)} / spy={len(spy)})")
         if merged.empty:
             st.info("No overlapping timestamps in market-hours window.")
             return
 
-        # ---- Plot: one trace per session to prevent bridges between days ----
+        # Plot per session (avoid bridging overnight gaps)
         fig = go.Figure()
-
         for d, g in merged.groupby("date_et", sort=True):
             fig.add_trace(go.Scatter(
-                x=g["ts"], y=g["QuantML"], mode="lines", name=f"QuantML (daily %) · {d}",
-                line=dict(width=2, color=BRAND["accent"]), connectgaps=False,
+                x=g["ts"], y=g["QuantML"], mode="lines",
+                name=f"QuantML (daily %) · {d}",
+                line=dict(width=2, color=BRAND['accent']), connectgaps=False,
                 hovertemplate="%{x}<br>QuantML % %{y:.2f}<extra></extra>"
             ))
             fig.add_trace(go.Scatter(
-                x=g["ts"], y=g["SPY"], mode="lines", name=f"SPY (daily %) · {d}",
-                line=dict(width=2, color=BRAND["primary"]), connectgaps=False,
+                x=g["ts"], y=g["SPY"], mode="lines",
+                name=f"SPY (daily %) · {d}",
+                line=dict(width=2, color=BRAND['primary']), connectgaps=False,
                 hovertemplate="%{x}<br>SPY % %{y:.2f}<extra></extra>"
             ))
 
         fig.add_hline(y=0, line_width=1, line_dash="dot", line_color="rgba(0,0,0,.35)")
-
-        # Hide weekends AND overnight 16:00→09:30 so there’s no visual “ramp”
-        fig.update_xaxes(rangebreaks=[
-            dict(bounds=["sat", "mon"]),
-            dict(pattern="hour", bounds=[16, 9.5])  # 4pm → 9:30am ET
-        ])
-
-        fig.update_layout(
-            height=260, margin=dict(l=8, r=8, t=6, b=6),
-            xaxis_title=None, yaxis_title="Daily return (%)",
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0)
-        )
+        fig.update_xaxes(rangebreaks=[dict(bounds=["sat","mon"]),
+                                      dict(pattern="hour", bounds=[16, 9.5])])
+        fig.update_layout(height=260, margin=dict(l=8, r=8, t=6, b=6),
+                          xaxis_title=None, yaxis_title="Daily return (%)",
+                          legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0))
         st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
         return
 
     else:
         # ---- 1-month view (close-to-close daily returns) ----
         ph  = get_portfolio_history_df(api, period="1M")
-        qm  = (_daily_returns_from_equity(ph, ui_period)
-               .assign(date=lambda d: d["ts"].dt.date)
+
+        qm  = (_ensure_ts_and_date(_daily_returns_from_equity(ph, ui_period))
                .groupby("date", as_index=False).last()
                .rename(columns={"ret": "QuantML"}))
-        spy = (_daily_returns_for_symbol(api, "SPY", ui_period)
-               .assign(date=lambda d: d["ts"].dt.date)
+
+        spy = (_ensure_ts_and_date(_daily_returns_for_symbol(api, "SPY", ui_period))
                .groupby("date", as_index=False).last()
                .rename(columns={"ret": "SPY"}))
+
         merged = qm.merge(spy, on="date", how="inner").sort_values("date")
         if 'START_1M_FROM' in globals() and START_1M_FROM:
             merged = merged[merged["date"] >= START_1M_FROM]
             st.caption(f"Anchored 1M window from {START_1M_FROM}.")
+
         st.caption(f"⚙️ Debug: 1M → QuantML rows={len(qm)} SPY rows={len(spy)} merged={len(merged)}")
         if merged.empty:
             st.info("No overlapping business days between SPY and portfolio in 1M window.")
             return
-        x = merged["date"]; y_q = merged["QuantML"]; y_s = merged["SPY"]
+
+        x   = merged["date"]
+        y_q = merged["QuantML"]
+        y_s = merged["SPY"]
+
 
     # ---- Clip outliers ----
     def _clip(s, qlo=0.01, qhi=0.99):
@@ -1197,16 +1249,34 @@ def compute_period_returns(_api: Optional[REST]) -> dict:
 def _sort_df_green_amber_red(df: pd.DataFrame, pct_col: str) -> pd.DataFrame:
     """
     Sort DataFrame rows by:
-      1) greens first (high→low), then amber (closest to zero first), then red (low→high)
+      1) Green (≥0%) → descending (best first)
+      2) Amber (-0.8% ≤ x < 0%) → ascending (closest to 0 first)
+      3) Red (< -0.8%) → descending (worst first)
     """
     z = df.copy()
     v = pd.to_numeric(z[pct_col], errors="coerce").fillna(0.0)
     grp = v.apply(_traffic_group)
-    within = np.where(grp.eq(0), -v, np.where(grp.eq(2), v, v.abs()))
+
+    # Within-group order logic
+    within = np.select(
+        [
+            grp.eq(0),  # green
+            grp.eq(1),  # amber
+            grp.eq(2),  # red
+        ],
+        [
+            -v,          # green: high → low
+            v.abs(),     # amber: closest to 0 first
+            -v,          # red: low → high (descending negative)
+        ],
+        default=v,
+    )
+
     z["__grp"] = grp
     z["__within"] = within
     z = z.sort_values(["__grp", "__within"]).drop(columns=["__grp", "__within"])
     return z
+
 
 def _max_drawdown_pct(equity: pd.Series) -> float:
     """Max drawdown in %, computed on a series of equity values."""
