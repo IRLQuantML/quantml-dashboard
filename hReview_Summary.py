@@ -429,7 +429,7 @@ def confidence_bar(ticker, side, price, tp, sl, atr=None):
             xanchor="right", yanchor="bottom", font=dict(size=11)
         )]
     )
-    st.plotly_chart(fig, width='stretch')
+    st.plotly_chart(fig, config={**PLOTLY_CONFIG, "responsive": True})
 
 import streamlit as st
 def kpi_triplet(tp_pct, sl_pct, rr, *, tp_atr=None, sl_atr=None):
@@ -495,7 +495,7 @@ def trailing_chart_with_context(bars, *, price_now, tp, sl, entry, atr,
 
     fig.update_layout(height=200, margin=dict(l=10,r=10,t=30,b=10),
                       showlegend=False, xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, gridcolor="rgba(0,0,0,0.08)"))
-    st.plotly_chart(fig, width='stretch')
+    st.plotly_chart(fig, config={**PLOTLY_CONFIG, "responsive": True})
 
 def state_badge(*, last_tp_ts, last_sl_ts, cooldown_min, move_atr, trigger_atr):
     import pandas as pd, numpy as np, datetime as dt
@@ -2080,7 +2080,7 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
                     zerolinewidth=1, zerolinecolor="rgba(0,0,0,0.25)"),
     )
 
-    st.plotly_chart(bar_fig, width='stretch', config=PLOTLY_CONFIG)
+    st.plotly_chart(bar_fig, config={**PLOTLY_CONFIG, "responsive": True})
     # --- Caption explaining the SPY vs QuantML comparison ---
     st.caption(
         "Each bar shows the daily percentage return for QuantML (green) and SPY (blue). "
@@ -2962,7 +2962,7 @@ def render_portfolio_equity_chart(api: Optional[REST]) -> dict:
         fig.update_yaxes(tickformat="$,.0f")
 
     # --- Render chart ---
-    st.plotly_chart(fig, config=PLOTLY_CONFIG, width="stretch")
+    st.plotly_chart(fig, config={**PLOTLY_CONFIG, "responsive": True})
 
     # === Quick summary stats ===
     chg_pct = float(df["ret_pct"].iloc[-1]) if len(df) else float("nan")
@@ -3312,7 +3312,7 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
             height=180, margin=dict(l=8, r=8, t=6, b=6), showlegend=False,
             xaxis=dict(visible=False), yaxis_title="Δ equity (%)"
         )
-        st.plotly_chart(fig_roll, width="stretch", config=PLOTLY_CONFIG)
+        st.plotly_chart(fig_roll, config={**PLOTLY_CONFIG, "responsive": True})
 
         # summary chips + one-line explanation UNDER the sparkline
         mu  = roll_stats["roll_mean"]
@@ -3335,10 +3335,10 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
         vol = roll_stats["roll_vol"]
         st.plotly_chart(
             _banded_gauge(vol if np.isfinite(vol) else 0.0,
-                          title="P&L vol (10-min σ)",
-                          bands=(0.20, 0.50, 1.00),   # green <0.20, amber <0.50, red >=0.50 (%)
-                          good="low"),
-            width="stretch", config=PLOTLY_CONFIG
+                        title="P&L vol (10-min σ)",
+                        bands=(0.20, 0.50, 1.00),
+                        good="low"),
+            config={**PLOTLY_CONFIG, "responsive": True}
         )
 
     # ====================== Compact caption: QuantML vs SPY ======================
@@ -3388,7 +3388,7 @@ def render_broker_balances(acct: dict) -> None:
     if acct.get("margin_util_pct") is not None:
         st.plotly_chart(_banded_gauge(float(acct["margin_util_pct"]), "Margin Utilization",
                                       bands=(25, 50, 100), good="low"),
-                        width='stretch', config=PLOTLY_CONFIG)
+                        width='stretch', config={**PLOTLY_CONFIG, "responsive": True})
         st.caption("= Maintenance margin ÷ equity. Lower is safer.")
 
 # =============================================================================
@@ -4193,12 +4193,13 @@ def render_updated_dials(positions: pd.DataFrame, api: Optional[REST]) -> None:
 
     with d1:
         st.markdown("<div style='font-weight:600;margin:0 0 4px 2px;'>% of stocks up today</div>", unsafe_allow_html=True)
-        st.plotly_chart(_gauge_percent(up_today_pct, title="", good="high", bands=(40,60,80)), width='stretch', config=PLOTLY_CONFIG)
+        st.plotly_chart(_gauge_percent(up_today_pct, title="", good="high", bands=(40,60,80)),
+                config={**PLOTLY_CONFIG, "responsive": True})
         st.markdown("<div style='text-align:center;font-size:13px;color:#64748B;'>Dial 1: positive intraday P&L</div>", unsafe_allow_html=True)
-
     with d2:
         st.markdown("<div style='font-weight:600;margin:0 0 4px 2px;'># open since start of day</div>", unsafe_allow_html=True)
-        st.plotly_chart(_gauge_count(still_open_since_sod, max(1, npos), title=""), width='stretch', config=PLOTLY_CONFIG)
+        st.plotly_chart(_gauge_count(still_open_since_sod, max(1, npos), title=""),
+                config={**PLOTLY_CONFIG, "responsive": True})
         st.markdown("<div style='text-align:center;font-size:13px;color:#64748B;'>Dial 2: untouched by fills today</div>", unsafe_allow_html=True)
 
     with d3:
@@ -4208,7 +4209,7 @@ def render_updated_dials(positions: pd.DataFrame, api: Optional[REST]) -> None:
                         title="Total P/L % (open positions)",
                         good="high",
                         bands=(1.0, 2.0, 3.0)),   # bands relative to 3 %
-            width='stretch', config=PLOTLY_CONFIG
+            config={**PLOTLY_CONFIG, "responsive": True}
         )
         st.markdown("<div style='text-align:center;font-size:13px;color:#64748B;'>Dial 3: weighted open P&L %</div>", unsafe_allow_html=True)
 

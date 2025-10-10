@@ -22,3 +22,245 @@
 2025-10-10 17:50:40,944 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.285
 2025-10-10 17:50:42,327 | INFO | 📈 Cycle result: extended=2, skipped=5
 2025-10-10 17:50:42,418 | INFO | 🕑 Sleeping 60 sec…
+2025-10-10 17:51:47,460 | INFO | 🔍 Scanning 7 open positions: AMCR, F, GS, HPQ, PSKY, VTRS, WBD
+2025-10-10 17:51:48,019 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.76 new_tp=7.7283 min_abs=0.05 min_rel=0.001
+2025-10-10 17:51:48,676 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.82448 min_abs=0.05 min_rel=0.001
+2025-10-10 17:51:50,989 | INFO | 🆕 Created TP for GS qty=1 @ 763.93
+2025-10-10 17:51:51,271 | WARNING | No free qty for new SL on GS — TP/SL legs already reserve 1 of 1.
+2025-10-10 17:51:52,802 | INFO | 🆕 Created SL for GS qty=1 @ 771.87
+2025-10-10 17:51:52,899 | INFO | └─ GS: pct_move=0.3012 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 17:51:53,564 | INFO | └─ HPQ: dir=SHORT entry=26.872859 live=25.68 delta=1.192859 cur_tp=22.24 new_tp=22.13728 capped=False step_type=% step_pct=0.004 pct_move=4.4389 step_value_abs=0.10272
+2025-10-10 17:51:53,564 | INFO | └─ HPQ: reason=cooldown_skip since_sec=75 cooldown_min=5
+2025-10-10 17:51:54,136 | INFO | └─ PSKY: dir=SHORT entry=18.087296 live=17.33 delta=0.757296 cur_tp=12.8 new_tp=12.73068 capped=False step_type=% step_pct=0.004 pct_move=4.1869 step_value_abs=0.06932
+2025-10-10 17:51:54,137 | INFO | └─ PSKY: reason=cooldown_skip since_sec=74 cooldown_min=5
+2025-10-10 17:51:54,741 | INFO | └─ VTRS: reason=tp_step_too_small cur_tp=9.38 new_tp=9.3408 min_abs=0.05 min_rel=0.001
+2025-10-10 17:51:55,401 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.29
+2025-10-10 17:51:56,796 | INFO | 📈 Cycle result: extended=0, skipped=7
+2025-10-10 17:51:56,888 | INFO | 🕑 Sleeping 60 sec…
+2025-10-10 17:53:01,701 | INFO | 🔍 Scanning 7 open positions: AMCR, F, GS, HPQ, PSKY, VTRS, WBD
+2025-10-10 17:53:02,272 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.76 new_tp=7.7283 min_abs=0.05 min_rel=0.001
+2025-10-10 17:53:02,937 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.82448 min_abs=0.05 min_rel=0.001
+2025-10-10 17:53:04,891 | INFO | 🆕 Created TP for GS qty=1 @ 763.93
+2025-10-10 17:53:05,180 | WARNING | No free qty for new SL on GS — TP/SL legs already reserve 1 of 1.
+2025-10-10 17:53:06,890 | INFO | 🆕 Created SL for GS qty=1 @ 771.87
+2025-10-10 17:53:06,983 | INFO | └─ GS: pct_move=0.3012 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 17:53:07,632 | INFO | └─ HPQ: dir=SHORT entry=26.872859 live=25.66 delta=1.212859 cur_tp=22.24 new_tp=22.13736 capped=False step_type=% step_pct=0.004 pct_move=4.5133 step_value_abs=0.10264
+2025-10-10 17:53:07,632 | INFO | └─ HPQ: reason=cooldown_skip since_sec=149 cooldown_min=5
+2025-10-10 17:53:08,199 | INFO | └─ PSKY: dir=SHORT entry=18.087296 live=17.33 delta=0.757296 cur_tp=12.8 new_tp=12.73068 capped=False step_type=% step_pct=0.004 pct_move=4.1869 step_value_abs=0.06932
+2025-10-10 17:53:08,199 | INFO | └─ PSKY: reason=cooldown_skip since_sec=148 cooldown_min=5
+2025-10-10 17:53:08,761 | INFO | └─ VTRS: reason=tp_step_too_small cur_tp=9.38 new_tp=9.3408 min_abs=0.05 min_rel=0.001
+2025-10-10 17:53:09,427 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.29
+2025-10-10 17:53:10,809 | INFO | 📈 Cycle result: extended=0, skipped=7
+2025-10-10 17:53:10,901 | INFO | 🕑 Sleeping 60 sec…
+2025-10-10 17:54:15,751 | INFO | 🔍 Scanning 7 open positions: AMCR, F, GS, HPQ, PSKY, VTRS, WBD
+2025-10-10 17:54:16,339 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.76 new_tp=7.72832 min_abs=0.05 min_rel=0.001
+2025-10-10 17:54:17,007 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.82452 min_abs=0.05 min_rel=0.001
+2025-10-10 17:54:18,946 | INFO | 🆕 Created TP for GS qty=1 @ 763.93
+2025-10-10 17:54:19,229 | WARNING | No free qty for new SL on GS — TP/SL legs already reserve 1 of 1.
+2025-10-10 17:54:20,947 | INFO | 🆕 Created SL for GS qty=1 @ 771.87
+2025-10-10 17:54:21,039 | INFO | └─ GS: pct_move=0.3012 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 17:54:21,709 | INFO | └─ HPQ: dir=SHORT entry=26.872859 live=25.66 delta=1.212859 cur_tp=22.24 new_tp=22.13736 capped=False step_type=% step_pct=0.004 pct_move=4.5133 step_value_abs=0.10264
+2025-10-10 17:54:21,710 | INFO | └─ HPQ: reason=cooldown_skip since_sec=223 cooldown_min=5
+2025-10-10 17:54:22,284 | INFO | └─ PSKY: dir=SHORT entry=18.087296 live=17.29 delta=0.797296 cur_tp=12.8 new_tp=12.73084 capped=False step_type=% step_pct=0.004 pct_move=4.408 step_value_abs=0.06916
+2025-10-10 17:54:22,284 | INFO | └─ PSKY: reason=cooldown_skip since_sec=222 cooldown_min=5
+2025-10-10 17:54:22,861 | INFO | └─ VTRS: reason=tp_step_too_small cur_tp=9.38 new_tp=9.34084 min_abs=0.05 min_rel=0.001
+2025-10-10 17:54:23,532 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.28
+2025-10-10 17:54:24,909 | INFO | 📈 Cycle result: extended=0, skipped=7
+2025-10-10 17:54:24,999 | INFO | 🕑 Sleeping 60 sec…
+2025-10-10 17:55:29,819 | INFO | 🔍 Scanning 7 open positions: AMCR, F, GS, HPQ, PSKY, VTRS, WBD
+2025-10-10 17:55:30,401 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.76 new_tp=7.72832 min_abs=0.05 min_rel=0.001
+2025-10-10 17:55:31,062 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.82448 min_abs=0.05 min_rel=0.001
+2025-10-10 17:55:32,971 | INFO | 🆕 Created TP for GS qty=1 @ 764.01
+2025-10-10 17:55:33,260 | WARNING | No free qty for new SL on GS — TP/SL legs already reserve 1 of 1.
+2025-10-10 17:55:34,976 | INFO | 🆕 Created SL for GS qty=1 @ 771.95
+2025-10-10 17:55:35,071 | INFO | └─ GS: pct_move=0.2908 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 17:55:35,741 | INFO | └─ HPQ: dir=SHORT entry=26.872859 live=25.655 delta=1.217859 cur_tp=22.24 new_tp=22.13738 capped=False step_type=% step_pct=0.004 pct_move=4.5319 step_value_abs=0.10262
+2025-10-10 17:55:35,741 | INFO | └─ HPQ: reason=cooldown_skip since_sec=297 cooldown_min=5
+2025-10-10 17:55:36,303 | INFO | └─ PSKY: dir=SHORT entry=18.087296 live=17.295 delta=0.792296 cur_tp=12.8 new_tp=12.73082 capped=False step_type=% step_pct=0.004 pct_move=4.3804 step_value_abs=0.06918
+2025-10-10 17:55:36,303 | INFO | └─ PSKY: reason=cooldown_skip since_sec=296 cooldown_min=5
+2025-10-10 17:55:36,874 | INFO | └─ VTRS: reason=tp_step_too_small cur_tp=9.38 new_tp=9.34084 min_abs=0.05 min_rel=0.001
+2025-10-10 17:55:37,539 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.28
+2025-10-10 17:55:38,937 | INFO | 📈 Cycle result: extended=0, skipped=7
+2025-10-10 17:55:39,025 | INFO | 🕑 Sleeping 60 sec…
+2025-10-10 17:56:43,879 | INFO | 🔍 Scanning 7 open positions: AMCR, F, GS, HPQ, PSKY, VTRS, WBD
+2025-10-10 17:56:44,449 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.76 new_tp=7.7283 min_abs=0.05 min_rel=0.001
+2025-10-10 17:56:45,110 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.82444 min_abs=0.05 min_rel=0.001
+2025-10-10 17:56:47,046 | INFO | 🆕 Created TP for GS qty=1 @ 764.01
+2025-10-10 17:56:47,328 | WARNING | No free qty for new SL on GS — TP/SL legs already reserve 1 of 1.
+2025-10-10 17:56:49,038 | INFO | 🆕 Created SL for GS qty=1 @ 771.95
+2025-10-10 17:56:49,132 | INFO | └─ GS: pct_move=0.2908 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 17:56:49,788 | INFO | └─ HPQ: dir=SHORT entry=26.872859 live=25.67 delta=1.202859 cur_tp=22.24 new_tp=22.13732 capped=False step_type=% step_pct=0.004 pct_move=4.4761 step_value_abs=0.10268
+2025-10-10 17:56:50,063 | INFO | ⬆️ Replaced TP for HPQ SHORT → 22.13
+2025-10-10 17:56:50,263 | INFO | └─ HPQ: tp_parent_id=None tp_qty_hint=1 tp_coid_prefix=9c2c34ea-fcbe-4744-99e5-fc1904b87ab4
+2025-10-10 17:56:50,448 | INFO | 🔒 Replaced SL for HPQ SHORT → 25.69
+2025-10-10 17:56:51,212 | INFO | └─ PSKY: dir=SHORT entry=18.087296 live=17.285 delta=0.802296 cur_tp=12.8 new_tp=12.73086 capped=False step_type=% step_pct=0.004 pct_move=4.4357 step_value_abs=0.06914
+2025-10-10 17:56:51,487 | INFO | ⬆️ Replaced TP for PSKY SHORT → 12.73
+2025-10-10 17:56:51,688 | INFO | └─ PSKY: tp_parent_id=None tp_qty_hint=5 tp_coid_prefix=744ccc1a-4b62-4fb2-90ef-8b8e12daa0e6
+2025-10-10 17:56:51,875 | INFO | 🔒 Replaced SL for PSKY SHORT → 17.30
+2025-10-10 17:56:52,640 | INFO | └─ VTRS: reason=tp_step_too_small cur_tp=9.38 new_tp=9.3408 min_abs=0.05 min_rel=0.001
+2025-10-10 17:56:53,300 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.295
+2025-10-10 17:56:54,694 | INFO | 📈 Cycle result: extended=2, skipped=5
+2025-10-10 17:56:54,793 | INFO | 🕑 Sleeping 60 sec…
+2025-10-10 17:57:59,691 | INFO | 🔍 Scanning 7 open positions: AMCR, F, GS, HPQ, PSKY, VTRS, WBD
+2025-10-10 17:58:00,258 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.76 new_tp=7.72832 min_abs=0.05 min_rel=0.001
+2025-10-10 17:58:00,921 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.82442 min_abs=0.05 min_rel=0.001
+2025-10-10 17:58:03,229 | INFO | 🆕 Created TP for GS qty=1 @ 764.01
+2025-10-10 17:58:03,509 | WARNING | No free qty for new SL on GS — TP/SL legs already reserve 1 of 1.
+2025-10-10 17:58:05,023 | INFO | 🆕 Created SL for GS qty=1 @ 771.95
+2025-10-10 17:58:05,117 | INFO | └─ GS: pct_move=0.2908 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 17:58:05,776 | INFO | └─ HPQ: dir=SHORT entry=26.872859 live=25.63 delta=1.242859 cur_tp=22.13 new_tp=22.02748 capped=False step_type=% step_pct=0.004 pct_move=4.625 step_value_abs=0.10252
+2025-10-10 17:58:05,778 | INFO | └─ HPQ: reason=cooldown_skip since_sec=75 cooldown_min=5
+2025-10-10 17:58:06,455 | WARNING | No free qty for new SL on PSKY — TP/SL legs already reserve 5 of 5.
+2025-10-10 17:58:07,696 | INFO | 🔁 Reposted TP for PSKY qty=3 @ 12.73
+2025-10-10 17:58:08,079 | INFO | 🆕 Created SL for PSKY qty=2 @ 17.53
+2025-10-10 17:58:08,173 | INFO | └─ PSKY: dir=SHORT entry=18.087296 live=17.29 delta=0.797296 cur_tp=12.73 new_tp=12.66084 capped=False step_type=% step_pct=0.004 pct_move=4.408 step_value_abs=0.06916
+2025-10-10 17:58:08,173 | INFO | └─ PSKY: reason=cooldown_skip since_sec=76 cooldown_min=5
+2025-10-10 17:58:08,753 | INFO | └─ VTRS: reason=tp_step_too_small cur_tp=9.38 new_tp=9.3408 min_abs=0.05 min_rel=0.001
+2025-10-10 17:58:09,417 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.27
+2025-10-10 17:58:10,794 | INFO | 📈 Cycle result: extended=0, skipped=7
+2025-10-10 17:58:10,882 | INFO | 🕑 Sleeping 60 sec…
+2025-10-10 17:59:15,871 | INFO | 🔍 Scanning 7 open positions: AMCR, F, GS, HPQ, PSKY, VTRS, WBD
+2025-10-10 17:59:16,444 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.76 new_tp=7.72832 min_abs=0.05 min_rel=0.001
+2025-10-10 17:59:17,120 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.82446 min_abs=0.05 min_rel=0.001
+2025-10-10 17:59:19,238 | INFO | 🆕 Created TP for GS qty=1 @ 762.81
+2025-10-10 17:59:19,525 | WARNING | No free qty for new SL on GS — TP/SL legs already reserve 1 of 1.
+2025-10-10 17:59:21,060 | INFO | 🆕 Created SL for GS qty=1 @ 770.75
+2025-10-10 17:59:21,156 | INFO | └─ GS: pct_move=0.4466 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 17:59:21,823 | INFO | └─ HPQ: dir=SHORT entry=26.872859 live=25.63 delta=1.242859 cur_tp=22.13 new_tp=22.02748 capped=False step_type=% step_pct=0.004 pct_move=4.625 step_value_abs=0.10252
+2025-10-10 17:59:21,824 | INFO | └─ HPQ: reason=cooldown_skip since_sec=151 cooldown_min=5
+2025-10-10 17:59:22,390 | INFO | └─ PSKY: dir=SHORT entry=18.087296 live=17.305 delta=0.782296 cur_tp=12.73 new_tp=12.66078 capped=False step_type=% step_pct=0.004 pct_move=4.3251 step_value_abs=0.06922
+2025-10-10 17:59:22,390 | INFO | └─ PSKY: reason=cooldown_skip since_sec=150 cooldown_min=5
+2025-10-10 17:59:22,959 | INFO | └─ VTRS: reason=tp_step_too_small cur_tp=9.38 new_tp=9.3408 min_abs=0.05 min_rel=0.001
+2025-10-10 17:59:23,620 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.32
+2025-10-10 17:59:24,992 | INFO | 📈 Cycle result: extended=0, skipped=7
+2025-10-10 17:59:25,081 | INFO | 🕑 Sleeping 60 sec…
+2025-10-10 18:00:30,035 | INFO | 🔍 Scanning 7 open positions: AMCR, F, GS, HPQ, PSKY, VTRS, WBD
+2025-10-10 18:00:30,586 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.76 new_tp=7.7283 min_abs=0.05 min_rel=0.001
+2025-10-10 18:00:31,276 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.82442 min_abs=0.05 min_rel=0.001
+2025-10-10 18:00:33,228 | INFO | 🆕 Created TP for GS qty=1 @ 762.81
+2025-10-10 18:00:33,509 | WARNING | No free qty for new SL on GS — TP/SL legs already reserve 1 of 1.
+2025-10-10 18:00:35,217 | INFO | 🆕 Created SL for GS qty=1 @ 770.75
+2025-10-10 18:00:35,312 | INFO | └─ GS: pct_move=0.4466 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 18:00:35,989 | INFO | └─ HPQ: dir=SHORT entry=26.872859 live=25.63 delta=1.242859 cur_tp=22.13 new_tp=22.02748 capped=False step_type=% step_pct=0.004 pct_move=4.625 step_value_abs=0.10252
+2025-10-10 18:00:35,990 | INFO | └─ HPQ: reason=cooldown_skip since_sec=225 cooldown_min=5
+2025-10-10 18:00:36,556 | INFO | └─ PSKY: dir=SHORT entry=18.087296 live=17.31 delta=0.777296 cur_tp=12.73 new_tp=12.66076 capped=False step_type=% step_pct=0.004 pct_move=4.2975 step_value_abs=0.06924
+2025-10-10 18:00:36,556 | INFO | └─ PSKY: reason=cooldown_skip since_sec=224 cooldown_min=5
+2025-10-10 18:00:37,161 | INFO | └─ VTRS: reason=tp_step_too_small cur_tp=9.38 new_tp=9.3408 min_abs=0.05 min_rel=0.001
+2025-10-10 18:00:37,851 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.34
+2025-10-10 18:00:39,217 | INFO | 📈 Cycle result: extended=0, skipped=7
+2025-10-10 18:00:39,307 | INFO | 🕑 Sleeping 60 sec…
+2025-10-10 18:01:44,361 | INFO | 🔍 Scanning 7 open positions: AMCR, F, GS, HPQ, PSKY, VTRS, WBD
+2025-10-10 18:01:44,918 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.76 new_tp=7.72834 min_abs=0.05 min_rel=0.001
+2025-10-10 18:01:45,581 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.82436 min_abs=0.05 min_rel=0.001
+2025-10-10 18:01:47,295 | INFO | 🆕 Created TP for GS qty=1 @ 762.16
+2025-10-10 18:01:47,576 | WARNING | No free qty for new SL on GS — TP/SL legs already reserve 1 of 1.
+2025-10-10 18:01:49,278 | INFO | 🆕 Created SL for GS qty=1 @ 770.1
+2025-10-10 18:01:49,372 | INFO | └─ GS: pct_move=0.531 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 18:01:50,043 | INFO | └─ HPQ: dir=SHORT entry=26.872859 live=25.6 delta=1.272859 cur_tp=22.13 new_tp=22.0276 capped=False step_type=% step_pct=0.004 pct_move=4.7366 step_value_abs=0.1024
+2025-10-10 18:01:50,043 | INFO | └─ HPQ: reason=cooldown_skip since_sec=299 cooldown_min=5
+2025-10-10 18:01:50,654 | INFO | └─ PSKY: dir=SHORT entry=18.087296 live=17.3 delta=0.787296 cur_tp=12.73 new_tp=12.6608 capped=False step_type=% step_pct=0.004 pct_move=4.3528 step_value_abs=0.0692
+2025-10-10 18:01:50,654 | INFO | └─ PSKY: reason=cooldown_skip since_sec=298 cooldown_min=5
+2025-10-10 18:01:51,218 | INFO | └─ VTRS: reason=tp_step_too_small cur_tp=9.38 new_tp=9.3408 min_abs=0.05 min_rel=0.001
+2025-10-10 18:01:51,873 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.32
+2025-10-10 18:01:53,252 | INFO | 📈 Cycle result: extended=0, skipped=7
+2025-10-10 18:01:53,342 | INFO | 🕑 Sleeping 60 sec…
+2025-10-10 18:02:58,245 | INFO | 🔍 Scanning 7 open positions: AMCR, F, GS, HPQ, PSKY, VTRS, WBD
+2025-10-10 18:02:58,807 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.76 new_tp=7.72836 min_abs=0.05 min_rel=0.001
+2025-10-10 18:02:59,491 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.82438 min_abs=0.05 min_rel=0.001
+2025-10-10 18:03:01,417 | INFO | 🆕 Created TP for GS qty=1 @ 762.16
+2025-10-10 18:03:01,698 | WARNING | No free qty for new SL on GS — TP/SL legs already reserve 1 of 1.
+2025-10-10 18:03:03,234 | INFO | 🆕 Created SL for GS qty=1 @ 770.1
+2025-10-10 18:03:03,328 | INFO | └─ GS: pct_move=0.531 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 18:03:04,007 | INFO | └─ HPQ: dir=SHORT entry=26.872859 live=25.6 delta=1.272859 cur_tp=22.13 new_tp=22.0276 capped=False step_type=% step_pct=0.004 pct_move=4.7366 step_value_abs=0.1024
+2025-10-10 18:03:04,284 | INFO | ⬆️ Replaced TP for HPQ SHORT → 22.02
+2025-10-10 18:03:04,485 | INFO | └─ HPQ: tp_parent_id=None tp_qty_hint=1 tp_coid_prefix=53d84ed5-03c2-4bbb-8084-8aba1b52c4df
+2025-10-10 18:03:04,673 | INFO | 🔒 Replaced SL for HPQ SHORT → 25.62
+2025-10-10 18:03:05,455 | INFO | └─ PSKY: dir=SHORT entry=18.087296 live=17.3 delta=0.787296 cur_tp=12.73 new_tp=12.6608 capped=False step_type=% step_pct=0.004 pct_move=4.3528 step_value_abs=0.0692
+2025-10-10 18:03:05,734 | INFO | ⬆️ Replaced TP for PSKY SHORT → 12.66
+2025-10-10 18:03:05,935 | INFO | └─ PSKY: tp_parent_id=None tp_qty_hint=3 tp_coid_prefix=11ebb753-a2de-4d4f-a331-7468768488d7
+2025-10-10 18:03:06,121 | INFO | 🔒 Replaced SL for PSKY SHORT → 17.47
+2025-10-10 18:03:06,884 | INFO | └─ VTRS: reason=tp_step_too_small cur_tp=9.38 new_tp=9.34084 min_abs=0.05 min_rel=0.001
+2025-10-10 18:03:07,555 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.32
+2025-10-10 18:03:08,975 | INFO | 📈 Cycle result: extended=2, skipped=5
+2025-10-10 18:03:09,222 | INFO | 🕑 Sleeping 60 sec…
+2025-10-10 18:04:14,289 | INFO | 🔍 Scanning 7 open positions: AMCR, F, GS, HPQ, PSKY, VTRS, WBD
+2025-10-10 18:04:14,864 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.76 new_tp=7.72836 min_abs=0.05 min_rel=0.001
+2025-10-10 18:04:15,524 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.82438 min_abs=0.05 min_rel=0.001
+2025-10-10 18:04:17,450 | INFO | 🆕 Created TP for GS qty=1 @ 762.16
+2025-10-10 18:04:17,733 | WARNING | No free qty for new SL on GS — TP/SL legs already reserve 1 of 1.
+2025-10-10 18:04:19,260 | INFO | 🆕 Created SL for GS qty=1 @ 770.1
+2025-10-10 18:04:19,356 | INFO | └─ GS: pct_move=0.531 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 18:04:20,022 | INFO | └─ HPQ: dir=SHORT entry=26.872859 live=25.58 delta=1.292859 cur_tp=22.02 new_tp=21.91768 capped=False step_type=% step_pct=0.004 pct_move=4.811 step_value_abs=0.10232
+2025-10-10 18:04:20,022 | INFO | └─ HPQ: reason=cooldown_skip since_sec=75 cooldown_min=5
+2025-10-10 18:04:20,604 | INFO | └─ PSKY: dir=SHORT entry=18.087296 live=17.3 delta=0.787296 cur_tp=12.66 new_tp=12.5908 capped=False step_type=% step_pct=0.004 pct_move=4.3528 step_value_abs=0.0692
+2025-10-10 18:04:20,605 | INFO | └─ PSKY: reason=cooldown_skip since_sec=74 cooldown_min=5
+2025-10-10 18:04:21,175 | INFO | └─ VTRS: reason=tp_step_too_small cur_tp=9.38 new_tp=9.34086 min_abs=0.05 min_rel=0.001
+2025-10-10 18:04:21,857 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.27
+2025-10-10 18:04:23,241 | INFO | 📈 Cycle result: extended=0, skipped=7
+2025-10-10 18:04:23,333 | INFO | 🕑 Sleeping 60 sec…
+2025-10-10 18:05:28,391 | INFO | 🔍 Scanning 7 open positions: AMCR, F, GS, HPQ, PSKY, VTRS, WBD
+2025-10-10 18:05:28,996 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.76 new_tp=7.72834 min_abs=0.05 min_rel=0.001
+2025-10-10 18:05:29,709 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.8244 min_abs=0.05 min_rel=0.001
+2025-10-10 18:05:31,553 | INFO | 🆕 Created TP for GS qty=1 @ 762.16
+2025-10-10 18:05:31,872 | WARNING | No free qty for new SL on GS — TP/SL legs already reserve 1 of 1.
+2025-10-10 18:05:33,468 | INFO | 🆕 Created SL for GS qty=1 @ 770.1
+2025-10-10 18:05:33,561 | INFO | └─ GS: pct_move=0.531 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 18:05:34,215 | INFO | └─ HPQ: dir=SHORT entry=26.872859 live=25.585 delta=1.287859 cur_tp=22.02 new_tp=21.91766 capped=False step_type=% step_pct=0.004 pct_move=4.7924 step_value_abs=0.10234
+2025-10-10 18:05:34,215 | INFO | └─ HPQ: reason=cooldown_skip since_sec=149 cooldown_min=5
+2025-10-10 18:05:34,806 | INFO | └─ PSKY: dir=SHORT entry=18.087296 live=17.275 delta=0.812296 cur_tp=12.66 new_tp=12.5909 capped=False step_type=% step_pct=0.004 pct_move=4.491 step_value_abs=0.0691
+2025-10-10 18:05:34,806 | INFO | └─ PSKY: reason=cooldown_skip since_sec=148 cooldown_min=5
+2025-10-10 18:05:35,365 | INFO | └─ VTRS: reason=tp_step_too_small cur_tp=9.38 new_tp=9.34088 min_abs=0.05 min_rel=0.001
+2025-10-10 18:05:36,017 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.28
+2025-10-10 18:05:37,387 | INFO | 📈 Cycle result: extended=0, skipped=7
+2025-10-10 18:05:37,475 | INFO | 🕑 Sleeping 60 sec…
+2025-10-10 18:06:42,352 | INFO | 🔍 Scanning 7 open positions: AMCR, F, GS, HPQ, PSKY, VTRS, WBD
+2025-10-10 18:06:42,912 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.76 new_tp=7.72834 min_abs=0.05 min_rel=0.001
+2025-10-10 18:06:43,572 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.82442 min_abs=0.05 min_rel=0.001
+2025-10-10 18:06:45,475 | INFO | 🆕 Created TP for GS qty=1 @ 760.53
+2025-10-10 18:06:45,752 | WARNING | No free qty for new SL on GS — TP/SL legs already reserve 1 of 1.
+2025-10-10 18:06:47,448 | INFO | 🆕 Created SL for GS qty=1 @ 768.47
+2025-10-10 18:06:47,541 | INFO | └─ GS: dir=SHORT entry=770.22 live=764.5 delta=5.72 cur_tp=754.8156 new_tp=751.7576 capped=False step_type=% step_pct=0.004 pct_move=0.7426 step_value_abs=3.058
+2025-10-10 18:06:47,725 | WARNING | No open TP order found for GS (SHORT) — cannot amend TP.
+2025-10-10 18:06:47,818 | WARNING | No free qty for new TP on GS — existing exits consume the position.
+2025-10-10 18:06:48,564 | INFO | └─ HPQ: dir=SHORT entry=26.872859 live=25.56 delta=1.312859 cur_tp=22.02 new_tp=21.91776 capped=False step_type=% step_pct=0.004 pct_move=4.8854 step_value_abs=0.10224
+2025-10-10 18:06:48,565 | INFO | └─ HPQ: reason=cooldown_skip since_sec=224 cooldown_min=5
+2025-10-10 18:06:49,131 | INFO | └─ PSKY: dir=SHORT entry=18.087296 live=17.22 delta=0.867296 cur_tp=12.66 new_tp=12.59112 capped=False step_type=% step_pct=0.004 pct_move=4.7951 step_value_abs=0.06888
+2025-10-10 18:06:49,132 | INFO | └─ PSKY: reason=cooldown_skip since_sec=223 cooldown_min=5
+2025-10-10 18:06:49,698 | INFO | └─ VTRS: reason=tp_step_too_small cur_tp=9.38 new_tp=9.34088 min_abs=0.05 min_rel=0.001
+2025-10-10 18:06:50,352 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.28
+2025-10-10 18:06:51,723 | INFO | 📈 Cycle result: extended=0, skipped=7
+2025-10-10 18:06:52,009 | INFO | 🕑 Sleeping 60 sec…
+2025-10-10 18:07:57,084 | INFO | 🔍 Scanning 7 open positions: AMCR, F, GS, HPQ, PSKY, VTRS, WBD
+2025-10-10 18:07:57,645 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.76 new_tp=7.72834 min_abs=0.05 min_rel=0.001
+2025-10-10 18:07:58,310 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.8244 min_abs=0.05 min_rel=0.001
+2025-10-10 18:08:00,616 | INFO | 🆕 Created TP for GS qty=1 @ 761.32
+2025-10-10 18:08:00,903 | WARNING | No free qty for new SL on GS — TP/SL legs already reserve 1 of 1.
+2025-10-10 18:08:02,491 | INFO | 🆕 Created SL for GS qty=1 @ 769.26
+2025-10-10 18:08:02,586 | INFO | └─ GS: pct_move=0.6401 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 18:08:03,251 | INFO | └─ HPQ: dir=SHORT entry=26.872859 live=25.555 delta=1.317859 cur_tp=22.02 new_tp=21.91778 capped=False step_type=% step_pct=0.004 pct_move=4.9041 step_value_abs=0.10222
+2025-10-10 18:08:03,251 | INFO | └─ HPQ: reason=cooldown_skip since_sec=298 cooldown_min=5
+2025-10-10 18:08:03,826 | INFO | └─ PSKY: dir=SHORT entry=18.087296 live=17.23 delta=0.857296 cur_tp=12.66 new_tp=12.59108 capped=False step_type=% step_pct=0.004 pct_move=4.7398 step_value_abs=0.06892
+2025-10-10 18:08:03,827 | INFO | └─ PSKY: reason=cooldown_skip since_sec=297 cooldown_min=5
+2025-10-10 18:08:04,407 | INFO | └─ VTRS: reason=tp_step_too_small cur_tp=9.38 new_tp=9.34088 min_abs=0.05 min_rel=0.001
+2025-10-10 18:08:05,086 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.27
+2025-10-10 18:08:06,476 | INFO | 📈 Cycle result: extended=0, skipped=7
+2025-10-10 18:08:06,566 | INFO | 🕑 Sleeping 60 sec…
+2025-10-10 18:09:11,493 | INFO | 🔍 Scanning 7 open positions: AMCR, F, GS, HPQ, PSKY, VTRS, WBD
+2025-10-10 18:09:12,066 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.76 new_tp=7.72834 min_abs=0.05 min_rel=0.001
+2025-10-10 18:09:12,740 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.82438 min_abs=0.05 min_rel=0.001
+2025-10-10 18:09:14,675 | INFO | 🆕 Created TP for GS qty=1 @ 761.32
+2025-10-10 18:09:14,963 | WARNING | No free qty for new SL on GS — TP/SL legs already reserve 1 of 1.
+2025-10-10 18:09:16,502 | INFO | 🆕 Created SL for GS qty=1 @ 769.26
+2025-10-10 18:09:16,599 | INFO | └─ GS: pct_move=0.6401 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 18:09:17,269 | INFO | └─ HPQ: dir=SHORT entry=26.872859 live=25.56 delta=1.312859 cur_tp=22.02 new_tp=21.91776 capped=False step_type=% step_pct=0.004 pct_move=4.8854 step_value_abs=0.10224
+2025-10-10 18:09:17,556 | INFO | ⬆️ Replaced TP for HPQ SHORT → 21.91
+2025-10-10 18:09:17,757 | INFO | └─ HPQ: tp_parent_id=None tp_qty_hint=1 tp_coid_prefix=167073b4-875b-407a-ad35-afdf1851342b
+2025-10-10 18:09:17,948 | INFO | 🔒 Replaced SL for HPQ SHORT → 25.57
+2025-10-10 18:09:18,739 | INFO | └─ PSKY: dir=SHORT entry=18.087296 live=17.23 delta=0.857296 cur_tp=12.66 new_tp=12.59108 capped=False step_type=% step_pct=0.004 pct_move=4.7398 step_value_abs=0.06892
+2025-10-10 18:09:19,018 | INFO | ⬆️ Replaced TP for PSKY SHORT → 12.59
+2025-10-10 18:09:19,219 | INFO | └─ PSKY: tp_parent_id=None tp_qty_hint=3 tp_coid_prefix=a45d8b11-0808-408c-8507-4add5087cc19
+2025-10-10 18:09:19,411 | INFO | 🔒 Replaced SL for PSKY SHORT → 17.41
+2025-10-10 18:09:20,184 | INFO | └─ VTRS: reason=tp_step_too_small cur_tp=9.38 new_tp=9.34088 min_abs=0.05 min_rel=0.001
+2025-10-10 18:09:20,854 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.28
+2025-10-10 18:09:22,259 | INFO | 📈 Cycle result: extended=2, skipped=5
+2025-10-10 18:09:22,351 | INFO | 🕑 Sleeping 60 sec…
