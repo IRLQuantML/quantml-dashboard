@@ -551,13 +551,6 @@ def render_positions_panel(api, positions: pd.DataFrame, *, atr_mode: dict | Non
         side_filter = st.segmented_control("Side", ["All", "Longs", "Shorts"], default="All", key="pos_side_filter")
     with c2:
         recent_only = st.toggle("Only Updated in last 30m", value=False, key="pos_recent_toggle")
-    with c3:
-        focus_symbol = st.selectbox(
-            "Mini chart symbol", 
-            sorted(merged[sym_col].unique()),
-            index=0 if merged.empty else 0,
-            key="pos_focus_symbol"
-        )
 
     df = merged.copy()
     # Apply side filter
@@ -612,39 +605,73 @@ def render_positions_panel(api, positions: pd.DataFrame, *, atr_mode: dict | Non
     st.divider()
 
     # ===================== Mini trailing visualization (last ~50 bars) =====================
-    def mini_trailing_chart(symbol: str, cur_tp: float | None, cur_sl: float | None):
-        # Try 5Min, fallback handled inside _get_symbol_bars()
-        bars = _get_symbol_bars(api, symbol, "5Min", days=5).tail(50)
-        if bars is None or bars.empty:
-            st.info("No recent bars for mini chart.")
-            return
-        x = bars["ts"]; y = pd.to_numeric(bars["close"], errors="coerce")
 
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=x, y=y, mode="lines", name="Price"))
-        if pd.notna(cur_tp or np.nan):
-            fig.add_hline(y=float(cur_tp), line_dash="dot", annotation_text="TP", annotation_position="top right")
-        if pd.notna(cur_sl or np.nan):
-            fig.add_hline(y=float(cur_sl), line_dash="dot", annotation_text="SL", annotation_position="bottom right")
-        fig.update_layout(height=160, margin=dict(l=10,r=10,t=10,b=10), showlegend=False,
-                          xaxis=dict(visible=False), yaxis=dict(visible=False))
-        st.plotly_chart(
-            fig,
-            config=PLOTLY_CONFIG,
-            theme=None,                 # optional: keep QuantML's custom colors
-            key=None,
-            kwargs=dict(width="stretch")  # 👈 this passes the width correctly via config
+    # Build symbol choices (add ALL) and pick a safe default
+    syms = sorted(df[sym_col].dropna().astype(str).unique())
+    choices = ["ALL"] + syms
+    default_sym = st.session_state.get("pos_focus_symbol2")
+    if default_sym not in choices:
+        default_sym = (syms[:1] or ["ALL"])[0]
+
+    # Header + selector on the same row
+    left, right = st.columns([0.5, 0.5])
+    with left:
+        st.markdown("**Mini trailing chart**")
+    with right:
+        focus_symbol = st.selectbox(
+            "Mini chart symbol",
+            choices,
+            index=choices.index(default_sym),
+            key="pos_focus_symbol2",
+            label_visibility="collapsed",
         )
 
-    # Pull TP/SL for the selected symbol
-    row = df[df[sym_col] == focus_symbol].head(1)
-    tp_val = float(row["Current TP"].iloc[0]) if ("Current TP" in row.columns and len(row)) else None
-    sl_val = float(row["Current SL"].iloc[0]) if ("Current SL" in row.columns and len(row)) else None
+    # --- Show single or multi-mini-chart view ---
+    if focus_symbol == "ALL":
+        # Show grid of mini-charts (top 6 by RR)
+        tmp = df[[sym_col, "Side", "Current Price", "Current TP", "Current SL"]].dropna(subset=[sym_col]).copy()
 
-    st.markdown("**Mini trailing chart**")
-    mini_trailing_chart_rich(api, str(focus_symbol), tp_val, sl_val)
+        def _rr_quick(r):
+            side = str(r.get("Side", "Long")).lower()
+            p  = float(r.get("Current Price") or np.nan)
+            tp = float(r.get("Current TP") or np.nan)
+            sl = float(r.get("Current SL") or np.nan)
+            if not (np.isfinite(p) and p > 0): return np.nan
+            if side == "long":
+                tp_d = max((tp - p), 0) if np.isfinite(tp) else 0
+                sl_d = max((p - sl), 0) if np.isfinite(sl) else 0
+            else:
+                tp_d = max((p - tp), 0) if np.isfinite(tp) else 0
+                sl_d = max((sl - p), 0) if np.isfinite(sl) else 0
+            return (tp_d / sl_d) if sl_d > 0 else np.inf
+
+        tmp["__rr"] = tmp.apply(_rr_quick, axis=1)
+        top = (
+            tmp.sort_values(["__rr", sym_col], ascending=[False, True])
+            .head(6)[sym_col].astype(str).tolist()
+        )
+
+        grid = st.columns(3)
+        for i, sym in enumerate(top):
+            with grid[i % 3]:
+                r = df[df[sym_col] == sym].head(1)
+                t = float(pd.to_numeric(r["Current TP"], errors="coerce").iloc[0]) if "Current TP" in r.columns else np.nan
+                s = float(pd.to_numeric(r["Current SL"], errors="coerce").iloc[0]) if "Current SL" in r.columns else np.nan
+                st.markdown(f"**{sym}**")
+                mini_trailing_chart_rich(api, sym, t if np.isfinite(t) else None, s if np.isfinite(s) else None)
+        st.divider()
+
+    else:
+        # Pull TP/SL for the selected symbol AFTER selection
+        row = df[df[sym_col] == focus_symbol].head(1)
+        tp_val = float(pd.to_numeric(row["Current TP"], errors="coerce").iloc[0]) if ("Current TP" in row.columns and len(row)) else None
+        sl_val = float(pd.to_numeric(row["Current SL"], errors="coerce").iloc[0]) if ("Current SL" in row.columns and len(row)) else None
+
+        mini_trailing_chart_rich(api, str(focus_symbol), tp_val, sl_val)
+        st.divider()
 
     # ===================== SL/TP Confidence bar (per row) =====================
+    st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
     st.markdown("**SL/TP confidence bars**")
     def _buffers(side: str, price: float, tp: float | None, sl: float | None) -> tuple[float,float]:
         """Returns (tp_buffer_pct, sl_buffer_pct) as proportions of price."""
@@ -711,7 +738,9 @@ def render_positions_panel(api, positions: pd.DataFrame, *, atr_mode: dict | Non
             sl_atr = abs(p - sl) / float(row[atr_col])
         return pd.Series({"tp_buf":tp_buf,"sl_buf":sl_buf,"sl_atr":sl_atr})
 
-    rows[["tp_buf","sl_buf","sl_atr"]] = rows.apply(_calc, axis=1)
+    # compute buffers (% of price) and SL distance in ATRs
+    calc = rows.apply(_calc, axis=1, result_type="expand")  # expand to DataFrame
+    rows[["tp_buf","sl_buf","sl_atr"]] = calc[["tp_buf","sl_buf","sl_atr"]]
 
     # sort: riskiest first (smallest sl_atr), then lower RR
     rows["rr"] = np.where(
@@ -719,7 +748,9 @@ def render_positions_panel(api, positions: pd.DataFrame, *, atr_mode: dict | Non
         pd.to_numeric(rows["tp_buf"], errors="coerce") / pd.to_numeric(rows["sl_buf"], errors="coerce"),
         np.inf  # sort ∞ last by second key (we still rank by sl_atr first)
     )
-    rows = rows.sort_values(["sl_atr","rr"], ascending=[True, True], na_position="last").head(12)
+    # --- sort by Risk/Reward (high → low). Use sl_atr as tie-breaker (lower = riskier, shown later)
+    rows["__rr_rank"] = rows["rr"].replace([np.inf, -np.inf], 1e12)  # put ∞ at the very top
+    rows = rows.sort_values(["__rr_rank", "sl_atr"], ascending=[False, True], na_position="last").drop(columns="__rr_rank").head(12)
 
     # grid (3 per row feels right)
     cols = st.columns(3)
@@ -1836,7 +1867,8 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
     """
     SPY vs QuantML — daily returns
     Top: intraday lines (2D) or 1M close-to-close lines
-    Bottom: grouped bars of close-of-business daily returns (QuantML vs SPY) using same colours.
+    Bottom: grouped bars of close-of-business daily returns (QuantML vs SPY),
+            plus a thin Δ-line (QuantML − SPY) on a secondary axis.
     """
     import numpy as np
     from zoneinfo import ZoneInfo
@@ -1869,9 +1901,6 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
         # SPY robust intraday fetch (5Min with 1Min→5Min resample fallback)
         spy = _symbol_returns_5min_robust(api, "SPY", days=lookback_days)
 
-        # Early diagnostics
-        st.caption(f"⚙️ Debug: 2D raw → qm={len(qm)} spy={len(spy)}")
-
         if qm.empty or spy.empty:
             st.info("SPY or portfolio data not available for 2D.")
             return
@@ -1894,7 +1923,6 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
             # Overlay pre-market day onto prior SPY session
             qm["ts"] -= pd.Timedelta(days=1)
             qm["date_et"] = qm["ts"].dt.date
-            st.caption("🔧 QuantML pre-market shifted to overlay previous SPY session.")
 
         # Align to SPY 5-min grid and only compare where both exist
         grid = (spy[["ts"]]
@@ -1908,7 +1936,6 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
                        .assign(date_et=lambda d: d["ts"].dt.date)
                        .sort_values("ts"))
 
-        st.caption(f"⚙️ Debug: 2D merged={len(merged)} (qm={len(qm)} / spy={len(spy)})")
         if merged.empty:
             st.info("No overlapping timestamps in market-hours window.")
             return
@@ -1935,14 +1962,7 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
         fig.update_layout(height=260, margin=dict(l=8, r=8, t=6, b=6),
                           xaxis_title=None, yaxis_title="Daily return (%)",
                           legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0))
-        st.plotly_chart(
-            fig,
-            config=PLOTLY_CONFIG,
-            theme=None,                 # optional: keep QuantML's custom colors
-            key=None,
-            kwargs=dict(width="stretch")  # 👈 this passes the width correctly via config
-        )
-
+        st.plotly_chart(fig, width='stretch', config=PLOTLY_CONFIG)
 
         # ── Bottom BAR CHART (daily close-of-business return summary) ───────
         daily_summary = (
@@ -1967,9 +1987,7 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
         merged = qm.merge(spy, on="date", how="inner").sort_values("date")
         if 'START_1M_FROM' in globals() and START_1M_FROM:
             merged = merged[merged["date"] >= START_1M_FROM]
-            st.caption(f"Anchored 1M window from {START_1M_FROM}.")
 
-        st.caption(f"⚙️ Debug: 1M → QuantML rows={len(qm)} SPY rows={len(spy)} merged={len(merged)}")
         if merged.empty:
             st.info("No overlapping business days between SPY and portfolio in 1M window.")
             return
@@ -2005,38 +2023,46 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
             xaxis_title=None, yaxis_title="Daily return (%)",
             legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0)
         )
-        st.plotly_chart(
-            fig,
-            config=PLOTLY_CONFIG,
-            theme=None,                 # optional: keep QuantML's custom colors
-            key=None,
-            kwargs=dict(width="stretch")  # 👈 this passes the width correctly via config
-        )
+        st.plotly_chart(fig, width='stretch', config=PLOTLY_CONFIG)
 
         # ── Bottom BAR CHART (daily close-of-business) ───────────────────────
         x_dates = merged["date"]
         y_q = merged["QuantML"]
         y_s = merged["SPY"]
 
-    # === Shared BAR CHART build (for both modes) =============================
+    # === Professional BAR CHART (grouped) with Δ-line ========================
+    delta = (pd.to_numeric(y_q, errors="coerce") - pd.to_numeric(y_s, errors="coerce"))
+
     bar_fig = go.Figure()
+
+    # QuantML bars
     bar_fig.add_trace(go.Bar(
         x=x_dates, y=y_q,
         name="QuantML (daily %)",
         marker_color=BRAND["accent"],
-        opacity=0.88,
+        marker_line_width=1.1, marker_line_color="rgba(0,0,0,0.25)",
         hovertemplate="%{x}<br>QuantML % %{y:.2f}<extra></extra>"
     ))
+    # SPY bars
     bar_fig.add_trace(go.Bar(
         x=x_dates, y=y_s,
         name="SPY (daily %)",
         marker_color=BRAND["primary"],
-        opacity=0.88,
+        marker_line_width=1.1, marker_line_color="rgba(0,0,0,0.25)",
         hovertemplate="%{x}<br>SPY % %{y:.2f}<extra></extra>"
     ))
+    # Δ-line (secondary axis)
+    bar_fig.add_trace(go.Scatter(
+        x=x_dates, y=delta,
+        name="Δ (QML − SPY)",
+        mode="lines+markers",
+        line=dict(width=2, color="#64748B"),
+        marker=dict(size=5),
+        yaxis="y2",
+        hovertemplate="%{x}<br>Δ %{y:.2f} pp<extra></extra>"
+    ))
 
-    # polish
-    bar_fig.update_traces(marker_line_width=1.2, marker_line_color="rgba(0,0,0,0.25)")
+    # Layout polish
     bar_fig.update_layout(
         barmode="group",
         bargap=0.25,
@@ -2049,27 +2075,19 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
         paper_bgcolor="white",
         font=dict(size=12),
         yaxis=dict(zeroline=True, zerolinewidth=1, zerolinecolor="rgba(0,0,0,0.3)"),
+        # Secondary axis for Δ (keep subtle range)
+        yaxis2=dict(overlaying="y", side="right", title="Δ (pp)", showgrid=False, zeroline=True,
+                    zerolinewidth=1, zerolinecolor="rgba(0,0,0,0.25)"),
     )
 
-    # annotate the outperformer each day
-    try:
-        for i in range(len(x_dates)):
-            better = "QuantML" if float(y_q.iloc[i]) > float(y_s.iloc[i]) else "SPY"
-            color = BRAND["accent"] if better == "QuantML" else BRAND["primary"]
-            bar_fig.add_annotation(
-                x=x_dates.iloc[i],
-                y=max(float(y_q.iloc[i] or 0), float(y_s.iloc[i] or 0)) * 1.05
-                  if np.isfinite(max(float(y_q.iloc[i] or 0), float(y_s.iloc[i] or 0)))
-                  else 0,
-                text=better,
-                showarrow=False,
-                font=dict(color=color, size=11)
-            )
-    except Exception:
-        # If anything is non-finite, skip annotations quietly
-        pass
-
     st.plotly_chart(bar_fig, width='stretch', config=PLOTLY_CONFIG)
+    # --- Caption explaining the SPY vs QuantML comparison ---
+    st.caption(
+        "Each bar shows the daily percentage return for QuantML (green) and SPY (blue). "
+        "The thin grey Δ-line tracks QuantML’s relative outperformance or underperformance "
+        "versus SPY for that day."
+    )
+
 
 # ===================== Alpaca Portfolio History =====================
 @st.cache_data(ttl=60, show_spinner=False)
@@ -2886,7 +2904,7 @@ def render_portfolio_equity_chart(api: Optional[REST]) -> dict:
         key="ph_period",
     )
 
-    # Fetch series (get_portfolio_history_df handles 1Y->1A and timeframe defaults)
+    # Fetch equity curve
     try:
         df = get_portfolio_history_df(api, period=period)
     except Exception as e:
@@ -2897,14 +2915,14 @@ def render_portfolio_equity_chart(api: Optional[REST]) -> dict:
         st.info("No portfolio history is available.")
         return {"period": period}
 
-    # Tighten the y-range so the area doesn't flood the plot
+    # Tight y-range for better readability
     y = pd.to_numeric(df["equity"], errors="coerce").astype(float)
     ymin, ymax = float(np.nanmin(y)), float(np.nanmax(y))
     span = ymax - ymin
     pad = max(1.0, 0.02 * span) if np.isfinite(span) else 1.0
     yrange = [ymin - pad, ymax + pad] if np.isfinite(ymin) and np.isfinite(ymax) else None
 
-    # Main area chart (low-opacity fill)
+    # --- Main area chart (soft fill) ---
     fig = go.Figure()
     fig.add_trace(go.Scatter(
         x=df["ts"],
@@ -2912,34 +2930,49 @@ def render_portfolio_equity_chart(api: Optional[REST]) -> dict:
         mode="lines",
         name="Equity",
         fill="tozeroy",
-        fillcolor="rgba(79,70,229,0.15)",  # soft fill
-        line=dict(width=2),
+        fillcolor="rgba(79,70,229,0.15)",  # soft purple fill
+        line=dict(width=2, color=BRAND["primary"]),
+        hovertemplate="%{x}<br>Equity %{y:$,.0f}<extra></extra>",
     ))
+
+    # Base layout
     fig.update_layout(
         height=280,
         showlegend=False,
         margin=dict(l=8, r=8, t=6, b=6),
-        yaxis_title=None,
         xaxis_title=None,
+        yaxis_title=None,
+        plot_bgcolor="white",
+        paper_bgcolor="white",
     )
+
+    # Apply y-range
     if yrange:
         fig.update_yaxes(range=yrange)
 
-    st.plotly_chart(
-        fig,
-        config=PLOTLY_CONFIG,
-        theme=None,                 # optional: keep QuantML's custom colors
-        key=None,
-        kwargs=dict(width="stretch")  # 👈 this passes the width correctly via config
-    )
+    # --- Fix Y-axis labels ("k k k" issue) ---
+    try:
+        if np.isfinite(ymin) and np.isfinite(ymax) and ymax > ymin:
+            tick_vals = np.linspace(ymin, ymax, 5).tolist()
+            tick_texts = [f"${v:,.0f}" for v in tick_vals]
+            fig.update_yaxes(tickmode="array", tickvals=tick_vals, ticktext=tick_texts)
+        else:
+            fig.update_yaxes(tickformat="$,.0f")
+    except Exception:
+        fig.update_yaxes(tickformat="$,.0f")
 
+    # --- Render chart ---
+    st.plotly_chart(fig, config=PLOTLY_CONFIG, width="stretch")
 
-    # Quick stats from the plotted series
+    # === Quick summary stats ===
     chg_pct = float(df["ret_pct"].iloc[-1]) if len(df) else float("nan")
     idd_pct = _max_drawdown_pct(y)
-    st.caption(f"Change {period}: {chg_pct:+.2f}% · Max drawdown over period: {idd_pct:.2f}%")
+    st.caption(
+        f"Change {period}: {chg_pct:+.2f}% · Max drawdown over period: {idd_pct:.2f}%"
+    )
 
     return {"period": period, "change_pct": chg_pct, "idd_pct": idd_pct}
+
 
 def _parse_ts(ts):
     if isinstance(ts, datetime):
@@ -3266,7 +3299,7 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
 
         # flag > 2σ moves
         if len(rv) and len(r):
-            thresh = (rv * 2.0).reindex_like(r).fillna(method="ffill")
+            thresh = (rv * 2.0).reindex_like(r).ffill()
             spikes = r[abs(r) > thresh]
             if not spikes.empty:
                 fig_roll.add_trace(go.Scatter(
@@ -4824,14 +4857,13 @@ def main() -> None:
     positions = merge_tp_sl_from_alpaca_orders(positions, api)
     positions = compute_derived_metrics(positions)
 
-    # ----- Traffic Lights
-    render_traffic_lights(positions)
-    st.divider()
-    render_color_system_legend()
+    # === QuantML vs SPY (Intraday comparison + Mini trailing chart) ===
+    render_perf_and_risk_kpis(api, positions)
     st.divider()
 
-    # Performance KPIs + intraday smoothing (uses intraday equity + positions)
-    render_perf_and_risk_kpis(api, positions)
+    # ----- Traffic Lights (moved below QuantML vs SPY) -----
+    render_traffic_lights(positions)
+    render_color_system_legend()
     st.divider()
 
     # === Your portfolio (Alpaca)
@@ -4868,9 +4900,9 @@ def main() -> None:
     hist_df, realized_total = build_history_rows_from_fills(api, positions, days=int(hist_days))
     render_portfolio_ledger_table(positions, realized_pnl_total=realized_total, history_rows=hist_df)
 
-    st.divider()
+    #st.divider()
     # ----- NEW: Attach your uploaded transaction history file -----
-    render_transaction_history_positions(api, days=180)
+    #render_transaction_history_positions(api, days=180)
 
     # ===== Contributors / Detractors =====
     st.divider()
@@ -4890,6 +4922,8 @@ def main() -> None:
         with c2:
             st.markdown("**Top detractors (since entry)**")
             st.table(losers.assign(**{"P&L $": losers["P&L $"].map(lambda x: f"{x:,.2f}")}))
+    st.divider()
+    st.divider()
 
 if __name__ == "__main__":
     main()
