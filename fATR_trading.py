@@ -2891,37 +2891,99 @@ def run_tp_extender_pass(api: REST, mode: str, trigger_pct: float, step_pct: flo
                 elif (tp_order is not None) and (sl_order is None):
                     place_or_amend_sl(api, pos, target_sl_price=sl_price, sl_order=None, side_exit=side_exit)
 
-                # d) Single-share policy — ensure SL and (if missing) seed a tiny TP
-                elif (pos_qty == 1) and (tp_order is None):
-                    # Always ensure SL for qty=1
-                    if not sl_order:
-                        place_or_amend_sl(api, pos, target_sl_price=sl_price, sl_order=None, side_exit=side_exit)
-                        logging.info("🛡️ SL-only policy applied for %s (qty=1)", symbol)
+                # d) Single-share policy — always end the pass with BOTH exits present
+                elif pos_qty == 1:
+                    tp_missing = (tp_order is None)
+                    sl_missing = (sl_order is None)
 
-                    # Optionally seed a 1-share TP if no TP is visible
-                    if bool(globals().get("ALLOW_TP_CREATE_IF_MISSING", True)):
+                    # (i) If BOTH missing, use your baseline seeding (TP first, then SL)
+                    if tp_missing and sl_missing:
+                        base_sl_frac = float(globals().get("BASELINE_SL_FRACTION", 0.60))
+                        base_sl_frac = min(max(base_sl_frac, 0.10), 0.90)
+                        tp_px = _round_limit_for_side(tp_price, side_exit)
+
+                        # seed TP for 1 share (we only have qty=1)
                         try:
-                            tp_order_check = _get_symbol_open_tp_order_by_relation(api, symbol, side_exit, live_px)
-                        except Exception:
-                            tp_order_check = None
+                            _submit_order_safe(
+                                api,
+                                symbol=symbol,
+                                qty=1,
+                                side=side_exit,
+                                type="limit",
+                                time_in_force="gtc",
+                                limit_price=tp_px,
+                                reduce_only=True,
+                            )
+                            logging.info("🧩 Baseline TP seeded for %s (qty=1) @ %.2f", symbol, tp_px)
+                        except Exception as e:
+                            logging.warning("Baseline TP seed failed for %s: %s", symbol, e)
 
-                        if not tp_order_check:
-                            # respect actual availability to avoid 403s
-                            avail = _available_exit_qty(api, symbol, side_exit, pos_qty=1)
-                            if avail > 0:
-                                _submit_order_safe(
-                                    api,
-                                    symbol=symbol,
-                                    qty=min(1, int(avail)),     # cap to free qty
-                                    side=side_exit,
-                                    type="limit",
-                                    time_in_force="gtc",
-                                    limit_price=_round_limit_for_side(tp_price, side_exit),
-                                    reduce_only=True,
-                                )
-                                logging.info("🆕 Seeded tiny TP for %s (qty=1)", symbol)
-                    else:
-                        logging.info("ℹ️ Tiny-TP skipped for %s (qty=1) — no free exit qty available right now.", symbol)
+                        # then create SL
+                        place_or_amend_sl(api, pos, target_sl_price=sl_price, sl_order=None, side_exit=side_exit)
+
+                    # (ii) If EXACTLY ONE leg exists, cancel it to free qty and repost BOTH
+                    elif tp_missing ^ sl_missing:
+                        try:
+                            lone = sl_order if tp_missing else tp_order
+                            lone_id = getattr(lone, "id", None) if lone else None
+                            if lone_id:
+                                try:
+                                    _cancel_order_safe(api, symbol, lone_id)
+                                except NameError:
+                                    # fallback if helper not present
+                                    try:
+                                        api.cancel_order(lone_id)
+                                    except Exception:
+                                        pass
+                                logging.info("♻️  Cancelled lone %s leg for %s to free qty", "SL" if tp_missing else "TP", symbol)
+                        except Exception as e:
+                            logging.warning("Could not cancel lone leg for %s: %s", symbol, e)
+
+                        # repost both legs fresh (SL first for safety, then TP)
+                        place_or_amend_sl(api, pos, target_sl_price=sl_price, sl_order=None, side_exit=side_exit)
+                        try:
+                            _submit_order_safe(
+                                api,
+                                symbol=symbol,
+                                qty=1,
+                                side=side_exit,
+                                type="limit",
+                                time_in_force="gtc",
+                                limit_price=_round_limit_for_side(tp_price, side_exit),
+                                reduce_only=True,
+                            )
+                            logging.info("🆕 Reposted TP for %s (qty=1)", symbol)
+                        except Exception as e:
+                            logging.warning("Repost TP failed for %s: %s", symbol, e)
+
+                    # (iii) If only TP is missing but we prefer not to cancel, try a tiny TP if free qty exists
+                    elif tp_missing:
+                        # Always ensure SL present
+                        if not sl_order:
+                            place_or_amend_sl(api, pos, target_sl_price=sl_price, sl_order=None, side_exit=side_exit)
+
+                        if bool(globals().get("ALLOW_TP_CREATE_IF_MISSING", True)):
+                            try:
+                                tp_order_check = _get_symbol_open_tp_order_by_relation(api, symbol, side_exit, live_px)
+                            except Exception:
+                                tp_order_check = None
+
+                            if not tp_order_check:
+                                avail = _available_exit_qty(api, symbol, side_exit, pos_qty=1)
+                                if avail > 0:
+                                    _submit_order_safe(
+                                        api,
+                                        symbol=symbol,
+                                        qty=min(1, int(avail)),
+                                        side=side_exit,
+                                        type="limit",
+                                        time_in_force="gtc",
+                                        limit_price=_round_limit_for_side(tp_price, side_exit),
+                                        reduce_only=True,
+                                    )
+                                    logging.info("🆕 Seeded tiny TP for %s (qty=1)", symbol)
+                                else:
+                                    logging.info("ℹ️ Tiny-TP skipped for %s (qty=1) — no free exit qty available right now.", symbol)
         except Exception as e:
             logging.warning("Baseline exit ensure failed for %s: %s", symbol, e)
         # 3) Evaluate TP extension
