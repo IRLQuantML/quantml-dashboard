@@ -1,0 +1,21 @@
+2025-10-10 10:55:31,269 | INFO | ARGV → d:/QuantML/VS_QuantML_PROD/fATR_trading.py
+2025-10-10 10:55:31,269 | INFO | 🔧 Using config file: d:\QuantML\VS_QuantML_PROD\config.py
+2025-10-10 10:55:31,269 | INFO | CFG → mode=percent, pct_trigger=0.0300, pct_step=0.0100, atr_trigger=1.00, atr_step=0.50, max_mult=2.50, interval=120s
+2025-10-10 10:55:31,269 | INFO | ARGS → mode=None, pct_trigger=None, pct_step=None, atr_trigger=None, atr_step=None, max_mult=None, interval=None
+2025-10-10 10:55:31,270 | INFO | ✅ EFFECTIVE → mode=percent (profile), pct_trigger=0.0080, pct_step=0.0040, atr_trigger=0.25, atr_step=0.20, max_mult=2.50, interval=60s
+2025-10-10 10:55:36,325 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-10 10:55:37,157 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.5787 min_abs=0.05 min_rel=0.001
+2025-10-10 10:55:37,831 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.82392 min_abs=0.05 min_rel=0.001
+2025-10-10 10:55:38,477 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-17.694444
+2025-10-10 10:55:39,126 | INFO | └─ GS: pct_move=0.0578 trigger_pct=0.008 reason=trigger_not_met
+2025-10-10 10:55:39,785 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.046684
+2025-10-10 10:55:40,452 | INFO | └─ PSKY: dir=SHORT entry=18.32 live=17.965 delta=0.355 cur_tp=15.29 new_tp=15.21814 capped=False step_type=% step_pct=0.004 pct_move=1.9378 step_value_abs=0.07186
+2025-10-10 10:55:40,728 | INFO | ⬆️ Replaced TP for PSKY SHORT → 15.21
+2025-10-10 10:55:40,929 | INFO | └─ PSKY: tp_parent_id=None tp_qty_hint=43 tp_coid_prefix=9593be3d-dfa7-49a8-994f-ec4c38cb4168
+2025-10-10 10:55:41,116 | INFO | 🔒 Replaced SL for PSKY SHORT → 18.17
+2025-10-10 10:55:41,868 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-18.188
+2025-10-10 10:55:42,535 | INFO | └─ VTRS: reason=tp_step_too_small cur_tp=9.38 new_tp=9.34002 min_abs=0.05 min_rel=0.001
+2025-10-10 10:55:43,193 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.31
+2025-10-10 10:55:44,942 | INFO | 📈 Cycle result: extended=1, skipped=8
+2025-10-10 10:55:46,806 | INFO | 🏥 Healthcheck(close) done — fixed=0, missing_sl=0, missing_tp=0
+2025-10-10 10:55:46,806 | INFO | 🔔 Market closed — stopping monitor loop.

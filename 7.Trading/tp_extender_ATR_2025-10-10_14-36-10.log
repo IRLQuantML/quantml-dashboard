@@ -1,0 +1,5 @@
+2025-10-10 14:36:10,187 | INFO | ARGV → fATR_trading.py
+2025-10-10 14:36:10,187 | INFO | 🔧 Using config file: D:\QuantML\VS_QuantML_PROD\config.py
+2025-10-10 14:36:10,194 | INFO | CFG → mode=percent, pct_trigger=0.0300, pct_step=0.0100, atr_trigger=1.00, atr_step=0.50, max_mult=2.50, interval=120s
+2025-10-10 14:36:10,194 | INFO | ARGS → mode=None, pct_trigger=None, pct_step=None, atr_trigger=None, atr_step=None, max_mult=None, interval=None
+2025-10-10 14:36:10,194 | INFO | ✅ EFFECTIVE → mode=percent (profile), pct_trigger=0.0070, pct_step=0.0040, atr_trigger=0.25, atr_step=0.20, max_mult=2.50, interval=60s

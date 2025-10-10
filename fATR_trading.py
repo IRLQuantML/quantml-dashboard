@@ -26,9 +26,6 @@ from decimal import Decimal, ROUND_FLOOR, ROUND_CEILING
 import pandas as pd
 from alpaca_trade_api.rest import REST, TimeFrame
 
-# --- Third-party ---
-from torch import mode
-
 # Yahoo fallback (optional)
 try:
     import yfinance as yf
@@ -143,7 +140,6 @@ HEALTHCHECK_BASE_SL_FRAC   = float(getattr(CFG, "HEALTHCHECK_BASE_SL_FRACTION", 
 _last_extend_at: dict[str, float] = {}
 
 # === Apply TP_EXTEND_PROFILE overrides LAST (so they don't get overwritten) ===
-# === Apply TP_EXTEND_PROFILE overrides LAST (so they don't get overwritten) ===
 try:
     profile_name = str(getattr(CFG, "TP_EXTEND_PROFILE", "")).lower()
     profiles = getattr(CFG, "TP_EXTEND_PROFILES", {})
@@ -151,25 +147,79 @@ try:
     if prof:
         logging.info("⚙️ Applying TP_EXTEND_PROFILE='%s' overrides", profile_name)
         _cast = {
-            "TP_EXTEND_MODE": str,  # <-- we will SKIP applying this key
+            # --- ratchet / guardrails ---
+            "TP_EXTEND_MODE": str,            # we still SKIP applying this key below; mode is chosen by pick_mode
             "TP_EXTEND_TRIGGER_PCT": float,
             "TP_EXTEND_STEP_PCT": float,
             "TP_EXTEND_TRIGGER_ATR": float,
             "TP_EXTEND_STEP_ATR": float,
             "TP_EXTEND_MAX_MULT": float,
-            "MONITOR_INTERVAL_SEC": int,
-            "MONITOR_MAX_MINUTES": (lambda v: None if v in (None, "None", "", 0) else int(v)),
-            "MONITOR_STOP_AT_CLOSE": bool,
             "TP_EXTEND_COOLDOWN_MIN": int,
             "TP_EXTEND_MIN_ABS_STEP": float,
             "TP_EXTEND_MIN_REL_STEP": float,
             "TP_EXTEND_SPREAD_BUFFER_TICKS": int,
-            "TP_EXTEND_MAX_REPLACES_PER_SYMBOL": (lambda v: None if v in (None, "None", "", 0) else int(v)),  # ← ADD THIS
+            "TP_EXTEND_MAX_REPLACES_PER_SYMBOL": (lambda v: None if v in (None, "None", "", 0) else int(v)),
+
+            # --- baseline & protection ---
+            "EXTENDER_BASE_SL_ENABLE": bool,
+            "EXTENDER_BASE_SL_ATR_MULT": float,
+            "EXTENDER_BASE_SL_PCT": (lambda v: None if v in (None, "None", "", 0) else float(v)),
+            "BASELINE_SL_FRACTION": float,
+            "ATR_BE_LOCK": float,
+            "MIN_SL_GAP_PCT": float,
+            "SL_HARD_FAILSAFE": bool,
+            "SL_REBALANCE_IF_MISSING": bool,
+            "SL_MIN_SHARES": int,
+            "SL_REBALANCE_QTY_FRACTION": float,
+            "ATR_TRIGGER_BUFFER_MULT": float,
+            "ATR_DOLLAR_FLOOR": float,
+            "ATR_STEP_MIN_DOLLARS": float,
+
+            # --- monitor cadence / behavior ---
+            "MONITOR_INTERVAL_SEC": int,
+            "MONITOR_MAX_MINUTES": (lambda v: None if v in (None, "None", "", 0) else int(v)),
+            "MONITOR_STOP_AT_CLOSE": bool,
+            "REPLACE_ORDER_FIRST": bool,
+            "SKIP_GHOST_POSITIONS": bool,
+            "LOG_TICKERS_SAMPLES": int,
+            "TP_EXTENDER_LOG_LEVEL": str,     # note: logging.basicConfig already ran; keep for future sessions
+
+            # --- ATR source preferences ---
+            "ATR_SOURCE_ORDER": list,
+            "ATR_LENGTH": int,
+            "YAHOO_FALLBACK_ENABLE": bool,
+            "YAHOO_LOOKBACK_DAYS": int,
+            "YAHOO_INTERVAL": str,
+
+            # --- healthcheck knobs (optional per-profile) ---
+            "HEALTHCHECK_AT_OPEN": bool,
+            "HEALTHCHECK_AT_CLOSE": bool,
+            "HEALTHCHECK_OPEN_GRACE_MIN": int,
+            "HEALTHCHECK_CLOSE_GRACE_MIN": int,
+            "HEALTHCHECK_BASE_SL_FRACTION": float,
         }
         for k, v in prof.items():
-            if k == "TP_EXTEND_MODE":    # 🚫 do not let profiles change the mode
+            if k == "TP_EXTEND_MODE":
                 continue
             globals()[k] = _cast.get(k, lambda x: x)(v)
+        # --- Ensure logger reflects effective profile/config level (do this AFTER overrides) ---
+        try:
+            _lvl_name = str(
+                prof.get("TP_EXTENDER_LOG_LEVEL",
+                         getattr(CFG, "TP_EXTENDER_LOG_LEVEL",
+                                 getattr(CFG, "QML_LOG_LEVEL", "INFO")))
+            ).upper()
+            root = logging.getLogger()
+            if not root.handlers:
+                logging.basicConfig(
+                    level=getattr(logging, _lvl_name, logging.INFO),
+                    format="%(asctime)s | %(levelname)s | %(message)s",
+                    handlers=[logging.StreamHandler(sys.stdout), logging.FileHandler(log_file, encoding="utf-8")]
+                )
+            root.setLevel(getattr(logging, _lvl_name, logging.INFO))
+        except Exception:
+            logging.getLogger().setLevel(logging.INFO)
+
 except Exception as e:
     logging.warning("Profile load error: %s", e)
 
@@ -190,6 +240,41 @@ from decimal import Decimal, ROUND_FLOOR, ROUND_CEILING
 def _tick_for_price(px: float) -> Decimal:
     return Decimal("0.01") if px >= 1 else Decimal("0.0001")
 
+def _refresh_exits_from_baseline(api, pos, live_px: float, atr_val: float | None):
+    """
+    Replace BOTH exits to a fresh baseline around the current price.
+    - Baseline uses EXTENDER_BASE_SL_ATR_MULT × ATR if available, else 1% of price.
+    - Keeps correct closing side (sell for longs, buy for shorts).
+    - Uses replace-then-cancel patterns already present in helpers.
+    """
+    direction, side_exit = _position_side_and_exit(pos)  # 'LONG'/'SHORT', 'sell'/'buy'
+    # offset: prefer ATR baseline
+    eff_atr = None
+    try:
+        if atr_val and float(atr_val) > 0:
+            eff_atr = max(float(atr_val), float(globals().get("ATR_DOLLAR_FLOOR", 0.0)))
+    except Exception:
+        eff_atr = None
+    if eff_atr:
+        offset = float(globals().get("EXTENDER_BASE_SL_ATR_MULT", 0.35)) * eff_atr
+    else:
+        offset = 0.01 * float(live_px)
+
+    base_tp = (live_px + offset) if direction == "LONG" else (live_px - offset)
+    base_sl = (live_px - offset) if direction == "LONG" else (live_px + offset)
+
+    # Round for broker and spread/tick sanity
+    try:
+        base_tp = _round_limit_for_side(base_tp, side_exit)
+        base_sl = _round_stop_for_side(base_sl, side_exit)
+    except Exception:
+        pass
+
+    # Replace or (cancel→create) TP and SL using existing helpers
+    # 1) TP
+    place_or_amend_tp(api, pos, base_tp)
+    # 2) SL (create or amend)
+    place_or_amend_sl(api, pos, target_sl_price=base_sl, sl_order=None, side_exit=side_exit)
 
 def run_exits_healthcheck(api: REST, *, label: str = "open") -> None:
     """
@@ -350,75 +435,36 @@ def run_exits_healthcheck(api: REST, *, label: str = "open") -> None:
             has_tp = tp_px is not None
             has_sl = sl_px is not None
 
-            # reservations & availability
-            try:
-                avail = int(_available_exit_qty(api, sym, side_exit, qty))
-            except Exception:
-                avail = qty
-            try:
-                reserved_limits = int(_sum_exit_limit_remaining(api, sym, side_exit) or 0)
-            except Exception:
-                reserved_limits = 0
-
-            # tick + quotes
-            try:
-                tick = float((_min_tick_for(sym) or 0.01))
-            except Exception:
-                tick = 0.01
-            best_bid = best_ask = None
-            try:
-                q = _best_quotes(api, sym)
-                if q and isinstance(q, (tuple, list)) and len(q) >= 2:
-                    best_bid, best_ask = q[0], q[1]
-            except Exception:
-                pass
-
-            # compute baseline offsets (ATR-aware)
-            eff_atr = None
-            try:
-                atr_val, _src = _resolve_atr_for_symbol(api, sym, _build_atr_hints())
-                if atr_val and float(atr_val) > 0:
-                    eff_atr = max(float(atr_val), ATR_DOLLAR_FLOOR)
-            except Exception:
-                pass
-            offset = (EXTENDER_BASE_SL_ATR_MULT * float(eff_atr)) if eff_atr else (0.01 * live_px)
-
-            base_tp = (live_px + offset) if direction == "LONG" else (live_px - offset)
-            base_sl = (live_px - offset) if direction == "LONG" else (live_px + offset)
-            # round / space vs quotes
-            try:
-                base_tp = _round_limit_for_side(base_tp, side_exit)
-            except Exception:
-                pass
-            base_tp = _round_to_tick(base_tp, tick)
-            base_sl = _round_to_tick(base_sl, tick)
-
-            if side_exit == "sell":  # closing for longs
-                if best_ask and base_tp <= best_ask:
-                    base_tp = _round_to_tick(best_ask + 2 * tick, tick)
-                if best_bid and base_sl >= best_bid:
-                    base_sl = _round_to_tick(best_bid - 2 * tick, tick)
-            else:  # closing for shorts (buy to cover)
-                if best_bid and base_tp >= best_bid:
-                    base_tp = _round_to_tick(best_bid - 2 * tick, tick)
-                if best_ask and base_sl <= best_ask:
-                    base_sl = _round_to_tick(best_ask + 2 * tick, tick)
+            # --- Wrong-side SL correction (run for BOTH 'open' and 'close') ---
+            if has_sl:
+                wrong_side = (
+                    (direction == "LONG"  and sl_px is not None and live_px <= sl_px) or
+                    (direction == "SHORT" and sl_px is not None and live_px >= sl_px)
+                )
+                if wrong_side:
+                    _refresh_exits_from_baseline(api, pos, live_px, eff_atr)
+                    _hc_log(sym, "refresh_wrong_side_sl",
+                            live=f"{live_px:.4f}", sl=f"{(sl_px or float('nan')):.4f}")
+                    fixed += 1
+                    _last_fix[key] = time.time()
+                    # On 'close' we still want to ensure an SL exists afterward; don't return yet.
+                    if label != "close":
+                        continue
 
             # ---- label=close policy: ensure SL only (no TP changes) ----
             if label == "close":
                 if not has_sl:
-                    ok = place_or_amend_sl(api, pos, target_sl_price=base_sl, sl_order=None, side_exit=side_exit)
+                    ok = place_or_amend_sl(api, pos, target_sl_price=base_sl,
+                                           sl_order=None, side_exit=side_exit)
                     if ok:
                         fixed += 1
                         _hc_log(sym, "seed_sl_only_close", sl=f"{base_sl:.4f}", qty=qty)
-                # do not create/replace TP this late
                 _last_fix[key] = time.time()
                 continue
 
             # ---- Case A: both exits present → optional staleness refresh ----
             if has_tp and has_sl:
                 try:
-                    # optional scorer; ignore if not present
                     score = assess_exit_staleness(
                         side_long_short=("Long" if direction == "LONG" else "Short"),
                         entry_px=float(getattr(pos, "avg_entry_price", live_px)),
@@ -428,15 +474,11 @@ def run_exits_healthcheck(api: REST, *, label: str = "open") -> None:
                         tick=tick
                     )
                     if score and score.get("stale"):
-                        # refresh both legs to baseline
-                        try:
-                            _refresh_exits_from_baseline(api, pos, live_px, eff_atr)
-                            _hc_log(sym, "refresh_stale", reasons=",".join(score.get("reasons", [])))
-                            fixed += 1
-                            _last_fix[key] = time.time()
-                            continue
-                        except Exception:
-                            pass
+                        _refresh_exits_from_baseline(api, pos, live_px, eff_atr)
+                        _hc_log(sym, "refresh_stale", reasons=",".join(score.get("reasons", [])))
+                        fixed += 1
+                        _last_fix[key] = time.time()
+                        continue
                 except Exception:
                     pass
                 # all good, move on
@@ -514,6 +556,19 @@ def run_exits_healthcheck(api: REST, *, label: str = "open") -> None:
                 _hc_log(sym, "seed_tp", tp=f"{base_tp:.4f}")
                 _last_fix[key] = time.time()
                 continue
+            # If SL exists but sits on the wrong side of live_px, immediately refresh both exits
+            if has_sl:
+                wrong_side = False
+                if direction == "LONG" and sl_px is not None and live_px <= sl_px:
+                    wrong_side = True
+                if direction == "SHORT" and sl_px is not None and live_px >= sl_px:
+                    wrong_side = True
+                if wrong_side:
+                    _refresh_exits_from_baseline(api, pos, live_px, eff_atr)
+                    _hc_log(sym, "refresh_wrong_side_sl", live=f"{live_px:.4f}", sl=f"{(sl_px or float('nan')):.4f}")
+                    fixed += 1
+                    _last_fix[key] = time.time()
+                    continue
 
         except Exception as e:
             logging.warning("Healthcheck(%s) error on %s: %s", label, getattr(pos, "symbol", "?"), e)
@@ -3019,6 +3074,7 @@ def pick(arg_val, cfg_val):
     return cfg_val if (PREFER_CONFIG and arg_val is not None) else (arg_val if arg_val is not None else cfg_val)
 
 # --- precedence + helpers (near your arg/config merge) ---
+
 def _normalize_mode(v):
     if v is None: return None
     s = str(v).strip().lower()
@@ -3026,13 +3082,16 @@ def _normalize_mode(v):
     if s in ("percent","pct","p"): return "percent"
     raise ValueError(f"Invalid mode: {v!r}")
 
-def pick_mode(arg_mode, cfg_mode):
-    # CLI > config ; profile never decides the mode
+def pick_mode(arg_mode, cfg_mode, prof):
     am = _normalize_mode(arg_mode)
     cm = _normalize_mode(cfg_mode)
-    return am or cm or "percent"
+    pm = _normalize_mode((prof or {}).get("TP_EXTEND_MODE"))
+    return am or pm or cm or "percent"
 
 def main():
+    raw_profile = getattr(CFG, "TP_EXTEND_PROFILES", {}).get(getattr(CFG, "TP_EXTEND_PROFILE", ""), {})
+    profile = {k: v for k, v in raw_profile.items() if k.lower() not in ("mode", "tp_extend_mode")}
+
     # 1) Parser
     parser = argparse.ArgumentParser(description="QuantML — TP Extender (standalone)")
     parser.add_argument("--mode", choices=["atr", "percent"],
@@ -3052,7 +3111,7 @@ def main():
 
     api = _alpaca_client()
 
-    # 2) Read config defaults up-front (locals)
+    # 2) Read config defaults up-front
     cfg_mode        = str(getattr(CFG, "TP_EXTEND_MODE", "percent")).lower()
     cfg_trig_pct    = float(getattr(CFG, "TP_EXTEND_TRIGGER_PCT", 0.03))
     cfg_step_pct    = float(getattr(CFG, "TP_EXTEND_STEP_PCT",    0.01))
@@ -3063,9 +3122,7 @@ def main():
     cfg_max_min     = getattr(CFG, "MONITOR_MAX_MINUTES",         360)  # None/0 allowed
     cfg_stop_close  = bool(getattr(CFG, "MONITOR_STOP_AT_CLOSE",  True))
 
-    logging.info(
-        "🔧 Using config file: %s", getattr(CFG, "__file__", "<unknown>")
-    )
+    logging.info("🔧 Using config file: %s", getattr(CFG, "__file__", "<unknown>"))
     logging.info(
         "CFG → mode=%s, pct_trigger=%.4f, pct_step=%.4f, atr_trigger=%.2f, atr_step=%.2f, max_mult=%.2f, interval=%ds",
         cfg_mode, cfg_trig_pct, cfg_step_pct, cfg_trig_atr, cfg_step_atr, cfg_max_mult, cfg_interval
@@ -3075,9 +3132,15 @@ def main():
         args.mode, args.trigger_pct, args.step_pct, args.trigger_atr, args.step_atr, args.max_mult, args.interval
     )
 
-    # 3) Precedence helpers
+    # 3) Build profiles up-front
+    raw_profile = getattr(CFG, "TP_EXTEND_PROFILES", {}).get(getattr(CFG, "TP_EXTEND_PROFILE", ""), {})
+    profile = {k: v for k, v in raw_profile.items() if k.lower() not in ("mode", "tp_extend_mode")}  # exclude mode here
+
+    # 4) Precedence helpers
     PREFER_CONFIG = os.getenv("QML_PREFER_CONFIG", "1") == "1"
+
     def pick(arg_val, cfg_val):
+        # if preferring config, ignore CLI when CLI provided (unless arg is None)
         return cfg_val if (PREFER_CONFIG and arg_val is not None) else (arg_val if arg_val is not None else cfg_val)
 
     def _normalize_mode(v):
@@ -3087,21 +3150,17 @@ def main():
         if s in ("percent","pct","p"): return "percent"
         raise ValueError(f"Invalid mode: {v!r}")
 
-    def pick_mode(arg_mode, cfg_mode):
+    def pick_mode(arg_mode, cfg_mode, prof):
         am = _normalize_mode(arg_mode)
         cm = _normalize_mode(cfg_mode)
-        return am or cm or "percent"  # profile never decides mode
+        pm = _normalize_mode((prof or {}).get("TP_EXTEND_MODE"))
+        return am or pm or cm or "percent"
 
-    # 4) Freeze mode (CLI > config)
-    mode = pick_mode(args.mode, cfg_mode)
-    mode_src = "CLI" if args.mode else ("config" if cfg_mode else "default")
+    # 5) Decide mode (CLI > profile > config > default)
+    mode = pick_mode(args.mode, cfg_mode, raw_profile)
+    mode_src = "CLI" if args.mode else ("profile" if raw_profile.get("TP_EXTEND_MODE") else ("config" if cfg_mode else "default"))
 
-    # 5) Start from config, then optional profile (excluding mode), then apply CLI/config precedence with pick()
-    raw_profile = getattr(CFG, "TP_EXTEND_PROFILES", {}).get(getattr(CFG, "TP_EXTEND_PROFILE", ""), {})
-    # strip any 'mode' from profile just in case
-    profile = {k: v for k, v in raw_profile.items() if k.lower() not in ("mode", "tp_extend_mode")}
-
-    # base = config
+    # 6) Start from config, then profile (excluding mode), then CLI/config pick()
     trigger_pct = cfg_trig_pct
     step_pct    = cfg_step_pct
     trigger_atr = cfg_trig_atr
@@ -3109,9 +3168,8 @@ def main():
     max_mult    = cfg_max_mult
     interval    = cfg_interval
     max_min     = cfg_max_min
-    stop_close  = not args.no_stop_at_close if hasattr(args, "no_stop_at_close") else cfg_stop_close
+    stop_close  = cfg_stop_close
 
-    # profile tweaks (only if present), then CLI/config pick
     trigger_pct = pick(args.trigger_pct, profile.get("TP_EXTEND_TRIGGER_PCT", profile.get("pct_trigger", trigger_pct)))
     step_pct    = pick(args.step_pct,    profile.get("TP_EXTEND_STEP_PCT",    profile.get("pct_step",    step_pct)))
     trigger_atr = pick(args.trigger_atr, profile.get("TP_EXTEND_TRIGGER_ATR", profile.get("atr_trigger", trigger_atr)))
@@ -3119,23 +3177,28 @@ def main():
     max_mult    = pick(args.max_mult,    profile.get("TP_EXTEND_MAX_MULT",    profile.get("max_mult",    max_mult)))
     interval    = pick(args.interval,    profile.get("MONITOR_INTERVAL_SEC",  profile.get("interval",    interval)))
     max_min     = pick(args.max_min,     profile.get("MONITOR_MAX_MINUTES",   profile.get("max_minutes", max_min)))
-    # stop_close is a boolean flag with inverse CLI; we leave it as computed above
 
-    # 6) Friendly hints
+    # 7) Friendly warnings if mode/params mismatch
     if mode == "atr" and (args.trigger_pct is not None or args.step_pct is not None):
         logging.warning("ATR mode active: percent params (trigger_pct/step_pct) will be ignored.")
     if mode == "percent" and (args.trigger_atr is not None or args.step_atr is not None):
         logging.warning("Percent mode active: ATR params (trigger_atr/step_atr) will be ignored.")
 
+    # 8) EFFECTIVE banner — now that 'mode' and knobs are defined
     logging.info(
         "✅ EFFECTIVE → mode=%s (%s), pct_trigger=%.4f, pct_step=%.4f, atr_trigger=%.2f, atr_step=%.2f, "
         "max_mult=%.2f, interval=%ds",
         mode, mode_src, float(trigger_pct), float(step_pct), float(trigger_atr), float(step_atr),
         float(max_mult), int(interval)
     )
+    print(
+        f"EFFECTIVE → mode={mode} ({mode_src}), pct_trigger={float(trigger_pct):.4f}, "
+        f"pct_step={float(step_pct):.4f}, atr_trigger={float(trigger_atr):.2f}, "
+        f"atr_step={float(step_atr):.2f}, max_mult={float(max_mult):.2f}, interval={int(interval)}s"
+    )
 
-    # 7) Run
-    run_once = bool(args.once) or not bool(getattr(CFG, "MONITOR_ENABLE", True))
+    # 9) Run
+    run_once = bool(getattr(args, "once", False)) or not bool(getattr(CFG, "MONITOR_ENABLE", True))
     if run_once:
         run_tp_extender_pass(
             api,
@@ -3145,9 +3208,9 @@ def main():
             max_mult=float(max_mult)
         )
         logging.info("✅ One-pass extender finished.")
+        print("✅ One-pass extender finished.")
         return
 
-    # otherwise: monitor loop
     monitor_positions_loop(
         api,
         mode=mode,
@@ -3158,6 +3221,7 @@ def main():
         max_minutes=(None if max_min in (None, 0, "None", "") else int(max_min)),
         stop_at_close=bool(stop_close)
     )
+    print("🛑 Monitor loop exited.")
 
 if __name__ == "__main__":
     main()

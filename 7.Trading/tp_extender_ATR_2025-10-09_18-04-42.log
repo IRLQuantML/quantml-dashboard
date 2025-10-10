@@ -1,0 +1,1703 @@
+2025-10-09 18:04:42,688 | INFO | Writing logs to 7.Trading\tp_extender_ATR_2025-10-09_18-04-42.log
+2025-10-09 18:04:42,688 | INFO | ⚙️ Applying TP_EXTEND_PROFILE='aggressive' overrides
+2025-10-09 18:04:42,689 | INFO | ARGV → fATR_trading.py
+2025-10-09 18:04:42,689 | INFO | 🔧 Using config file: D:\QuantML\VS_QuantML_PROD\config.py
+2025-10-09 18:04:42,689 | INFO | CFG → mode=atr, pct_trigger=0.0100, pct_step=0.0050, atr_trigger=0.25, atr_step=0.20, max_mult=2.50, interval=60s
+2025-10-09 18:04:42,689 | INFO | ARGS → mode=None, pct_trigger=None, pct_step=None, atr_trigger=None, atr_step=None, max_mult=None, interval=None
+2025-10-09 18:04:42,689 | INFO | ✅ EFFECTIVE → mode=atr (config), pct_trigger=0.0080, pct_step=0.0040, atr_trigger=0.30, atr_step=0.15, max_mult=3.00, interval=60s
+2025-10-09 18:04:47,488 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:04:48,260 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:04:48,930 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.847099 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:04:49,598 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:04:50,279 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.82
+2025-10-09 18:04:50,948 | INFO | └─ HPQ: pct_move=0.4767 atr_trigger=0.3 move_atr=0.2042 reason=trigger_not_met
+2025-10-09 18:04:51,623 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:04:52,290 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-10.297333
+2025-10-09 18:04:52,974 | INFO | └─ VTRS: pct_move=0.7031 atr_trigger=0.3 move_atr=0.2838 reason=trigger_not_met
+2025-10-09 18:04:53,648 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.183098
+2025-10-09 18:04:55,418 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:04:55,508 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:05:59,922 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:06:00,510 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:06:01,183 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:06:01,856 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:06:02,552 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.82
+2025-10-09 18:06:03,226 | INFO | └─ HPQ: pct_move=0.5324 atr_trigger=0.3 move_atr=0.2272 reason=trigger_not_met
+2025-10-09 18:06:03,908 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:06:04,571 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-10.297333
+2025-10-09 18:06:05,254 | INFO | └─ VTRS: pct_move=0.7031 atr_trigger=0.3 move_atr=0.2838 reason=trigger_not_met
+2025-10-09 18:06:05,919 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.193098
+2025-10-09 18:06:07,704 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:06:07,796 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:07:12,479 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:07:13,066 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:07:13,745 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:07:14,430 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:07:15,098 | INFO | └─ GS: reason=unfavorable_or_flat delta=-4.21
+2025-10-09 18:07:15,773 | INFO | └─ HPQ: pct_move=0.551 atr_trigger=0.3 move_atr=0.2348 reason=trigger_not_met
+2025-10-09 18:07:16,433 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:07:17,101 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.847333
+2025-10-09 18:07:17,766 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 18:07:18,433 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.098098
+2025-10-09 18:07:20,199 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:07:20,292 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:08:25,079 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:08:25,647 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:08:26,326 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:08:26,981 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:08:27,662 | INFO | └─ GS: reason=unfavorable_or_flat delta=-4.21
+2025-10-09 18:08:28,332 | INFO | └─ HPQ: pct_move=0.6067 atr_trigger=0.3 move_atr=0.2585 reason=trigger_not_met
+2025-10-09 18:08:29,006 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:08:29,674 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.847333
+2025-10-09 18:08:30,347 | INFO | └─ VTRS: pct_move=0.7031 atr_trigger=0.3 move_atr=0.2838 reason=trigger_not_met
+2025-10-09 18:08:31,028 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.098098
+2025-10-09 18:08:32,799 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:08:32,888 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:09:38,291 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:09:38,883 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:09:39,541 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:09:40,213 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:09:40,872 | INFO | └─ GS: reason=unfavorable_or_flat delta=-4.21
+2025-10-09 18:09:41,544 | INFO | └─ HPQ: pct_move=0.4581 atr_trigger=0.3 move_atr=0.1951 reason=trigger_not_met
+2025-10-09 18:09:42,201 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:09:42,868 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.847333
+2025-10-09 18:09:43,534 | INFO | └─ VTRS: pct_move=0.7031 atr_trigger=0.3 move_atr=0.2838 reason=trigger_not_met
+2025-10-09 18:09:44,198 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.123098
+2025-10-09 18:09:45,960 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:09:46,052 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:10:51,579 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:10:52,168 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:10:52,827 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:10:53,485 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:10:54,154 | INFO | └─ GS: reason=unfavorable_or_flat delta=-4.21
+2025-10-09 18:10:54,820 | INFO | └─ HPQ: pct_move=0.551 atr_trigger=0.3 move_atr=0.2346 reason=trigger_not_met
+2025-10-09 18:10:55,486 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:10:56,155 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.847333
+2025-10-09 18:10:56,880 | INFO | └─ VTRS: pct_move=0.7031 atr_trigger=0.3 move_atr=0.2838 reason=trigger_not_met
+2025-10-09 18:10:57,539 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.093098
+2025-10-09 18:10:59,320 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:10:59,412 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:12:04,173 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:12:04,785 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:12:05,453 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:12:06,119 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:12:06,794 | INFO | └─ GS: reason=unfavorable_or_flat delta=-4.21
+2025-10-09 18:12:07,464 | INFO | └─ HPQ: pct_move=0.5324 atr_trigger=0.3 move_atr=0.2267 reason=trigger_not_met
+2025-10-09 18:12:08,120 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:12:08,785 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.847333
+2025-10-09 18:12:09,452 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 18:12:10,111 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.083098
+2025-10-09 18:12:11,917 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:12:12,008 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:13:16,917 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:13:17,487 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:13:18,153 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:13:18,811 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:13:19,479 | INFO | └─ GS: reason=unfavorable_or_flat delta=-4.21
+2025-10-09 18:13:20,167 | INFO | └─ HPQ: pct_move=0.5138 atr_trigger=0.3 move_atr=0.2188 reason=trigger_not_met
+2025-10-09 18:13:20,837 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:13:21,517 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.847333
+2025-10-09 18:13:22,173 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 18:13:22,845 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.103098
+2025-10-09 18:13:24,597 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:13:24,689 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:14:29,273 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:14:29,837 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:14:30,514 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:14:31,166 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:14:31,838 | INFO | └─ GS: reason=unfavorable_or_flat delta=-4.21
+2025-10-09 18:14:32,500 | INFO | └─ HPQ: pct_move=0.5138 atr_trigger=0.3 move_atr=0.2188 reason=trigger_not_met
+2025-10-09 18:14:33,168 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:14:33,840 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.847333
+2025-10-09 18:14:34,515 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 18:14:35,209 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.113098
+2025-10-09 18:14:36,980 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:14:37,074 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:15:41,784 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:15:42,368 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:15:43,040 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:15:43,724 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:15:44,469 | INFO | └─ GS: reason=unfavorable_or_flat delta=-4.21
+2025-10-09 18:15:45,130 | INFO | └─ HPQ: pct_move=0.5696 atr_trigger=0.3 move_atr=0.2426 reason=trigger_not_met
+2025-10-09 18:15:45,834 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:15:46,489 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.847333
+2025-10-09 18:15:47,189 | INFO | └─ VTRS: pct_move=0.7031 atr_trigger=0.3 move_atr=0.2838 reason=trigger_not_met
+2025-10-09 18:15:47,847 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.078098
+2025-10-09 18:15:49,621 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:15:49,997 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:16:55,036 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:16:55,601 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:16:56,279 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:16:56,941 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:16:57,613 | INFO | └─ GS: reason=unfavorable_or_flat delta=-4.21
+2025-10-09 18:16:58,283 | INFO | └─ HPQ: pct_move=0.6067 atr_trigger=0.3 move_atr=0.2584 reason=trigger_not_met
+2025-10-09 18:16:58,957 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:16:59,642 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-14.672333
+2025-10-09 18:17:00,314 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 18:17:00,983 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.138098
+2025-10-09 18:17:02,803 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:17:02,893 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:18:08,111 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:18:08,691 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:18:09,346 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:18:10,010 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:18:10,674 | INFO | └─ GS: reason=unfavorable_or_flat delta=-4.21
+2025-10-09 18:18:11,338 | INFO | └─ HPQ: pct_move=0.6439 atr_trigger=0.3 move_atr=0.2739 reason=trigger_not_met
+2025-10-09 18:18:12,001 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:18:12,657 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-14.672333
+2025-10-09 18:18:13,324 | INFO | └─ VTRS: pct_move=0.7031 atr_trigger=0.3 move_atr=0.2838 reason=trigger_not_met
+2025-10-09 18:18:13,977 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.123098
+2025-10-09 18:18:15,763 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:18:15,853 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:19:21,045 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:19:21,616 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:19:22,368 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:19:23,289 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:19:23,977 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.12
+2025-10-09 18:19:24,630 | INFO | └─ HPQ: pct_move=0.6624 atr_trigger=0.3 move_atr=0.2816 reason=trigger_not_met
+2025-10-09 18:19:25,297 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:19:25,963 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-14.672333
+2025-10-09 18:19:26,637 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 18:19:27,319 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.168098
+2025-10-09 18:19:29,091 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:19:29,620 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:20:34,184 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:20:34,760 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:20:35,426 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:20:36,092 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:20:36,751 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.12
+2025-10-09 18:20:37,420 | INFO | └─ HPQ: pct_move=0.6253 atr_trigger=0.3 move_atr=0.2658 reason=trigger_not_met
+2025-10-09 18:20:38,082 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:20:38,758 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.857333
+2025-10-09 18:20:39,424 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 18:20:40,083 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.213098
+2025-10-09 18:20:41,840 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:20:41,932 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:21:47,206 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:21:47,774 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:21:48,438 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:21:49,095 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:21:49,763 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.12
+2025-10-09 18:21:50,420 | INFO | └─ HPQ: pct_move=0.6067 atr_trigger=0.3 move_atr=0.2579 reason=trigger_not_met
+2025-10-09 18:21:51,090 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:21:51,750 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.857333
+2025-10-09 18:21:52,419 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 18:21:53,084 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.263098
+2025-10-09 18:21:54,839 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:21:54,931 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:22:59,447 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:23:00,012 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:23:00,693 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:23:01,355 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:23:02,031 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.12
+2025-10-09 18:23:02,703 | INFO | └─ HPQ: pct_move=0.6067 atr_trigger=0.3 move_atr=0.2579 reason=trigger_not_met
+2025-10-09 18:23:03,387 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:23:04,047 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:23:04,706 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 18:23:05,375 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.328098
+2025-10-09 18:23:07,125 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:23:07,214 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:24:12,547 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:24:13,113 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:24:13,780 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:24:14,445 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:24:15,127 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.12
+2025-10-09 18:24:15,793 | INFO | └─ HPQ: pct_move=0.6439 atr_trigger=0.3 move_atr=0.2737 reason=trigger_not_met
+2025-10-09 18:24:16,453 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:24:17,122 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:24:17,789 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 18:24:18,462 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.283098
+2025-10-09 18:24:20,207 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:24:20,297 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:25:25,554 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:25:26,128 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:25:26,792 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:25:27,658 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:25:28,338 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.12
+2025-10-09 18:25:29,005 | INFO | └─ HPQ: pct_move=0.6253 atr_trigger=0.3 move_atr=0.2658 reason=trigger_not_met
+2025-10-09 18:25:29,700 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:25:30,377 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:25:31,059 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 18:25:31,728 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.368098
+2025-10-09 18:25:33,499 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:25:33,594 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:26:38,291 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:26:38,882 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:26:39,547 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:26:40,246 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:26:40,915 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.12
+2025-10-09 18:26:41,589 | INFO | └─ HPQ: pct_move=0.6253 atr_trigger=0.3 move_atr=0.2658 reason=trigger_not_met
+2025-10-09 18:26:42,255 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:26:42,952 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:26:43,628 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 18:26:44,301 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.323098
+2025-10-09 18:26:46,151 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:26:46,244 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:27:51,423 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:27:52,005 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:27:52,719 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:27:53,393 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:27:54,080 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.12
+2025-10-09 18:27:54,752 | INFO | └─ HPQ: pct_move=0.6253 atr_trigger=0.3 move_atr=0.2658 reason=trigger_not_met
+2025-10-09 18:27:55,434 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:27:56,105 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:27:56,785 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 18:27:57,460 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.323098
+2025-10-09 18:27:59,223 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:27:59,328 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:29:04,729 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:29:05,308 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:29:06,004 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:29:06,668 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:29:07,349 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.12
+2025-10-09 18:29:08,027 | INFO | └─ HPQ: pct_move=0.6624 atr_trigger=0.3 move_atr=0.2816 reason=trigger_not_met
+2025-10-09 18:29:08,713 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:29:09,397 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:29:10,065 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 18:29:10,754 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.338098
+2025-10-09 18:29:12,516 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:29:12,610 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:30:17,348 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:30:17,934 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:30:18,610 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:30:19,319 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:30:20,011 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.49
+2025-10-09 18:30:20,689 | INFO | └─ HPQ: pct_move=0.681 atr_trigger=0.3 move_atr=0.2894 reason=trigger_not_met
+2025-10-09 18:30:21,398 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:30:22,080 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:30:22,756 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 18:30:23,431 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.318098
+2025-10-09 18:30:25,213 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:30:25,307 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:31:30,847 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:31:31,434 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:31:32,119 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:31:32,786 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:31:33,465 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.74
+2025-10-09 18:31:34,153 | INFO | └─ HPQ: pct_move=0.6067 atr_trigger=0.3 move_atr=0.2578 reason=trigger_not_met
+2025-10-09 18:31:34,838 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:31:35,536 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:31:36,215 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 18:31:36,882 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.353098
+2025-10-09 18:31:38,665 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:31:38,764 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:32:43,663 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:32:44,245 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:32:44,914 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:32:45,589 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:32:46,262 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.74
+2025-10-09 18:32:46,936 | INFO | └─ HPQ: pct_move=0.6253 atr_trigger=0.3 move_atr=0.2657 reason=trigger_not_met
+2025-10-09 18:32:47,601 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:32:48,280 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:32:48,950 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 18:32:49,620 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.318098
+2025-10-09 18:32:51,394 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:32:51,488 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:33:56,633 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:33:57,214 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:33:57,906 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:33:58,582 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:33:59,276 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.74
+2025-10-09 18:33:59,953 | INFO | └─ HPQ: pct_move=0.6253 atr_trigger=0.3 move_atr=0.2657 reason=trigger_not_met
+2025-10-09 18:34:00,636 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:34:01,303 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:34:01,989 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 18:34:02,664 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.308098
+2025-10-09 18:34:04,465 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:34:04,559 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:35:09,975 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:35:10,552 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:35:11,241 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:35:11,909 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:35:12,583 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.74
+2025-10-09 18:35:13,273 | INFO | └─ HPQ: pct_move=0.5138 atr_trigger=0.3 move_atr=0.2183 reason=trigger_not_met
+2025-10-09 18:35:13,955 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:35:14,653 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:35:15,331 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 18:35:16,010 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.328098
+2025-10-09 18:35:17,778 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:35:17,870 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:36:23,310 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:36:23,888 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:36:24,560 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:36:25,235 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:36:25,901 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.74
+2025-10-09 18:36:26,592 | INFO | └─ HPQ: pct_move=0.5138 atr_trigger=0.3 move_atr=0.2183 reason=trigger_not_met
+2025-10-09 18:36:27,261 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:36:27,941 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:36:28,609 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 18:36:29,285 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.313098
+2025-10-09 18:36:31,091 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:36:31,184 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:37:35,597 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:37:36,167 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:37:36,853 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:37:37,533 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:37:38,200 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.74
+2025-10-09 18:37:38,872 | INFO | └─ HPQ: pct_move=0.4395 atr_trigger=0.3 move_atr=0.1868 reason=trigger_not_met
+2025-10-09 18:37:39,549 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:37:40,230 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:37:40,897 | INFO | └─ VTRS: pct_move=0.604 atr_trigger=0.3 move_atr=0.2438 reason=trigger_not_met
+2025-10-09 18:37:41,585 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.358098
+2025-10-09 18:37:43,358 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:37:43,448 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:38:48,043 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:38:48,617 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:38:49,297 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:38:49,963 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:38:50,644 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.4
+2025-10-09 18:38:51,360 | INFO | └─ HPQ: pct_move=0.2909 atr_trigger=0.3 move_atr=0.1236 reason=trigger_not_met
+2025-10-09 18:38:52,044 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:38:52,718 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:38:53,386 | INFO | └─ VTRS: pct_move=0.5049 atr_trigger=0.3 move_atr=0.2038 reason=trigger_not_met
+2025-10-09 18:38:54,077 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.308098
+2025-10-09 18:38:55,848 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:38:55,939 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:40:00,829 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:40:01,492 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:40:02,159 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:40:02,838 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:40:03,519 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.4
+2025-10-09 18:40:04,204 | INFO | └─ HPQ: pct_move=0.3281 atr_trigger=0.3 move_atr=0.1394 reason=trigger_not_met
+2025-10-09 18:40:04,970 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:40:05,641 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:40:06,328 | INFO | └─ VTRS: pct_move=0.5049 atr_trigger=0.3 move_atr=0.2038 reason=trigger_not_met
+2025-10-09 18:40:07,023 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.318098
+2025-10-09 18:40:08,799 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:40:09,147 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:41:14,474 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:41:15,070 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:41:15,739 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:41:16,412 | INFO | └─ FICO: pct_move=0.0171 atr_trigger=0.3 move_atr=0.0041 reason=trigger_not_met
+2025-10-09 18:41:17,105 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.4
+2025-10-09 18:41:17,773 | INFO | └─ HPQ: pct_move=0.2724 atr_trigger=0.3 move_atr=0.1157 reason=trigger_not_met
+2025-10-09 18:41:18,449 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:41:19,119 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:41:19,793 | INFO | └─ VTRS: pct_move=0.5545 atr_trigger=0.3 move_atr=0.2238 reason=trigger_not_met
+2025-10-09 18:41:20,459 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.448098
+2025-10-09 18:41:22,227 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:41:22,319 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:42:27,367 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:42:27,944 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:42:28,623 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:42:29,295 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-16.144445
+2025-10-09 18:42:29,977 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.93
+2025-10-09 18:42:30,662 | INFO | └─ HPQ: pct_move=0.4395 atr_trigger=0.3 move_atr=0.1868 reason=trigger_not_met
+2025-10-09 18:42:31,342 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:42:32,025 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:42:32,694 | INFO | └─ VTRS: pct_move=0.604 atr_trigger=0.3 move_atr=0.2438 reason=trigger_not_met
+2025-10-09 18:42:33,379 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.453098
+2025-10-09 18:42:35,174 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:42:35,265 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:43:40,758 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:43:41,365 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:43:42,039 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:43:42,722 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-16.144445
+2025-10-09 18:43:43,402 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.93
+2025-10-09 18:43:44,100 | INFO | └─ HPQ: pct_move=0.4395 atr_trigger=0.3 move_atr=0.1868 reason=trigger_not_met
+2025-10-09 18:43:44,774 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:43:45,460 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:43:46,135 | INFO | └─ VTRS: pct_move=0.6536 atr_trigger=0.3 move_atr=0.2638 reason=trigger_not_met
+2025-10-09 18:43:46,831 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.408098
+2025-10-09 18:43:48,633 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:43:49,060 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:44:53,985 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:44:54,567 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:44:55,238 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:44:55,905 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-16.144445
+2025-10-09 18:44:56,604 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.93
+2025-10-09 18:44:57,279 | INFO | └─ HPQ: pct_move=0.4395 atr_trigger=0.3 move_atr=0.1868 reason=trigger_not_met
+2025-10-09 18:44:57,958 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:44:58,619 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:44:59,305 | INFO | └─ VTRS: pct_move=0.604 atr_trigger=0.3 move_atr=0.2438 reason=trigger_not_met
+2025-10-09 18:44:59,969 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.393098
+2025-10-09 18:45:01,741 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:45:01,833 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:46:06,658 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:46:07,248 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:46:07,936 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:46:08,634 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-16.144445
+2025-10-09 18:46:09,344 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.68
+2025-10-09 18:46:10,037 | INFO | └─ HPQ: pct_move=0.4953 atr_trigger=0.3 move_atr=0.2104 reason=trigger_not_met
+2025-10-09 18:46:10,912 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:46:11,588 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:46:12,254 | INFO | └─ VTRS: pct_move=0.6536 atr_trigger=0.3 move_atr=0.2638 reason=trigger_not_met
+2025-10-09 18:46:12,933 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.358098
+2025-10-09 18:46:14,707 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:46:14,804 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:47:19,424 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:47:20,000 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:47:20,678 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:47:21,333 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-16.144445
+2025-10-09 18:47:22,007 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.68
+2025-10-09 18:47:22,673 | INFO | └─ HPQ: pct_move=0.4581 atr_trigger=0.3 move_atr=0.1947 reason=trigger_not_met
+2025-10-09 18:47:23,393 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:47:24,048 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:47:24,711 | INFO | └─ VTRS: pct_move=0.5049 atr_trigger=0.3 move_atr=0.2038 reason=trigger_not_met
+2025-10-09 18:47:25,382 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.363098
+2025-10-09 18:47:27,136 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:47:27,225 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:48:32,587 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:48:33,162 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:48:33,899 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:48:34,563 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-16.144445
+2025-10-09 18:48:35,219 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.68
+2025-10-09 18:48:35,889 | INFO | └─ HPQ: pct_move=0.4395 atr_trigger=0.3 move_atr=0.1868 reason=trigger_not_met
+2025-10-09 18:48:36,549 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:48:37,220 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:48:37,876 | INFO | └─ VTRS: pct_move=0.4554 atr_trigger=0.3 move_atr=0.1838 reason=trigger_not_met
+2025-10-09 18:48:38,541 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.328098
+2025-10-09 18:48:40,297 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:48:40,388 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:49:45,311 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:49:46,072 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:49:46,742 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:49:47,400 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-16.144445
+2025-10-09 18:49:48,069 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.68
+2025-10-09 18:49:48,723 | INFO | └─ HPQ: pct_move=0.4395 atr_trigger=0.3 move_atr=0.1868 reason=trigger_not_met
+2025-10-09 18:49:49,399 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:49:50,058 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:49:50,726 | INFO | └─ VTRS: pct_move=0.4554 atr_trigger=0.3 move_atr=0.1838 reason=trigger_not_met
+2025-10-09 18:49:51,391 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.318098
+2025-10-09 18:49:53,141 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:49:53,231 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:50:58,285 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:50:58,864 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:50:59,536 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:51:00,247 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-16.144445
+2025-10-09 18:51:01,030 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.68
+2025-10-09 18:51:01,703 | INFO | └─ HPQ: pct_move=0.3281 atr_trigger=0.3 move_atr=0.1394 reason=trigger_not_met
+2025-10-09 18:51:02,381 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:51:03,105 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:51:03,768 | INFO | └─ VTRS: pct_move=0.3067 atr_trigger=0.3 move_atr=0.1238 reason=trigger_not_met
+2025-10-09 18:51:04,460 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.298098
+2025-10-09 18:51:06,221 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:51:06,311 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:52:11,422 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:52:12,005 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:52:12,678 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:52:13,341 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-16.144445
+2025-10-09 18:52:14,013 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.48
+2025-10-09 18:52:14,674 | INFO | └─ HPQ: pct_move=0.3281 atr_trigger=0.3 move_atr=0.1394 reason=trigger_not_met
+2025-10-09 18:52:15,347 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:52:16,015 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:52:16,728 | INFO | └─ VTRS: pct_move=0.3067 atr_trigger=0.3 move_atr=0.1238 reason=trigger_not_met
+2025-10-09 18:52:17,400 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.293098
+2025-10-09 18:52:19,166 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:52:19,255 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:53:23,694 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:53:24,281 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:53:24,940 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:53:25,597 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-16.144445
+2025-10-09 18:53:26,266 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.48
+2025-10-09 18:53:26,932 | INFO | └─ HPQ: pct_move=0.3652 atr_trigger=0.3 move_atr=0.1552 reason=trigger_not_met
+2025-10-09 18:53:27,626 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:53:28,286 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:53:28,955 | INFO | └─ VTRS: pct_move=0.3067 atr_trigger=0.3 move_atr=0.1238 reason=trigger_not_met
+2025-10-09 18:53:29,620 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.298098
+2025-10-09 18:53:31,405 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:53:31,495 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:54:36,826 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:54:37,397 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:54:38,066 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:54:38,716 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-16.144445
+2025-10-09 18:54:39,385 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.48
+2025-10-09 18:54:40,050 | INFO | └─ HPQ: pct_move=0.3652 atr_trigger=0.3 move_atr=0.1552 reason=trigger_not_met
+2025-10-09 18:54:40,717 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:54:41,389 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:54:42,071 | INFO | └─ VTRS: pct_move=0.4058 atr_trigger=0.3 move_atr=0.1638 reason=trigger_not_met
+2025-10-09 18:54:42,737 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.308098
+2025-10-09 18:54:44,484 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:54:44,583 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:55:49,604 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:55:50,184 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:55:50,852 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:55:51,519 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-16.144445
+2025-10-09 18:55:52,184 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.48
+2025-10-09 18:55:52,853 | INFO | └─ HPQ: pct_move=0.2909 atr_trigger=0.3 move_atr=0.1236 reason=trigger_not_met
+2025-10-09 18:55:53,542 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:55:54,217 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:55:54,899 | INFO | └─ VTRS: pct_move=0.4058 atr_trigger=0.3 move_atr=0.1638 reason=trigger_not_met
+2025-10-09 18:55:55,583 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.343098
+2025-10-09 18:55:57,363 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:55:57,455 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:57:02,596 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:57:03,183 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:57:03,876 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:57:04,534 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-16.144445
+2025-10-09 18:57:05,218 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.48
+2025-10-09 18:57:05,899 | INFO | └─ HPQ: pct_move=0.2909 atr_trigger=0.3 move_atr=0.1236 reason=trigger_not_met
+2025-10-09 18:57:06,571 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:57:07,244 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:57:07,911 | INFO | └─ VTRS: pct_move=0.5049 atr_trigger=0.3 move_atr=0.2038 reason=trigger_not_met
+2025-10-09 18:57:08,590 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.318098
+2025-10-09 18:57:10,341 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:57:10,429 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:58:15,559 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:58:16,139 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:58:16,812 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:58:17,480 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-16.144445
+2025-10-09 18:58:18,155 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.48
+2025-10-09 18:58:18,825 | INFO | └─ HPQ: pct_move=0.2909 atr_trigger=0.3 move_atr=0.1236 reason=trigger_not_met
+2025-10-09 18:58:19,509 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:58:20,183 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:58:20,861 | INFO | └─ VTRS: pct_move=0.5049 atr_trigger=0.3 move_atr=0.2038 reason=trigger_not_met
+2025-10-09 18:58:21,519 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.328098
+2025-10-09 18:58:23,290 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:58:23,381 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 18:59:28,715 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 18:59:29,294 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:59:29,967 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:59:30,626 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-16.144445
+2025-10-09 18:59:31,305 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.95
+2025-10-09 18:59:31,963 | INFO | └─ HPQ: pct_move=0.3095 atr_trigger=0.3 move_atr=0.1315 reason=trigger_not_met
+2025-10-09 18:59:32,644 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 18:59:33,318 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.617333
+2025-10-09 18:59:33,995 | INFO | └─ VTRS: pct_move=0.5049 atr_trigger=0.3 move_atr=0.2038 reason=trigger_not_met
+2025-10-09 18:59:34,670 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.338098
+2025-10-09 18:59:36,439 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 18:59:36,528 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:00:41,203 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:00:41,807 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:00:42,478 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:00:43,173 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-16.144445
+2025-10-09 19:00:43,873 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.56
+2025-10-09 19:00:44,547 | INFO | └─ HPQ: pct_move=0.3095 atr_trigger=0.3 move_atr=0.1315 reason=trigger_not_met
+2025-10-09 19:00:45,237 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:00:45,906 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.467333
+2025-10-09 19:00:46,603 | INFO | └─ VTRS: pct_move=0.5049 atr_trigger=0.3 move_atr=0.2038 reason=trigger_not_met
+2025-10-09 19:00:47,288 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.308098
+2025-10-09 19:00:49,215 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:00:49,308 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:01:54,516 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:01:55,099 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:01:55,789 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:01:56,453 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-16.144445
+2025-10-09 19:01:57,139 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.56
+2025-10-09 19:01:57,810 | INFO | └─ HPQ: pct_move=0.2909 atr_trigger=0.3 move_atr=0.1236 reason=trigger_not_met
+2025-10-09 19:01:58,487 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:01:59,160 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:01:59,836 | INFO | └─ VTRS: pct_move=0.5545 atr_trigger=0.3 move_atr=0.2238 reason=trigger_not_met
+2025-10-09 19:02:00,509 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.278098
+2025-10-09 19:02:02,364 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:02:02,457 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:03:07,132 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:03:07,719 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:03:08,380 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:03:09,053 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-16.144445
+2025-10-09 19:03:09,715 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.56
+2025-10-09 19:03:10,413 | INFO | └─ HPQ: pct_move=0.2166 atr_trigger=0.3 move_atr=0.092 reason=trigger_not_met
+2025-10-09 19:03:11,112 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:03:11,781 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:03:12,448 | INFO | └─ VTRS: pct_move=0.6536 atr_trigger=0.3 move_atr=0.2638 reason=trigger_not_met
+2025-10-09 19:03:13,120 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.243098
+2025-10-09 19:03:14,892 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:03:14,982 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:04:19,674 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:04:20,256 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:04:20,926 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:04:21,593 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-16.144445
+2025-10-09 19:04:22,256 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.56
+2025-10-09 19:04:22,948 | INFO | └─ HPQ: pct_move=0.2538 atr_trigger=0.3 move_atr=0.1078 reason=trigger_not_met
+2025-10-09 19:04:23,613 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:04:24,284 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:04:24,949 | INFO | └─ VTRS: pct_move=0.6536 atr_trigger=0.3 move_atr=0.2638 reason=trigger_not_met
+2025-10-09 19:04:25,625 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.233098
+2025-10-09 19:04:27,461 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:04:27,552 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:05:32,899 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:05:33,486 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:05:34,157 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:05:34,822 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-16.144445
+2025-10-09 19:05:35,498 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.62
+2025-10-09 19:05:36,165 | INFO | └─ HPQ: pct_move=0.2538 atr_trigger=0.3 move_atr=0.1078 reason=trigger_not_met
+2025-10-09 19:05:36,832 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:05:37,495 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:05:38,179 | INFO | └─ VTRS: pct_move=0.6536 atr_trigger=0.3 move_atr=0.2638 reason=trigger_not_met
+2025-10-09 19:05:38,847 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.233098
+2025-10-09 19:05:40,615 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:05:40,708 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:06:45,805 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:06:46,381 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:06:47,058 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:06:47,727 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-16.144445
+2025-10-09 19:06:48,399 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.07
+2025-10-09 19:06:49,068 | INFO | └─ HPQ: pct_move=0.3281 atr_trigger=0.3 move_atr=0.1394 reason=trigger_not_met
+2025-10-09 19:06:49,733 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:06:50,411 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:06:51,117 | INFO | └─ VTRS: pct_move=0.7031 atr_trigger=0.3 move_atr=0.2838 reason=trigger_not_met
+2025-10-09 19:06:51,985 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.188098
+2025-10-09 19:06:53,766 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:06:53,858 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:07:59,155 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:07:59,747 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.596367 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:08:00,421 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:08:01,123 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-16.144445
+2025-10-09 19:08:01,792 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.07
+2025-10-09 19:08:02,469 | INFO | └─ HPQ: pct_move=0.2538 atr_trigger=0.3 move_atr=0.1078 reason=trigger_not_met
+2025-10-09 19:08:03,130 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:08:03,812 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:08:04,493 | INFO | └─ VTRS: pct_move=0.7031 atr_trigger=0.3 move_atr=0.2838 reason=trigger_not_met
+2025-10-09 19:08:05,193 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.173098
+2025-10-09 19:08:06,993 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:08:07,084 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:09:12,190 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:09:12,770 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.594224 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:09:13,441 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:09:14,100 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-16.144445
+2025-10-09 19:09:14,805 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.07
+2025-10-09 19:09:15,481 | INFO | └─ HPQ: pct_move=0.2909 atr_trigger=0.3 move_atr=0.1236 reason=trigger_not_met
+2025-10-09 19:09:16,151 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:09:16,813 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:09:17,491 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:09:18,179 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.168098
+2025-10-09 19:09:19,946 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:09:20,039 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:10:24,838 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:10:25,444 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.594224 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:10:26,114 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:10:26,808 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-11.014445
+2025-10-09 19:10:27,575 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.23
+2025-10-09 19:10:28,252 | INFO | └─ HPQ: pct_move=0.2538 atr_trigger=0.3 move_atr=0.1078 reason=trigger_not_met
+2025-10-09 19:10:28,919 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:10:29,594 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:10:30,265 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:10:30,940 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.153098
+2025-10-09 19:10:32,712 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:10:32,803 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:11:38,331 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:11:38,917 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.594224 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:11:39,592 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:11:40,283 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-11.014445
+2025-10-09 19:11:41,047 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.62
+2025-10-09 19:11:41,718 | INFO | └─ HPQ: pct_move=0.2538 atr_trigger=0.3 move_atr=0.1078 reason=trigger_not_met
+2025-10-09 19:11:42,418 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:11:43,083 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:11:43,753 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:11:44,421 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.133098
+2025-10-09 19:11:46,189 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:11:46,281 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:12:51,705 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:12:52,288 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.593152 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:12:53,019 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:12:53,688 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-11.014445
+2025-10-09 19:12:54,374 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.52
+2025-10-09 19:12:55,043 | INFO | └─ HPQ: pct_move=0.1795 atr_trigger=0.3 move_atr=0.0763 reason=trigger_not_met
+2025-10-09 19:12:55,737 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:12:56,449 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:12:57,136 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:12:57,802 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.143098
+2025-10-09 19:12:59,570 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:12:59,663 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:14:04,932 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:14:05,505 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.593152 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:14:06,183 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:14:06,859 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-11.014445
+2025-10-09 19:14:07,540 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.52
+2025-10-09 19:14:08,218 | INFO | └─ HPQ: pct_move=0.1795 atr_trigger=0.3 move_atr=0.0763 reason=trigger_not_met
+2025-10-09 19:14:08,894 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:14:09,572 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:14:10,243 | INFO | └─ VTRS: pct_move=0.7031 atr_trigger=0.3 move_atr=0.2838 reason=trigger_not_met
+2025-10-09 19:14:10,916 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.153098
+2025-10-09 19:14:12,689 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:14:12,778 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:15:17,327 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:15:17,914 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.593152 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:15:18,604 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:15:19,282 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-11.014445
+2025-10-09 19:15:20,012 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.52
+2025-10-09 19:15:20,752 | INFO | └─ HPQ: pct_move=0.1795 atr_trigger=0.3 move_atr=0.0763 reason=trigger_not_met
+2025-10-09 19:15:21,478 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:15:22,152 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:15:22,834 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:15:23,530 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.153098
+2025-10-09 19:15:25,303 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:15:25,407 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:16:30,890 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:16:31,462 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.592081 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:16:32,141 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:16:32,810 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:16:33,490 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.52
+2025-10-09 19:16:34,268 | INFO | └─ HPQ: pct_move=0.1609 atr_trigger=0.3 move_atr=0.0684 reason=trigger_not_met
+2025-10-09 19:16:34,949 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:16:35,643 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:16:36,328 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:16:37,043 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.143098
+2025-10-09 19:16:38,816 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:16:38,908 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:17:44,207 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:17:44,869 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.592081 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:17:45,552 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:17:46,224 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:17:46,898 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.52
+2025-10-09 19:17:47,582 | INFO | └─ HPQ: pct_move=0.0866 atr_trigger=0.3 move_atr=0.0368 reason=trigger_not_met
+2025-10-09 19:17:48,258 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:17:48,936 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:17:49,597 | INFO | └─ VTRS: pct_move=0.6536 atr_trigger=0.3 move_atr=0.2638 reason=trigger_not_met
+2025-10-09 19:17:50,271 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.138098
+2025-10-09 19:17:52,037 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:17:52,127 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:18:56,702 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:18:57,291 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.592081 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:18:57,979 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:18:58,646 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:18:59,329 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.52
+2025-10-09 19:19:00,000 | INFO | └─ HPQ: pct_move=0.1052 atr_trigger=0.3 move_atr=0.0447 reason=trigger_not_met
+2025-10-09 19:19:00,673 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:19:01,357 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:19:02,036 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:19:02,727 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.158098
+2025-10-09 19:19:04,567 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:19:04,658 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:20:09,917 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:20:10,525 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.592081 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:20:11,186 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:20:11,971 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:20:12,687 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.52
+2025-10-09 19:20:13,360 | INFO | └─ HPQ: pct_move=0.1052 atr_trigger=0.3 move_atr=0.0447 reason=trigger_not_met
+2025-10-09 19:20:14,062 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:20:14,740 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:20:15,415 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:20:16,101 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.143098
+2025-10-09 19:20:17,888 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:20:17,979 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:21:22,404 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:21:22,987 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.592081 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:21:23,672 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:21:24,342 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:21:25,079 | INFO | └─ GS: reason=unfavorable_or_flat delta=-1.41
+2025-10-09 19:21:25,761 | INFO | └─ HPQ: pct_move=0.0866 atr_trigger=0.3 move_atr=0.0368 reason=trigger_not_met
+2025-10-09 19:21:26,428 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:21:27,096 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:21:27,758 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:21:28,439 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.133098
+2025-10-09 19:21:30,237 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:21:30,327 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:22:35,087 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:22:35,668 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.592081 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:22:36,348 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:22:37,026 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:22:37,700 | INFO | └─ GS: reason=unfavorable_or_flat delta=-1.41
+2025-10-09 19:22:38,364 | INFO | └─ HPQ: pct_move=0.0866 atr_trigger=0.3 move_atr=0.0368 reason=trigger_not_met
+2025-10-09 19:22:39,045 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:22:39,715 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:22:40,470 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:22:41,147 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.143098
+2025-10-09 19:22:42,918 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:22:43,009 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:23:47,953 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:23:48,553 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.592081 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:23:49,231 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:23:49,898 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:23:50,570 | INFO | └─ GS: reason=unfavorable_or_flat delta=-1.84
+2025-10-09 19:23:51,261 | INFO | └─ HPQ: pct_move=0.068 atr_trigger=0.3 move_atr=0.0289 reason=trigger_not_met
+2025-10-09 19:23:51,926 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:23:52,642 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:23:53,302 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:23:53,973 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.183098
+2025-10-09 19:23:55,752 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:23:55,843 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:25:01,006 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:25:01,605 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.592081 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:25:02,281 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:25:02,964 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:25:03,705 | INFO | └─ GS: reason=unfavorable_or_flat delta=-1.84
+2025-10-09 19:25:05,026 | INFO | └─ HPQ: pct_move=0.0309 atr_trigger=0.3 move_atr=0.0131 reason=trigger_not_met
+2025-10-09 19:25:06,090 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:25:07,182 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.577333
+2025-10-09 19:25:08,186 | INFO | └─ VTRS: pct_move=0.6536 atr_trigger=0.3 move_atr=0.2638 reason=trigger_not_met
+2025-10-09 19:25:08,849 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.198098
+2025-10-09 19:25:10,614 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:25:10,704 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:26:15,915 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:26:16,541 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.592081 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:26:17,210 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:26:17,863 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:26:18,528 | INFO | └─ GS: reason=unfavorable_or_flat delta=-1.84
+2025-10-09 19:26:19,194 | INFO | └─ HPQ: pct_move=0.0309 atr_trigger=0.3 move_atr=0.0131 reason=trigger_not_met
+2025-10-09 19:26:19,858 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:26:20,730 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.577333
+2025-10-09 19:26:21,385 | INFO | └─ VTRS: pct_move=0.6536 atr_trigger=0.3 move_atr=0.2638 reason=trigger_not_met
+2025-10-09 19:26:22,043 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.213098
+2025-10-09 19:26:23,841 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:26:23,932 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:27:28,807 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:27:29,380 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.592081 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:27:30,044 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:27:30,715 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:27:31,395 | INFO | └─ GS: reason=unfavorable_or_flat delta=-1.84
+2025-10-09 19:27:32,059 | INFO | └─ HPQ: pct_move=0.0495 atr_trigger=0.3 move_atr=0.021 reason=trigger_not_met
+2025-10-09 19:27:32,725 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:27:33,380 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.577333
+2025-10-09 19:27:34,048 | INFO | └─ VTRS: pct_move=0.6536 atr_trigger=0.3 move_atr=0.2638 reason=trigger_not_met
+2025-10-09 19:27:34,704 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.218098
+2025-10-09 19:27:36,652 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:27:36,745 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:28:41,615 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:28:42,189 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.592081 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:28:42,871 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:28:43,530 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:28:44,203 | INFO | └─ GS: reason=unfavorable_or_flat delta=-1.84
+2025-10-09 19:28:44,890 | INFO | └─ HPQ: pct_move=0.068 atr_trigger=0.3 move_atr=0.0289 reason=trigger_not_met
+2025-10-09 19:28:45,560 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:28:46,238 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.577333
+2025-10-09 19:28:46,899 | INFO | └─ VTRS: pct_move=0.7031 atr_trigger=0.3 move_atr=0.2838 reason=trigger_not_met
+2025-10-09 19:28:47,582 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.193098
+2025-10-09 19:28:49,363 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:28:49,452 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:29:54,621 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:29:55,200 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.592081 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:29:55,859 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:29:56,535 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:29:57,218 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.1
+2025-10-09 19:29:57,878 | INFO | └─ HPQ: pct_move=0.068 atr_trigger=0.3 move_atr=0.0289 reason=trigger_not_met
+2025-10-09 19:29:58,551 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:29:59,213 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.577333
+2025-10-09 19:29:59,886 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:30:00,565 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.163098
+2025-10-09 19:30:02,424 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:30:02,521 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:31:07,860 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:31:08,433 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.592081 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:31:09,108 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:31:09,778 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:31:10,465 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.205
+2025-10-09 19:31:11,130 | INFO | └─ HPQ: pct_move=0.068 atr_trigger=0.3 move_atr=0.0289 reason=trigger_not_met
+2025-10-09 19:31:11,818 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:31:12,495 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.577333
+2025-10-09 19:31:13,173 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:31:13,845 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.158098
+2025-10-09 19:31:15,604 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:31:15,698 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:32:21,108 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:32:21,683 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.592081 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:32:22,363 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:32:23,063 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:32:23,862 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.205
+2025-10-09 19:32:24,526 | INFO | └─ HPQ: pct_move=0.1238 atr_trigger=0.3 move_atr=0.0526 reason=trigger_not_met
+2025-10-09 19:32:25,207 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:32:25,914 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.577333
+2025-10-09 19:32:26,592 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:32:27,268 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.143098
+2025-10-09 19:32:29,082 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:32:29,353 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:33:34,583 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:33:35,201 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.592081 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:33:35,878 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:33:36,550 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:33:37,219 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.525
+2025-10-09 19:33:37,893 | INFO | └─ HPQ: pct_move=0.1238 atr_trigger=0.3 move_atr=0.0526 reason=trigger_not_met
+2025-10-09 19:33:38,580 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:33:39,262 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.577333
+2025-10-09 19:33:39,940 | INFO | └─ VTRS: pct_move=0.6536 atr_trigger=0.3 move_atr=0.2638 reason=trigger_not_met
+2025-10-09 19:33:40,615 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.123098
+2025-10-09 19:33:42,411 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:33:42,504 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:34:47,468 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:34:48,048 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.589938 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:34:48,908 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:34:49,574 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:34:50,271 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.525
+2025-10-09 19:34:50,931 | INFO | └─ HPQ: pct_move=0.1052 atr_trigger=0.3 move_atr=0.0447 reason=trigger_not_met
+2025-10-09 19:34:51,610 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:34:52,293 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.577333
+2025-10-09 19:34:52,970 | INFO | └─ VTRS: pct_move=0.6536 atr_trigger=0.3 move_atr=0.2638 reason=trigger_not_met
+2025-10-09 19:34:53,643 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.113098
+2025-10-09 19:34:55,451 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:34:55,544 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:36:01,071 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:36:01,654 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.589938 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:36:02,345 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:36:03,009 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:36:03,710 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.525
+2025-10-09 19:36:04,381 | INFO | └─ HPQ: pct_move=0.068 atr_trigger=0.3 move_atr=0.0289 reason=trigger_not_met
+2025-10-09 19:36:05,062 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:36:05,737 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.577333
+2025-10-09 19:36:06,412 | INFO | └─ VTRS: pct_move=0.6536 atr_trigger=0.3 move_atr=0.2638 reason=trigger_not_met
+2025-10-09 19:36:07,092 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.118098
+2025-10-09 19:36:08,867 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:36:09,202 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:37:14,205 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:37:14,797 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.589938 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:37:15,468 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:37:16,138 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:37:16,837 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.525
+2025-10-09 19:37:17,515 | INFO | └─ HPQ: pct_move=0.068 atr_trigger=0.3 move_atr=0.0289 reason=trigger_not_met
+2025-10-09 19:37:18,178 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:37:18,853 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.937333
+2025-10-09 19:37:19,514 | INFO | └─ VTRS: pct_move=0.7031 atr_trigger=0.3 move_atr=0.2838 reason=trigger_not_met
+2025-10-09 19:37:20,198 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.133098
+2025-10-09 19:37:21,971 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:37:22,062 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:38:26,664 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:38:27,242 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.589938 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:38:27,924 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:38:28,589 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:38:29,274 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.525
+2025-10-09 19:38:29,932 | INFO | └─ HPQ: pct_move=0.0495 atr_trigger=0.3 move_atr=0.021 reason=trigger_not_met
+2025-10-09 19:38:30,619 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:38:31,284 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:38:31,948 | INFO | └─ VTRS: pct_move=0.7031 atr_trigger=0.3 move_atr=0.2838 reason=trigger_not_met
+2025-10-09 19:38:32,617 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.133098
+2025-10-09 19:38:34,411 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:38:34,503 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:39:38,992 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:39:39,565 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.588867 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:39:40,235 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:39:40,890 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:39:41,561 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.525
+2025-10-09 19:39:42,223 | INFO | └─ HPQ: pct_move=0.0309 atr_trigger=0.3 move_atr=0.0131 reason=trigger_not_met
+2025-10-09 19:39:42,895 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:39:43,560 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:39:44,234 | INFO | └─ VTRS: pct_move=0.6536 atr_trigger=0.3 move_atr=0.2638 reason=trigger_not_met
+2025-10-09 19:39:44,904 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.133098
+2025-10-09 19:39:46,664 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:39:46,756 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:40:51,488 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:40:52,072 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.587795 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:40:52,741 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:40:53,412 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:40:54,088 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.2
+2025-10-09 19:40:54,797 | INFO | └─ HPQ: pct_move=0.0309 atr_trigger=0.3 move_atr=0.0131 reason=trigger_not_met
+2025-10-09 19:40:55,472 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:40:56,124 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:40:56,801 | INFO | └─ VTRS: pct_move=0.6536 atr_trigger=0.3 move_atr=0.2638 reason=trigger_not_met
+2025-10-09 19:40:57,466 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.133098
+2025-10-09 19:40:59,216 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:40:59,310 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:42:04,491 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:42:05,058 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.587795 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:42:05,756 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:42:06,416 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:42:07,103 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.2
+2025-10-09 19:42:07,778 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.006684
+2025-10-09 19:42:08,455 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:42:09,136 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:42:09,820 | INFO | └─ VTRS: pct_move=0.6536 atr_trigger=0.3 move_atr=0.2638 reason=trigger_not_met
+2025-10-09 19:42:10,520 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.123098
+2025-10-09 19:42:12,276 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:42:12,367 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:43:17,881 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:43:18,463 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.587795 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:43:19,129 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:43:19,790 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:43:20,455 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.74
+2025-10-09 19:43:21,131 | INFO | └─ HPQ: pct_move=0.0495 atr_trigger=0.3 move_atr=0.021 reason=trigger_not_met
+2025-10-09 19:43:21,786 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:43:22,460 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:43:23,122 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:43:23,787 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.123098
+2025-10-09 19:43:25,535 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:43:25,627 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:44:31,061 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:44:31,638 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.587795 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:44:32,297 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:44:32,954 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:44:33,623 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.125
+2025-10-09 19:44:34,294 | INFO | └─ HPQ: pct_move=0.0123 atr_trigger=0.3 move_atr=0.0052 reason=trigger_not_met
+2025-10-09 19:44:34,964 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:44:35,622 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:44:36,295 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:44:36,957 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.128098
+2025-10-09 19:44:38,722 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:44:38,815 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:45:44,020 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:45:44,588 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.587795 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:45:45,268 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:45:45,930 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:45:46,600 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.125
+2025-10-09 19:45:47,268 | INFO | └─ HPQ: pct_move=0.068 atr_trigger=0.3 move_atr=0.0289 reason=trigger_not_met
+2025-10-09 19:45:47,944 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:45:48,625 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.857333
+2025-10-09 19:45:49,302 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:45:49,991 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.213098
+2025-10-09 19:45:51,747 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:45:51,838 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:46:56,727 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:46:57,305 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.587795 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:46:57,975 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:46:58,633 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:46:59,316 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.125
+2025-10-09 19:46:59,971 | INFO | └─ HPQ: pct_move=0.0495 atr_trigger=0.3 move_atr=0.021 reason=trigger_not_met
+2025-10-09 19:47:00,635 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:47:01,295 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.727333
+2025-10-09 19:47:01,963 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:47:02,630 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.243098
+2025-10-09 19:47:04,389 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:47:04,481 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:48:09,133 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:48:09,713 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.585652 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:48:10,384 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:48:11,048 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:48:11,715 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.125
+2025-10-09 19:48:12,378 | INFO | └─ HPQ: pct_move=0.068 atr_trigger=0.3 move_atr=0.0289 reason=trigger_not_met
+2025-10-09 19:48:13,045 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:48:13,699 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.727333
+2025-10-09 19:48:14,368 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:48:15,029 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.253098
+2025-10-09 19:48:16,833 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:48:16,922 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:49:22,293 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:49:22,871 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.585652 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:49:23,544 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:49:24,378 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:49:25,054 | INFO | └─ GS: reason=unfavorable_or_flat delta=-3.125
+2025-10-09 19:49:25,706 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.021684
+2025-10-09 19:49:26,372 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:49:27,021 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.727333
+2025-10-09 19:49:27,694 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:49:28,361 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.303098
+2025-10-09 19:49:30,107 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:49:30,195 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:50:35,122 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:50:35,695 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.585652 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:50:36,355 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:50:37,044 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:50:37,703 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.79
+2025-10-09 19:50:38,421 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.006684
+2025-10-09 19:50:39,077 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:50:39,732 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.727333
+2025-10-09 19:50:40,401 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:50:41,065 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.328098
+2025-10-09 19:50:42,836 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:50:42,926 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:51:47,325 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:51:47,907 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.585652 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:51:48,663 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.844957 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:51:49,338 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:51:49,995 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.79
+2025-10-09 19:51:50,659 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.021684
+2025-10-09 19:51:51,323 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:51:51,980 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.727333
+2025-10-09 19:51:52,683 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:51:53,340 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.333098
+2025-10-09 19:51:55,095 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:51:55,186 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:53:00,569 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:53:01,151 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:53:01,820 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.843885 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:53:02,475 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:53:03,144 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.79
+2025-10-09 19:53:03,796 | INFO | └─ HPQ: pct_move=0.068 atr_trigger=0.3 move_atr=0.0289 reason=trigger_not_met
+2025-10-09 19:53:04,465 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:53:05,131 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.727333
+2025-10-09 19:53:05,802 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:53:06,478 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.333098
+2025-10-09 19:53:08,233 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:53:08,322 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:54:13,556 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:54:14,120 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:54:14,772 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.843885 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:54:15,434 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:54:16,091 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.79
+2025-10-09 19:54:16,763 | INFO | └─ HPQ: pct_move=0.068 atr_trigger=0.3 move_atr=0.0289 reason=trigger_not_met
+2025-10-09 19:54:17,428 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:54:18,080 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.037333
+2025-10-09 19:54:18,728 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:54:19,420 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.368098
+2025-10-09 19:54:21,214 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:54:21,302 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:55:26,585 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:55:27,165 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:55:27,820 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:55:28,565 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:55:29,232 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.79
+2025-10-09 19:55:29,908 | INFO | └─ HPQ: pct_move=0.0309 atr_trigger=0.3 move_atr=0.0131 reason=trigger_not_met
+2025-10-09 19:55:30,577 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:55:31,225 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.037333
+2025-10-09 19:55:31,892 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:55:32,648 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.378098
+2025-10-09 19:55:34,408 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:55:34,498 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:56:38,925 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:56:39,509 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:56:40,164 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:56:40,828 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:56:41,481 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.79
+2025-10-09 19:56:42,147 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.011684
+2025-10-09 19:56:42,809 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:56:43,474 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.037333
+2025-10-09 19:56:44,146 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:56:44,877 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.433098
+2025-10-09 19:56:46,627 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:56:46,719 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:57:51,896 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:57:52,456 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:57:53,130 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:57:53,790 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:57:54,458 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.2
+2025-10-09 19:57:55,123 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.011684
+2025-10-09 19:57:55,774 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:57:56,478 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.037333
+2025-10-09 19:57:57,131 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:57:57,806 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.418098
+2025-10-09 19:57:59,790 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:57:59,877 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 19:59:04,411 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 19:59:04,981 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:59:05,651 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:59:06,305 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 19:59:06,968 | INFO | └─ GS: reason=unfavorable_or_flat delta=-2.2
+2025-10-09 19:59:07,616 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.001684
+2025-10-09 19:59:08,282 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 19:59:09,017 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.037333
+2025-10-09 19:59:09,686 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 19:59:10,362 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.403098
+2025-10-09 19:59:12,097 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 19:59:12,187 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:00:17,735 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:00:18,355 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:00:19,030 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:00:19,693 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-13.624445
+2025-10-09 20:00:20,623 | INFO | └─ GS: reason=unfavorable_or_flat delta=-1.88
+2025-10-09 20:00:21,310 | INFO | └─ HPQ: pct_move=0.0309 atr_trigger=0.3 move_atr=0.0131 reason=trigger_not_met
+2025-10-09 20:00:22,020 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:00:22,671 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-14.397333
+2025-10-09 20:00:23,342 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:00:23,996 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.403098
+2025-10-09 20:00:25,740 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:00:25,837 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:01:31,000 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:01:31,572 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:01:32,232 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:01:32,899 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-15.774445
+2025-10-09 20:01:33,569 | INFO | └─ GS: reason=unfavorable_or_flat delta=-1.98
+2025-10-09 20:01:34,242 | INFO | └─ HPQ: pct_move=0.0866 atr_trigger=0.3 move_atr=0.0368 reason=trigger_not_met
+2025-10-09 20:01:34,907 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:01:35,576 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-14.397333
+2025-10-09 20:01:36,238 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:01:36,904 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.393098
+2025-10-09 20:01:38,683 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:01:38,774 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:02:43,550 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:02:44,127 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:02:44,872 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:02:45,538 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-15.774445
+2025-10-09 20:02:46,208 | INFO | └─ GS: reason=unfavorable_or_flat delta=-1.98
+2025-10-09 20:02:46,871 | INFO | └─ HPQ: pct_move=0.1052 atr_trigger=0.3 move_atr=0.0447 reason=trigger_not_met
+2025-10-09 20:02:47,533 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:02:48,202 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-14.397333
+2025-10-09 20:02:48,861 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:02:49,533 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.443098
+2025-10-09 20:02:51,286 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:02:51,375 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:03:55,782 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:03:56,354 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:03:57,092 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:03:57,747 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-15.774445
+2025-10-09 20:03:58,413 | INFO | └─ GS: reason=unfavorable_or_flat delta=-1.98
+2025-10-09 20:03:59,080 | INFO | └─ HPQ: pct_move=0.068 atr_trigger=0.3 move_atr=0.0289 reason=trigger_not_met
+2025-10-09 20:03:59,753 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:04:00,483 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-14.397333
+2025-10-09 20:04:01,149 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:04:02,120 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.453098
+2025-10-09 20:04:03,882 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:04:03,973 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:05:08,716 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:05:09,297 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:05:09,954 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:05:10,624 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-15.774445
+2025-10-09 20:05:11,353 | INFO | └─ GS: reason=unfavorable_or_flat delta=-1.98
+2025-10-09 20:05:12,018 | INFO | └─ HPQ: pct_move=0.0309 atr_trigger=0.3 move_atr=0.0131 reason=trigger_not_met
+2025-10-09 20:05:12,770 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:05:13,440 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-14.397333
+2025-10-09 20:05:14,110 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:05:14,767 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.448098
+2025-10-09 20:05:16,528 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:05:16,619 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:06:22,089 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:06:22,672 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:06:23,343 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:06:24,001 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-15.774445
+2025-10-09 20:06:24,670 | INFO | └─ GS: reason=unfavorable_or_flat delta=-1.76
+2025-10-09 20:06:25,329 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.011684
+2025-10-09 20:06:25,994 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:06:26,643 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-14.397333
+2025-10-09 20:06:27,317 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:06:27,985 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.463098
+2025-10-09 20:06:29,762 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:06:29,883 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:07:34,555 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:07:35,132 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:07:35,793 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:07:36,563 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-15.774445
+2025-10-09 20:07:37,221 | INFO | └─ GS: reason=unfavorable_or_flat delta=-1.76
+2025-10-09 20:07:37,892 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.021684
+2025-10-09 20:07:38,551 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:07:39,213 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-14.397333
+2025-10-09 20:07:39,882 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:07:40,563 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.448098
+2025-10-09 20:07:42,303 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:07:42,395 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:08:47,206 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:08:47,780 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:08:48,470 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:08:49,127 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-6.504445
+2025-10-09 20:08:49,790 | INFO | └─ GS: reason=unfavorable_or_flat delta=-1.76
+2025-10-09 20:08:50,455 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.021684
+2025-10-09 20:08:51,118 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:08:51,811 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-14.397333
+2025-10-09 20:08:52,569 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:08:53,237 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.463098
+2025-10-09 20:08:54,978 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:08:55,066 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:10:00,224 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:10:00,813 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:10:01,482 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:10:02,148 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-6.504445
+2025-10-09 20:10:02,838 | INFO | └─ GS: reason=unfavorable_or_flat delta=-1.76
+2025-10-09 20:10:03,725 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.011684
+2025-10-09 20:10:04,433 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:10:05,133 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-14.397333
+2025-10-09 20:10:05,805 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:10:06,461 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.443098
+2025-10-09 20:10:08,297 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:10:08,388 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:11:13,950 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:11:14,524 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:11:15,209 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:11:15,878 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-6.504445
+2025-10-09 20:11:16,552 | INFO | └─ GS: reason=unfavorable_or_flat delta=-1.76
+2025-10-09 20:11:17,213 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.021684
+2025-10-09 20:11:17,877 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:11:18,537 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-15.007333
+2025-10-09 20:11:19,213 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:11:19,881 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.483098
+2025-10-09 20:11:21,633 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:11:21,724 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:12:27,145 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:12:27,725 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:12:28,407 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:12:29,062 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-6.504445
+2025-10-09 20:12:29,749 | INFO | └─ GS: reason=unfavorable_or_flat delta=-1.83
+2025-10-09 20:12:30,422 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.041684
+2025-10-09 20:12:31,099 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:12:31,770 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-14.157333
+2025-10-09 20:12:32,446 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:12:33,119 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.453098
+2025-10-09 20:12:34,891 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:12:34,979 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:13:40,299 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:13:40,879 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:13:41,550 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:13:42,220 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-4.954445
+2025-10-09 20:13:42,883 | INFO | └─ GS: reason=unfavorable_or_flat delta=-1.28
+2025-10-09 20:13:43,555 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.031684
+2025-10-09 20:13:44,219 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:13:44,896 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-14.157333
+2025-10-09 20:13:45,565 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:13:46,241 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.378098
+2025-10-09 20:13:48,006 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:13:48,101 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:14:53,132 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:14:53,713 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:14:54,385 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:14:55,062 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-4.954445
+2025-10-09 20:14:55,744 | INFO | └─ GS: reason=unfavorable_or_flat delta=-1.28
+2025-10-09 20:14:56,412 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.046684
+2025-10-09 20:14:57,089 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:14:57,753 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-14.417333
+2025-10-09 20:14:58,424 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:14:59,093 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.388098
+2025-10-09 20:15:00,946 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:15:01,040 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:16:05,380 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:16:05,968 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:16:06,646 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:16:07,308 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-4.954445
+2025-10-09 20:16:07,980 | INFO | └─ GS: reason=unfavorable_or_flat delta=-1.27
+2025-10-09 20:16:08,647 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.031684
+2025-10-09 20:16:09,333 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:16:09,996 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-14.417333
+2025-10-09 20:16:10,667 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:16:11,335 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.403098
+2025-10-09 20:16:13,102 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:16:13,192 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:17:18,073 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:17:18,656 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:17:19,310 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:17:19,980 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-4.954445
+2025-10-09 20:17:20,643 | INFO | └─ GS: reason=unfavorable_or_flat delta=-1.39
+2025-10-09 20:17:21,311 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.031684
+2025-10-09 20:17:21,975 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:17:22,642 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-14.417333
+2025-10-09 20:17:23,311 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:17:23,968 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.398098
+2025-10-09 20:17:25,718 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:17:25,809 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:18:30,614 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:18:31,182 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:18:31,845 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:18:32,507 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-4.954445
+2025-10-09 20:18:33,169 | INFO | └─ GS: reason=unfavorable_or_flat delta=-1.22
+2025-10-09 20:18:33,829 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.021684
+2025-10-09 20:18:34,495 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:18:35,162 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-14.417333
+2025-10-09 20:18:35,817 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:18:36,494 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.398098
+2025-10-09 20:18:38,243 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:18:38,332 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:19:42,826 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:19:43,391 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:19:44,249 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:19:44,902 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-4.954445
+2025-10-09 20:19:45,610 | INFO | └─ GS: reason=unfavorable_or_flat delta=-1.22
+2025-10-09 20:19:46,264 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.021684
+2025-10-09 20:19:46,922 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:19:47,585 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.557333
+2025-10-09 20:19:48,259 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:19:48,922 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.393098
+2025-10-09 20:19:50,673 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:19:50,763 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:20:55,130 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:20:55,725 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:20:56,396 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:20:57,054 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-4.954445
+2025-10-09 20:20:57,717 | INFO | └─ GS: reason=unfavorable_or_flat delta=-0.39
+2025-10-09 20:20:58,377 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.011684
+2025-10-09 20:20:59,036 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:20:59,697 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.137333
+2025-10-09 20:21:00,359 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:21:01,031 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.368098
+2025-10-09 20:21:02,794 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:21:02,883 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:22:07,450 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:22:08,029 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:22:08,704 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:22:09,368 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-4.954445
+2025-10-09 20:22:10,206 | INFO | └─ GS: reason=unfavorable_or_flat delta=-0.615
+2025-10-09 20:22:10,861 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.006684
+2025-10-09 20:22:11,535 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:22:12,197 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.137333
+2025-10-09 20:22:12,855 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:22:13,521 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.313098
+2025-10-09 20:22:20,272 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:22:20,364 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:23:25,738 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:23:26,304 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:23:26,986 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:23:27,638 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-5.634445
+2025-10-09 20:23:28,309 | INFO | └─ GS: reason=unfavorable_or_flat delta=-0.615
+2025-10-09 20:23:28,967 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.021684
+2025-10-09 20:23:29,634 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:23:30,295 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.137333
+2025-10-09 20:23:30,975 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:23:31,646 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.278098
+2025-10-09 20:23:33,403 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:23:33,493 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:24:38,884 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:24:39,456 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:24:40,121 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:24:40,779 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-5.634445
+2025-10-09 20:24:41,437 | INFO | └─ GS: reason=unfavorable_or_flat delta=-0.54
+2025-10-09 20:24:42,107 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.016684
+2025-10-09 20:24:42,763 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:24:43,437 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-13.137333
+2025-10-09 20:24:44,100 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:24:44,771 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.223098
+2025-10-09 20:24:46,518 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:24:46,610 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:25:51,442 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:25:52,015 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:25:52,700 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:25:53,359 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-5.014445
+2025-10-09 20:25:54,038 | INFO | └─ GS: reason=unfavorable_or_flat delta=-0.54
+2025-10-09 20:25:54,702 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.006684
+2025-10-09 20:25:55,382 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:25:56,044 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.917333
+2025-10-09 20:25:56,701 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:25:57,378 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.248098
+2025-10-09 20:25:59,190 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:25:59,279 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:27:04,279 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:27:04,867 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:27:05,526 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:27:06,193 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-5.014445
+2025-10-09 20:27:06,852 | INFO | └─ GS: reason=unfavorable_or_flat delta=-0.1
+2025-10-09 20:27:07,513 | INFO | └─ HPQ: pct_move=0.1052 atr_trigger=0.3 move_atr=0.0447 reason=trigger_not_met
+2025-10-09 20:27:08,181 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:27:08,845 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.917333
+2025-10-09 20:27:09,519 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:27:10,191 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.263098
+2025-10-09 20:27:12,002 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:27:12,098 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:28:16,488 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:28:17,104 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:28:17,761 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:28:18,427 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-5.034445
+2025-10-09 20:28:19,127 | INFO | └─ GS: pct_move=0.0116 atr_trigger=0.3 move_atr=0.006 reason=trigger_not_met
+2025-10-09 20:28:19,798 | INFO | └─ HPQ: pct_move=0.2166 atr_trigger=0.3 move_atr=0.092 reason=trigger_not_met
+2025-10-09 20:28:20,471 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:28:21,134 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.917333
+2025-10-09 20:28:21,805 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:28:22,473 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.268098
+2025-10-09 20:28:24,235 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:28:24,324 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:29:29,114 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:29:29,678 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:29:30,343 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:29:31,014 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-5.034445
+2025-10-09 20:29:31,679 | INFO | └─ GS: reason=unfavorable_or_flat delta=-0.88
+2025-10-09 20:29:32,350 | INFO | └─ HPQ: pct_move=0.2909 atr_trigger=0.3 move_atr=0.1236 reason=trigger_not_met
+2025-10-09 20:29:33,005 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:29:33,670 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.917333
+2025-10-09 20:29:34,332 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:29:35,016 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.233098
+2025-10-09 20:29:36,904 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:29:36,994 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:30:42,228 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:30:42,819 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:30:43,477 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:30:44,140 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-5.664445
+2025-10-09 20:30:44,811 | INFO | └─ GS: reason=unfavorable_or_flat delta=-0.99
+2025-10-09 20:30:45,501 | INFO | └─ HPQ: pct_move=0.2724 atr_trigger=0.3 move_atr=0.1157 reason=trigger_not_met
+2025-10-09 20:30:46,169 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:30:46,833 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.917333
+2025-10-09 20:30:47,707 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:30:48,387 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.218098
+2025-10-09 20:30:50,168 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:30:50,264 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:31:55,842 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:31:56,448 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:31:57,131 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:31:57,815 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-5.664445
+2025-10-09 20:31:58,506 | INFO | └─ GS: reason=unfavorable_or_flat delta=-0.99
+2025-10-09 20:31:59,181 | INFO | └─ HPQ: pct_move=0.1795 atr_trigger=0.3 move_atr=0.0763 reason=trigger_not_met
+2025-10-09 20:31:59,878 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:32:00,560 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.917333
+2025-10-09 20:32:01,255 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:32:01,925 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.233098
+2025-10-09 20:32:03,720 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:32:03,813 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:33:08,758 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:33:09,332 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:33:10,030 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:33:10,700 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-10.534445
+2025-10-09 20:33:11,378 | INFO | └─ GS: reason=unfavorable_or_flat delta=-0.825
+2025-10-09 20:33:12,069 | INFO | └─ HPQ: pct_move=0.1795 atr_trigger=0.3 move_atr=0.0763 reason=trigger_not_met
+2025-10-09 20:33:12,747 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:33:13,716 | WARNING | No free qty for new SL on TDG — TP/SL legs already reserve 4 of 4.
+2025-10-09 20:33:17,255 | WARNING | submit_order doesn't support reduce_only in this SDK; retrying without it (was True).
+2025-10-09 20:33:17,354 | INFO | 🆕 Created SL for TDG qty=2 @ 1271.75
+2025-10-09 20:33:17,454 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.917333
+2025-10-09 20:33:18,131 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:33:18,798 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.208098
+2025-10-09 20:33:20,574 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:33:20,668 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:34:26,085 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:34:26,677 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:34:27,360 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:34:28,037 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-10.534445
+2025-10-09 20:34:28,732 | INFO | └─ GS: reason=unfavorable_or_flat delta=-0.825
+2025-10-09 20:34:29,409 | INFO | └─ HPQ: pct_move=0.1052 atr_trigger=0.3 move_atr=0.0447 reason=trigger_not_met
+2025-10-09 20:34:30,095 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:34:30,776 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.917333
+2025-10-09 20:34:31,464 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:34:32,132 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.198098
+2025-10-09 20:34:33,911 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:34:34,003 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:35:39,442 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:35:40,035 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:35:40,725 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:35:41,411 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-10.534445
+2025-10-09 20:35:42,096 | INFO | └─ GS: reason=unfavorable_or_flat delta=-1.06
+2025-10-09 20:35:42,767 | INFO | └─ HPQ: pct_move=0.1052 atr_trigger=0.3 move_atr=0.0447 reason=trigger_not_met
+2025-10-09 20:35:43,450 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:35:44,123 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.917333
+2025-10-09 20:35:44,796 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:35:45,484 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.208098
+2025-10-09 20:35:47,263 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:35:47,358 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:36:51,983 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:36:52,582 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:36:53,257 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:36:53,931 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-10.534445
+2025-10-09 20:36:54,609 | INFO | └─ GS: reason=unfavorable_or_flat delta=-0.595
+2025-10-09 20:36:55,292 | INFO | └─ HPQ: pct_move=0.1052 atr_trigger=0.3 move_atr=0.0447 reason=trigger_not_met
+2025-10-09 20:36:55,970 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:36:56,649 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.917333
+2025-10-09 20:36:57,333 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:36:58,009 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.198098
+2025-10-09 20:36:59,779 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:36:59,873 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:38:05,086 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:38:05,673 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:38:06,376 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:38:07,050 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-10.534445
+2025-10-09 20:38:07,732 | INFO | └─ GS: pct_move=0.0064 atr_trigger=0.3 move_atr=0.0033 reason=trigger_not_met
+2025-10-09 20:38:08,409 | INFO | └─ HPQ: pct_move=0.1052 atr_trigger=0.3 move_atr=0.0447 reason=trigger_not_met
+2025-10-09 20:38:09,084 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:38:09,759 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-12.917333
+2025-10-09 20:38:10,439 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:38:11,118 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.198098
+2025-10-09 20:38:12,894 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:38:12,985 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:39:18,137 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:39:18,726 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:39:19,409 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:39:20,097 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-10.534445
+2025-10-09 20:39:20,761 | INFO | └─ GS: pct_move=0.0218 atr_trigger=0.3 move_atr=0.0113 reason=trigger_not_met
+2025-10-09 20:39:21,447 | INFO | └─ HPQ: pct_move=0.068 atr_trigger=0.3 move_atr=0.0289 reason=trigger_not_met
+2025-10-09 20:39:22,122 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:39:22,804 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-17.537333
+2025-10-09 20:39:23,485 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:39:24,164 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.213098
+2025-10-09 20:39:26,046 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:39:26,142 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:40:31,108 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:40:31,701 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:40:32,396 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:40:33,072 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-10.534445
+2025-10-09 20:40:33,751 | INFO | └─ GS: pct_move=0.0597 atr_trigger=0.3 move_atr=0.0309 reason=trigger_not_met
+2025-10-09 20:40:34,415 | INFO | └─ HPQ: pct_move=0.1609 atr_trigger=0.3 move_atr=0.0684 reason=trigger_not_met
+2025-10-09 20:40:35,089 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:40:35,757 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-17.537333
+2025-10-09 20:40:36,451 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:40:37,126 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.178098
+2025-10-09 20:40:38,915 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:40:39,010 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:41:44,273 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:41:44,850 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:41:45,531 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:41:46,207 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-10.534445
+2025-10-09 20:41:46,891 | INFO | └─ GS: pct_move=0.027 atr_trigger=0.3 move_atr=0.014 reason=trigger_not_met
+2025-10-09 20:41:47,573 | INFO | └─ HPQ: pct_move=0.1423 atr_trigger=0.3 move_atr=0.0605 reason=trigger_not_met
+2025-10-09 20:41:48,265 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:41:48,942 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-17.537333
+2025-10-09 20:41:49,607 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:41:50,298 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.153098
+2025-10-09 20:41:52,093 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:41:52,186 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:42:57,682 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:42:58,266 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:42:58,933 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:42:59,610 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-10.534445
+2025-10-09 20:43:00,288 | INFO | └─ GS: pct_move=0.0629 atr_trigger=0.3 move_atr=0.0326 reason=trigger_not_met
+2025-10-09 20:43:00,973 | INFO | └─ HPQ: pct_move=0.068 atr_trigger=0.3 move_atr=0.0289 reason=trigger_not_met
+2025-10-09 20:43:01,647 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:43:02,321 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-17.537333
+2025-10-09 20:43:02,996 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:43:03,678 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.148098
+2025-10-09 20:43:05,530 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:43:05,628 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:44:09,949 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:44:10,531 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:44:11,209 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:44:11,890 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-10.534445
+2025-10-09 20:44:12,600 | INFO | └─ GS: pct_move=0.0629 atr_trigger=0.3 move_atr=0.0326 reason=trigger_not_met
+2025-10-09 20:44:13,281 | INFO | └─ HPQ: pct_move=0.068 atr_trigger=0.3 move_atr=0.0289 reason=trigger_not_met
+2025-10-09 20:44:13,955 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:44:14,628 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-17.537333
+2025-10-09 20:44:15,294 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:44:15,965 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.128098
+2025-10-09 20:44:17,764 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:44:17,857 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:45:23,015 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:45:23,645 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:45:24,336 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:45:25,012 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-10.534445
+2025-10-09 20:45:25,711 | INFO | └─ GS: pct_move=0.1104 atr_trigger=0.3 move_atr=0.0572 reason=trigger_not_met
+2025-10-09 20:45:26,383 | INFO | └─ HPQ: pct_move=0.1238 atr_trigger=0.3 move_atr=0.0526 reason=trigger_not_met
+2025-10-09 20:45:27,062 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:45:27,754 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-17.537333
+2025-10-09 20:45:28,460 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:45:29,156 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.158098
+2025-10-09 20:45:30,941 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:45:31,033 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:46:36,719 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:46:37,311 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:46:37,976 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:46:38,638 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-10.534445
+2025-10-09 20:46:39,316 | INFO | └─ GS: pct_move=0.0924 atr_trigger=0.3 move_atr=0.0479 reason=trigger_not_met
+2025-10-09 20:46:40,007 | INFO | └─ HPQ: pct_move=0.1052 atr_trigger=0.3 move_atr=0.0447 reason=trigger_not_met
+2025-10-09 20:46:40,684 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:46:41,347 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-17.537333
+2025-10-09 20:46:42,034 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:46:42,697 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.163098
+2025-10-09 20:46:44,486 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:46:44,578 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:47:49,767 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:47:50,335 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:47:51,010 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:47:51,674 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-10.534445
+2025-10-09 20:47:52,355 | INFO | └─ GS: pct_move=0.1297 atr_trigger=0.3 move_atr=0.0672 reason=trigger_not_met
+2025-10-09 20:47:53,028 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.001684
+2025-10-09 20:47:53,696 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:47:54,374 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-17.697333
+2025-10-09 20:47:55,047 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:47:55,743 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.178098
+2025-10-09 20:47:57,507 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:47:57,597 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:49:02,907 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:49:03,500 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:49:04,172 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:49:04,851 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-10.534445
+2025-10-09 20:49:05,519 | INFO | └─ GS: pct_move=0.163 atr_trigger=0.3 move_atr=0.0845 reason=trigger_not_met
+2025-10-09 20:49:06,202 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.001684
+2025-10-09 20:49:06,866 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:49:07,544 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-17.697333
+2025-10-09 20:49:08,225 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:49:08,906 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.183098
+2025-10-09 20:49:10,686 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:49:10,777 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:50:16,066 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:50:16,646 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:50:17,322 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:50:17,992 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-10.534445
+2025-10-09 20:50:18,681 | INFO | └─ GS: pct_move=0.2195 atr_trigger=0.3 move_atr=0.1138 reason=trigger_not_met
+2025-10-09 20:50:19,361 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.001684
+2025-10-09 20:50:20,047 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:50:20,765 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-17.697333
+2025-10-09 20:50:21,456 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:50:22,120 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.203098
+2025-10-09 20:50:23,891 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:50:23,984 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:51:28,614 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:51:29,213 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:51:29,880 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:51:30,546 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-10.534445
+2025-10-09 20:51:31,219 | INFO | └─ GS: pct_move=0.1386 atr_trigger=0.3 move_atr=0.0719 reason=trigger_not_met
+2025-10-09 20:51:31,888 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.016684
+2025-10-09 20:51:32,756 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:51:33,425 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-17.697333
+2025-10-09 20:51:34,081 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:51:34,745 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.213098
+2025-10-09 20:51:36,584 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:51:36,674 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:52:42,083 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:52:42,666 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:52:43,325 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:52:43,974 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-10.534445
+2025-10-09 20:52:44,640 | INFO | └─ GS: pct_move=0.1386 atr_trigger=0.3 move_atr=0.0719 reason=trigger_not_met
+2025-10-09 20:52:45,304 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.036684
+2025-10-09 20:52:45,971 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:52:46,629 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-18.647333
+2025-10-09 20:52:47,349 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:52:48,003 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.203098
+2025-10-09 20:52:49,739 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:52:49,832 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:53:55,345 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-09 20:53:55,926 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:53:56,595 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:53:57,251 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-16.774445
+2025-10-09 20:53:57,932 | INFO | └─ GS: pct_move=0.1502 atr_trigger=0.3 move_atr=0.0779 reason=trigger_not_met
+2025-10-09 20:53:58,592 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.051684
+2025-10-09 20:53:59,253 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-09 20:53:59,933 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-18.647333
+2025-10-09 20:54:00,597 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-09 20:54:01,270 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.163098
+2025-10-09 20:54:03,060 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-09 20:54:03,149 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:55:03,334 | INFO | ⏳ Market near close — skipping TP/SL updates for this pass.
+2025-10-09 20:55:03,422 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:56:03,605 | INFO | ⏳ Market near close — skipping TP/SL updates for this pass.
+2025-10-09 20:56:03,695 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:57:03,881 | INFO | ⏳ Market near close — skipping TP/SL updates for this pass.
+2025-10-09 20:57:03,971 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:58:04,157 | INFO | ⏳ Market near close — skipping TP/SL updates for this pass.
+2025-10-09 20:58:04,249 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 20:59:04,442 | INFO | ⏳ Market near close — skipping TP/SL updates for this pass.
+2025-10-09 20:59:04,533 | INFO | 🕑 Sleeping 60 sec…
+2025-10-09 21:00:04,721 | INFO | ⏳ Market near close — skipping TP/SL updates for this pass.
+2025-10-09 21:01:02,353 | INFO | 🏥 Healthcheck(close) done — fixed=0, missing_sl=0, missing_tp=0
+2025-10-09 21:01:02,354 | INFO | 🔔 Market closed — stopping monitor loop.

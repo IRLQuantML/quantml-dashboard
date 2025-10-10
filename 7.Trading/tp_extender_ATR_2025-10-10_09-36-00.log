@@ -1,0 +1,20 @@
+2025-10-10 09:36:00,489 | INFO | Writing logs to 7.Trading\tp_extender_ATR_2025-10-10_09-36-00.log
+2025-10-10 09:36:00,490 | INFO | ⚙️ Applying TP_EXTEND_PROFILE='aggressive' overrides
+2025-10-10 09:36:00,490 | INFO | ARGV → d:/QuantML/VS_QuantML_PROD/fATR_trading.py
+2025-10-10 09:36:00,491 | INFO | 🔧 Using config file: d:\QuantML\VS_QuantML_PROD\config.py
+2025-10-10 09:36:00,491 | INFO | CFG → mode=atr, pct_trigger=0.0080, pct_step=0.0040, atr_trigger=0.25, atr_step=0.20, max_mult=2.50, interval=60s
+2025-10-10 09:36:00,491 | INFO | ARGS → mode=None, pct_trigger=None, pct_step=None, atr_trigger=None, atr_step=None, max_mult=None, interval=None
+2025-10-10 09:36:00,491 | INFO | ✅ EFFECTIVE → mode=atr (config), pct_trigger=0.0080, pct_step=0.0040, atr_trigger=0.30, atr_step=0.15, max_mult=3.00, interval=60s
+2025-10-10 09:36:05,383 | INFO | 🔍 Scanning 9 open positions: AMCR, F, FICO, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-10 09:36:06,132 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.61 new_tp=7.58351 min_abs=0.03 min_rel=0.0008
+2025-10-10 09:36:06,800 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.842814 min_abs=0.03 min_rel=0.0008
+2025-10-10 09:36:07,450 | INFO | └─ FICO: reason=unfavorable_or_flat delta=-17.694444
+2025-10-10 09:36:08,118 | INFO | └─ GS: pct_move=0.0578 atr_trigger=0.3 move_atr=0.0299 reason=trigger_not_met
+2025-10-10 09:36:08,767 | INFO | └─ HPQ: reason=unfavorable_or_flat delta=-0.046684
+2025-10-10 09:36:09,420 | INFO | └─ PSKY: reason=tp_step_too_small cur_tp=15.53 new_tp=15.524992 min_abs=0.03 min_rel=0.0008
+2025-10-10 09:36:10,068 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-16.137333
+2025-10-10 09:36:10,729 | INFO | └─ VTRS: reason=non_tightening_step_short
+2025-10-10 09:36:11,408 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.083098
+2025-10-10 09:36:13,137 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-10 09:36:57,451 | INFO | 🏥 Healthcheck(close) done — fixed=0, missing_sl=0, missing_tp=0
+2025-10-10 09:36:57,452 | INFO | 🔔 Market closed — stopping monitor loop.
