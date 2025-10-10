@@ -264,3 +264,20 @@
 2025-10-10 18:09:20,854 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.28
 2025-10-10 18:09:22,259 | INFO | 📈 Cycle result: extended=2, skipped=5
 2025-10-10 18:09:22,351 | INFO | 🕑 Sleeping 60 sec…
+2025-10-10 18:10:27,485 | INFO | 🔍 Scanning 7 open positions: AMCR, F, GS, HPQ, PSKY, VTRS, WBD
+2025-10-10 18:10:28,056 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.76 new_tp=7.72834 min_abs=0.05 min_rel=0.001
+2025-10-10 18:10:28,738 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.82438 min_abs=0.05 min_rel=0.001
+2025-10-10 18:10:30,698 | INFO | 🆕 Created TP for GS qty=1 @ 760.81
+2025-10-10 18:10:30,987 | WARNING | No free qty for new SL on GS — TP/SL legs already reserve 1 of 1.
+2025-10-10 18:10:32,722 | INFO | 🆕 Created SL for GS qty=1 @ 768.75
+2025-10-10 18:10:32,818 | INFO | └─ GS: dir=SHORT entry=770.22 live=764.78 delta=5.44 cur_tp=754.8156 new_tp=751.75648 capped=False step_type=% step_pct=0.004 pct_move=0.7063 step_value_abs=3.05912
+2025-10-10 18:10:33,003 | WARNING | No open TP order found for GS (SHORT) — cannot amend TP.
+2025-10-10 18:10:33,098 | WARNING | No free qty for new TP on GS — existing exits consume the position.
+2025-10-10 18:10:33,862 | INFO | └─ HPQ: dir=SHORT entry=26.872859 live=25.53 delta=1.342859 cur_tp=21.91 new_tp=21.80788 capped=False step_type=% step_pct=0.004 pct_move=4.9971 step_value_abs=0.10212
+2025-10-10 18:10:33,863 | INFO | └─ HPQ: reason=cooldown_skip since_sec=76 cooldown_min=5
+2025-10-10 18:10:34,439 | INFO | └─ PSKY: dir=SHORT entry=18.087296 live=17.23 delta=0.857296 cur_tp=12.59 new_tp=12.52108 capped=False step_type=% step_pct=0.004 pct_move=4.7398 step_value_abs=0.06892
+2025-10-10 18:10:34,440 | INFO | └─ PSKY: reason=cooldown_skip since_sec=75 cooldown_min=5
+2025-10-10 18:10:35,025 | INFO | └─ VTRS: reason=tp_step_too_small cur_tp=9.38 new_tp=9.34088 min_abs=0.05 min_rel=0.001
+2025-10-10 18:10:35,696 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.27
+2025-10-10 18:10:37,092 | INFO | 📈 Cycle result: extended=0, skipped=7
+2025-10-10 18:10:37,183 | INFO | 🕑 Sleeping 60 sec…

@@ -4359,7 +4359,7 @@ def build_adaptive_atr_df(_api: Optional[REST], positions: pd.DataFrame) -> pd.D
             "Ticker","Side","Cost per Share","Current Price","Initial TP","Current TP","Initial SL","Current SL","Updated (ET)"
         ])
 
-    # Ensure current TP/SL columns are present
+    # Start from live positions + any TP/SL you already attached
     z = merge_tp_sl_from_alpaca_orders(positions.copy(), _api)
 
     # Initial TP/SL from the entry bracket (per current open lot)
@@ -4367,7 +4367,7 @@ def build_adaptive_atr_df(_api: Optional[REST], positions: pd.DataFrame) -> pd.D
 
     rows = []
     for _, r in z.iterrows():
-        sym  = str(r.get("Ticker", r.get("symbol", "")))
+        sym  = str(r.get("Ticker", r.get("symbol", ""))).upper()
         side = str(r.get("Side", r.get("Trade Action",""))).title()
 
         # entry cost (per share)
@@ -4383,9 +4383,28 @@ def build_adaptive_atr_df(_api: Optional[REST], positions: pd.DataFrame) -> pd.D
         except Exception:
             cur_px = float("nan")
 
-        # current TP/SL (from open orders)
-        cur_tp = pd.to_numeric(pd.Series([r.get("TP", r.get("tp_price"))]), errors="coerce").iloc[0]
-        cur_sl = pd.to_numeric(pd.Series([r.get("SL", r.get("sl_price"))]), errors="coerce").iloc[0]
+        # --- current TP/SL (robust: read from open orders and keep only the closing side) ---
+        # Close side for a LONG is 'sell'; for a SHORT is 'buy'
+        side_exit = "sell" if side.lower() == "long" else "buy"
+        tp_px = sl_px = np.nan
+        tp_side = sl_side = None
+        try:
+            # Uses list_orders(..., nested=True), classifies, and picks by relation to price
+            tp_px, sl_px, tp_side, sl_side = _get_current_exits_with_sides(_api, sym, cur_px)
+        except Exception:
+            # fallback to whatever merge put in
+            tp_px = pd.to_numeric(pd.Series([r.get("TP", r.get("tp_price"))]), errors="coerce").iloc[0]
+            sl_px = pd.to_numeric(pd.Series([r.get("SL", r.get("sl_price"))]), errors="coerce").iloc[0]
+            tp_side = sl_side = side_exit
+
+        # Keep only exits on the CORRECT close side
+        if tp_side and tp_side != side_exit:
+            tp_px = np.nan
+        if sl_side and sl_side != side_exit:
+            sl_px = np.nan
+
+        cur_tp = float(tp_px) if pd.notna(tp_px) else np.nan
+        cur_sl = float(sl_px) if pd.notna(sl_px) else np.nan
 
         # initial TP/SL (from entry bracket)
         im = init_map.get(sym.upper(), {})
