@@ -127,6 +127,159 @@ except Exception:
 
 # ===================== Sorting + Drawdown helpers =====================
 
+# --- helper: add TP% / SL% columns beside Current TP / SL ---
+def _add_tp_sl_percent_cols(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Adds:
+      • TP % = ((Current TP / Current Price) - 1) * 100
+      • SL % = ((Current SL / Current Price) - 1) * 100
+    Inserts each % column immediately to the right of its base column.
+    """
+    if df is None or df.empty:
+        return df
+
+    d = df.copy()
+    # Coerce to numeric where needed
+    for c in ("Current Price", "Current TP", "Current SL"):
+        if c in d.columns:
+            d[c] = pd.to_numeric(d[c], errors="coerce")
+
+    if {"Current TP", "Current Price"}.issubset(d.columns):
+        d["TP %"] = ((d["Current TP"] / d["Current Price"]) - 1.0) * 100.0
+    if {"Current SL", "Current Price"}.issubset(d.columns):
+        d["SL %"] = ((d["Current SL"] / d["Current Price"]) - 1.0) * 100.0
+
+    def _insert_after(df_, after_col, new_col):
+        if new_col in df_.columns and after_col in df_.columns:
+            cols = list(df_.columns)
+            cols.remove(new_col)
+            i = cols.index(after_col)
+            cols.insert(i + 1, new_col)
+            return df_[cols]
+        return df_
+
+    if "TP %" in d.columns:
+        d = _insert_after(d, "Current TP", "TP %")
+    if "SL %" in d.columns:
+        d = _insert_after(d, "Current SL", "SL %")
+
+    return d
+
+def _fmt_pct(v):
+    if pd.isna(v): return ""
+    return f"{v:+.2f}%"
+
+def _color_pct(val):
+    if pd.isna(val): return ""
+    if val > 0:  return "color:#0f8a00;font-weight:600;"
+    if val < 0:  return "color:#b00020;font-weight:600;"
+    return ""
+
+# --- tiny util used by both helpers ---
+def _insert_after(df_, after_col, new_col):
+    if new_col in df_.columns and after_col in df_.columns:
+        cols = list(df_.columns)
+        cols.remove(new_col)
+        i = cols.index(after_col)
+        cols.insert(i + 1, new_col)
+        return df_[cols]
+    return df_
+
+# --- A) PnL %: side-aware gain/loss vs entry (Cost per Share) ---
+def _add_pnl_percent_col(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Adds 'PnL %' = side-aware return from entry:
+        Long : (CurrentPrice / CostPerShare - 1) * 100
+        Short: (CostPerShare / CurrentPrice - 1) * 100
+    Inserts right after 'Current Price'.
+    """
+    if df is None or df.empty:
+        return df
+
+    d = df.copy()
+    for c in ("Current Price", "Cost per Share", "Side"):
+        if c in d.columns:
+            d[c] = pd.to_numeric(d[c].astype(str).str.replace("$","", regex=False), errors="coerce") \
+                   if c != "Side" else d[c]
+
+    def _pnl(row):
+        cp, cost = row.get("Current Price"), row.get("Cost per Share")
+        sd = str(row.get("Side", "")).strip().lower()
+        if cp and cost and cp > 0 and cost > 0:
+            if sd == "short":
+                return (cost / cp - 1.0) * 100.0
+            else:
+                return (cp / cost - 1.0) * 100.0
+        return None
+
+    d["PnL %"] = d.apply(_pnl, axis=1)
+
+    if "PnL %" in d.columns:
+        d = _insert_after(d, "Current Price", "PnL %")
+
+    return d
+
+# --- B) SL (ATR ×): how many ATRs between Current Price and Current SL ---
+def _add_sl_atr_multiple(df: pd.DataFrame, atr_col_candidates=("ATR","atr_14","atr14")) -> pd.DataFrame:
+    """
+    Adds 'SL (ATR ×)' = |CurrentPrice - CurrentSL| / ATR
+    Looks for an ATR column by common names; if not found, leaves blank.
+    Inserts after 'SL %' if present else after 'Current SL'.
+    """
+    if df is None or df.empty:
+        return df
+
+    d = df.copy()
+    # pick an ATR column if present
+    atr_col = next((c for c in atr_col_candidates if c in d.columns), None)
+    if atr_col is None:
+        # nothing to compute -> just return as-is
+        return d
+
+    for c in ("Current Price", "Current SL", atr_col):
+        if c in d.columns:
+            d[c] = pd.to_numeric(d[c].astype(str).str.replace("$","", regex=False), errors="coerce")
+
+    def _sl_atr(row):
+        cp, sl, atr = row.get("Current Price"), row.get("Current SL"), row.get(atr_col)
+        if cp and sl and atr and atr > 0:
+            return abs(cp - sl) / float(atr)
+        return None
+
+    d["SL (ATR ×)"] = d.apply(_sl_atr, axis=1)
+
+    if "SL (ATR ×)" in d.columns:
+        anchor = "SL %" if "SL %" in d.columns else "Current SL"
+        d = _insert_after(d, anchor, "SL (ATR ×)")
+
+    return d
+
+# --- C) styling helpers for % columns (keep TP%/SL% neutral, PnL% colored) ---
+def _fmt_signed_pct(v):
+    if pd.isna(v): return ""
+    try: return f"{float(v):+.2f}%"
+    except Exception: return ""
+
+def _fmt_atr_mult(v):
+    if pd.isna(v): return ""
+    try: return f"{float(v):.2f}×"
+    except Exception: return ""
+
+def _color_pct_signed(val):
+    # green for positive, red for negative
+    try:
+        if pd.isna(val): return ""
+        v = float(val)
+        if v > 0:  return "color:#0f8a00;font-weight:600;"
+        if v < 0:  return "color:#b00020;font-weight:600;"
+    except Exception:
+        pass
+    return ""
+
+def _style_tp_sl_percent(val):
+    # neutral for TP% and SL%
+    return "color:#555555;" if not pd.isna(val) else ""
+
 def _ensure_ts_and_date(df: pd.DataFrame | None) -> pd.DataFrame:
     """
     Return df with datetime 'ts' and a 'date' (ts.date) column.
@@ -474,45 +627,55 @@ def _get_symbol_bars_yahoo(symbol: str, timeframe: str, *, days: int) -> pd.Data
     except Exception:
         return pd.DataFrame(columns=["ts","close"])
 
+def _style_tp_sl_percent(val):
+    if pd.isna(val): return ""
+    return "color:#555555;"  # neutral grey text
 
-def _style_adaptive_atr(row: pd.Series) -> pd.Series:
-    """Colour rules for Adaptive ATR table (side-aware):
-       - Current Price: green if move is favorable for the side, else red
-       - Current TP:    green if on the favorable side of entry, else red
-       - Current SL:    green if tightened favorably vs entry, else red
-         (Long: SL >= entry is safer → green; Short: SL <= entry → green)
+def _style_adaptive_atr(row: pd.Series):
     """
-    s = pd.Series("", index=row.index, dtype="object")
+    Cleaner color logic for Adaptive ATR table:
+    - Only color 'Current Price' by P&L direction (green good, red bad).
+    - Color 'Side' as a subtle cue (blue Long, orange Short).
+    Uses Index.get_loc() to avoid 'Index is not callable' errors.
+    """
+    # start with neutral styles
+    styles = [""] * len(row)
 
-    side   = str(row.get("Side", "")).strip().lower()  # "long" | "short"
-    entry  = pd.to_numeric(row.get("Cost per Share"), errors="coerce")
-    cur    = pd.to_numeric(row.get("Current Price"),  errors="coerce")
-    cur_tp = pd.to_numeric(row.get("Current TP"),     errors="coerce")
-    cur_sl = pd.to_numeric(row.get("Current SL"),     errors="coerce")
+    # quick column lookups (safe even if columns missing)
+    idx = row.index
+    has_cp   = "Current Price" in idx
+    has_cost = "Cost per Share" in idx
+    has_side = "Side" in idx
 
-    # Current Price → green if moving the right way for the side
-    if np.isfinite(entry) and np.isfinite(cur):
-        favorable = (side == "long"  and cur >= entry) or \
-                    (side == "short" and cur <= entry)
-        s["Current Price"] = f"color:{TL_GREEN}; font-weight:700;" if favorable \
-                             else f"color:{TL_RED}; font-weight:700;"
+    # favor numeric values; fall back to coercion
+    def _to_float(x):
+        try:
+            return float(x)
+        except Exception:
+            try:
+                return float(str(x).replace("$", ""))
+            except Exception:
+                return None
 
-    # Current TP → green if TP is on the favorable side of entry
-    if "Current TP" in row.index and np.isfinite(entry) and np.isfinite(cur_tp):
-        tp_ok = (side == "long"  and cur_tp > entry) or \
-                (side == "short" and cur_tp < entry)
-        s["Current TP"] = f"color:{TL_GREEN}; font-weight:700;" if tp_ok \
-                          else f"color:{TL_RED}; font-weight:700;"
+    side = str(row.get("Side", "")).strip().lower()
+    cp   = _to_float(row.get("Current Price"))
+    cost = _to_float(row.get("Cost per Share"))
 
-    # Current SL → green if tightened favorably vs entry (risk reduced)
-    if "Current SL" in row.index and np.isfinite(entry) and np.isfinite(cur_sl):
-        sl_ok = (side == "long"  and cur_sl >= entry) or \
-                (side == "short" and cur_sl <= entry)
-        s["Current SL"] = f"color:{TL_GREEN}; font-weight:700;" if sl_ok \
-                          else f"color:{TL_RED}; font-weight:700;"
+    # color Current Price by favorable/unfavorable vs entry, respecting side
+    if has_cp and has_cost and cp is not None and cost is not None:
+        cp_loc = idx.get_loc("Current Price")
+        if side == "long":
+            styles[cp_loc] = "color:#0f8a00;font-weight:600;" if cp > cost else "color:#b00020;font-weight:600;"
+        elif side == "short":
+            styles[cp_loc] = "color:#0f8a00;font-weight:600;" if cp < cost else "color:#b00020;font-weight:600;"
 
-    return s
+    # subtle 'Side' cue
+    if has_side:
+        side_loc = idx.get_loc("Side")
+        color = "#0077b6" if side == "long" else "#e67e22"
+        styles[side_loc] = f"color:{color};font-weight:600;"
 
+    return styles
 
 def build_position_transaction_history(api, days: int = 180) -> pd.DataFrame:
     """
@@ -3364,6 +3527,7 @@ def build_adaptive_atr_df(_api: Optional[REST], positions: pd.DataFrame) -> pd.D
 
 def render_adaptive_atr_table(positions: pd.DataFrame, api: Optional[REST]) -> None:
     st.subheader("Dynamic Stop trailing (Adaptive ATR)")
+
     if positions is None or positions.empty:
         st.info("No open positions.")
         return
@@ -3373,21 +3537,61 @@ def render_adaptive_atr_table(positions: pd.DataFrame, api: Optional[REST]) -> N
         st.info("No data available for Adaptive ATR.")
         return
 
+    # fix tiny header typo if present
+    if "Upated (ET)" in df.columns:
+        df = df.rename(columns={"Upated (ET)":"Updated (ET)"})
+
+    # Existing columns (you already added TP%/SL% elsewhere)
+    df = _add_tp_sl_percent_cols(df)          # already in your file
+    df = _add_pnl_percent_col(df)             # A) add PnL %
+    df = _add_sl_atr_multiple(df)             # B) add SL (ATR ×) if ATR column exists
+
     # Numeric formatting
     fmt = {
         "Cost per Share": "${:,.2f}",
         "Current Price":  "${:,.2f}",
         "Initial TP":     "{:.2f}",
         "Current TP":     "{:.2f}",
+        "TP %":           _fmt_signed_pct,
         "Initial SL":     "{:.2f}",
         "Current SL":     "{:.2f}",
+        "SL %":           _fmt_signed_pct,
+        "PnL %":          _fmt_signed_pct,
+        "SL (ATR ×)":     _fmt_atr_mult,
     }
 
-    styled = (df.style
-                .format(fmt, na_rep="—")
-                .apply(_style_adaptive_atr, axis=1))
+    # Build styler: keep your row-level style, then neutralize TP/SL %, color PnL %
+    styled = (
+        df.style
+          .format(fmt, na_rep="—")
+          .apply(_style_adaptive_atr, axis=1)                # colors Current Price + Side
+    )
 
-    st.dataframe(styled, width="stretch", hide_index=True)
+    # neutral grey for TP % / SL %
+    pct_neutral_cols = [c for c in ("TP %", "SL %") if c in df.columns]
+    if pct_neutral_cols:
+        styled = styled.map(_style_tp_sl_percent, subset=pct_neutral_cols)
+
+    # green/red for PnL %
+    if "PnL %" in df.columns:
+        styled = styled.map(_color_pct_signed, subset=["PnL %"])
+
+
+    # C) tooltips (column help). Note: works on recent Streamlit; if not, add st.caption legend instead.
+    column_help = {
+        "PnL %": "Side-aware return from entry price. Long: (Price/Cost−1). Short: (Cost/Price−1).",
+        "TP %":  "Distance from current price to Current TP as a percent of price.",
+        "SL %":  "Distance from current price to Current SL as a percent of price.",
+        "SL (ATR ×)": "How many ATRs between Current Price and Current SL (uses ATR column if present).",
+    }
+
+    st.dataframe(
+        styled,
+        width="stretch",
+        hide_index=True,
+        column_config={k: st.column_config.TextColumn(k, help=v) for k, v in column_help.items() if k in df.columns}
+    )
+
 
 def _symbols_touched_today(api: Optional[REST]) -> set[str]:
     """Symbols with any fills since ET midnight (today)."""
