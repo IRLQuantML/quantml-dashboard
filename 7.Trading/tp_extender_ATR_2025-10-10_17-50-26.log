@@ -3,3 +3,22 @@
 2025-10-10 17:50:26,380 | INFO | CFG → mode=percent, pct_trigger=0.0300, pct_step=0.0100, atr_trigger=1.00, atr_step=0.50, max_mult=2.50, interval=120s
 2025-10-10 17:50:26,380 | INFO | ARGS → mode=None, pct_trigger=None, pct_step=None, atr_trigger=None, atr_step=None, max_mult=None, interval=None
 2025-10-10 17:50:26,380 | INFO | ✅ EFFECTIVE → mode=percent (profile), pct_trigger=0.0070, pct_step=0.0040, atr_trigger=0.25, atr_step=0.20, max_mult=2.50, interval=60s
+2025-10-10 17:50:31,403 | INFO | 🔍 Scanning 7 open positions: AMCR, F, GS, HPQ, PSKY, VTRS, WBD
+2025-10-10 17:50:32,183 | INFO | └─ AMCR: reason=tp_step_too_small cur_tp=7.76 new_tp=7.72832 min_abs=0.05 min_rel=0.001
+2025-10-10 17:50:32,838 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.82452 min_abs=0.05 min_rel=0.001
+2025-10-10 17:50:34,859 | WARNING | submit_order doesn't support reduce_only in this SDK; retrying without it (was True).
+2025-10-10 17:50:34,955 | INFO | 🆕 Created TP for GS qty=1 @ 763.93
+2025-10-10 17:50:35,232 | WARNING | No free qty for new SL on GS — TP/SL legs already reserve 1 of 1.
+2025-10-10 17:50:36,747 | INFO | 🆕 Created SL for GS qty=1 @ 771.87
+2025-10-10 17:50:36,842 | INFO | └─ GS: pct_move=0.3012 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 17:50:37,506 | INFO | └─ HPQ: dir=SHORT entry=26.872859 live=25.69 delta=1.182859 cur_tp=22.35 new_tp=22.24724 capped=False step_type=% step_pct=0.004 pct_move=4.4017 step_value_abs=0.10276
+2025-10-10 17:50:37,786 | INFO | ⬆️ Replaced TP for HPQ SHORT → 22.24
+2025-10-10 17:50:37,987 | INFO | └─ HPQ: tp_parent_id=None tp_qty_hint=1 tp_coid_prefix=ec3e4b5c-0cd1-4b10-91ac-a9037ef4f454
+2025-10-10 17:50:38,172 | INFO | 🔒 Replaced SL for HPQ SHORT → 25.73
+2025-10-10 17:50:38,935 | INFO | └─ PSKY: dir=SHORT entry=18.087296 live=17.305 delta=0.782296 cur_tp=12.87 new_tp=12.80078 capped=False step_type=% step_pct=0.004 pct_move=4.3251 step_value_abs=0.06922
+2025-10-10 17:50:39,216 | INFO | ⬆️ Replaced TP for PSKY SHORT → 12.80
+2025-10-10 17:50:39,417 | INFO | └─ PSKY: tp_parent_id=None tp_qty_hint=5 tp_coid_prefix=6faa58d8-313b-4fdc-a5e5-81036faee9b9
+2025-10-10 17:50:40,269 | INFO | └─ VTRS: reason=tp_step_too_small cur_tp=9.38 new_tp=9.34076 min_abs=0.05 min_rel=0.001
+2025-10-10 17:50:40,944 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.285
+2025-10-10 17:50:42,327 | INFO | 📈 Cycle result: extended=2, skipped=5
+2025-10-10 17:50:42,418 | INFO | 🕑 Sleeping 60 sec…

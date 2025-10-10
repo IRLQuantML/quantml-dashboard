@@ -606,14 +606,14 @@ def render_positions_panel(api, positions: pd.DataFrame, *, atr_mode: dict | Non
 
     # ===================== Mini trailing visualization (last ~50 bars) =====================
 
-    # Build symbol choices (add ALL) and pick a safe default
+    # --- Build symbol choices and pick default ---
     syms = sorted(df[sym_col].dropna().astype(str).unique())
     choices = ["ALL"] + syms
     default_sym = st.session_state.get("pos_focus_symbol2")
     if default_sym not in choices:
         default_sym = (syms[:1] or ["ALL"])[0]
 
-    # Header + selector on the same row
+    # --- Header + selector on the same row ---
     left, right = st.columns([0.5, 0.5])
     with left:
         st.markdown("**Mini trailing chart**")
@@ -625,7 +625,6 @@ def render_positions_panel(api, positions: pd.DataFrame, *, atr_mode: dict | Non
             key="pos_focus_symbol2",
             label_visibility="collapsed",
         )
-
     # --- Show single or multi-mini-chart view ---
     if focus_symbol == "ALL":
         # Show grid of mini-charts (top 6 by RR)
@@ -662,10 +661,11 @@ def render_positions_panel(api, positions: pd.DataFrame, *, atr_mode: dict | Non
         st.divider()
 
     else:
-        # Pull TP/SL for the selected symbol AFTER selection
         row = df[df[sym_col] == focus_symbol].head(1)
-        tp_val = float(pd.to_numeric(row["Current TP"], errors="coerce").iloc[0]) if ("Current TP" in row.columns and len(row)) else None
-        sl_val = float(pd.to_numeric(row["Current SL"], errors="coerce").iloc[0]) if ("Current SL" in row.columns and len(row)) else None
+        tp_val = float(pd.to_numeric(row["Current TP"], errors="coerce").iloc[0]) \
+                if ("Current TP" in row.columns and len(row)) else None
+        sl_val = float(pd.to_numeric(row["Current SL"], errors="coerce").iloc[0]) \
+                if ("Current SL" in row.columns and len(row)) else None
 
         mini_trailing_chart_rich(api, str(focus_symbol), tp_val, sl_val)
         st.divider()
@@ -1962,7 +1962,7 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
         fig.update_layout(height=260, margin=dict(l=8, r=8, t=6, b=6),
                           xaxis_title=None, yaxis_title="Daily return (%)",
                           legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0))
-        st.plotly_chart(fig, width='stretch', config=PLOTLY_CONFIG)
+        st.plotly_chart(fig, config={**PLOTLY_CONFIG, "responsive": True})
 
         # ── Bottom BAR CHART (daily close-of-business return summary) ───────
         daily_summary = (
@@ -2023,7 +2023,7 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
             xaxis_title=None, yaxis_title="Daily return (%)",
             legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0)
         )
-        st.plotly_chart(fig, width='stretch', config=PLOTLY_CONFIG)
+        st.plotly_chart(fig, config={**PLOTLY_CONFIG, "responsive": True})
 
         # ── Bottom BAR CHART (daily close-of-business) ───────────────────────
         x_dates = merged["date"]
@@ -4896,9 +4896,9 @@ def main() -> None:
     st.divider()
 
     # ----- Portfolio Ledger (existing) -----
-    hist_days = st.slider("History window (days)", min_value=5, max_value=60, value=14, step=1)
-    hist_df, realized_total = build_history_rows_from_fills(api, positions, days=int(hist_days))
-    render_portfolio_ledger_table(positions, realized_pnl_total=realized_total, history_rows=hist_df)
+    #hist_days = st.slider("History window (days)", min_value=5, max_value=60, value=14, step=1)
+    #hist_df, realized_total = build_history_rows_from_fills(api, positions, days=int(hist_days))
+    #render_portfolio_ledger_table(positions, realized_pnl_total=realized_total, history_rows=hist_df)
 
     #st.divider()
     # ----- NEW: Attach your uploaded transaction history file -----
