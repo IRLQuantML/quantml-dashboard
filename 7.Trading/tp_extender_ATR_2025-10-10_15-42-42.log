@@ -1,0 +1,66 @@
+2025-10-10 15:42:42,081 | INFO | ARGV → fATR_trading.py
+2025-10-10 15:42:42,082 | INFO | 🔧 Using config file: D:\QuantML\VS_QuantML_PROD\config.py
+2025-10-10 15:42:42,082 | INFO | CFG → mode=percent, pct_trigger=0.0300, pct_step=0.0100, atr_trigger=1.00, atr_step=0.50, max_mult=2.50, interval=120s
+2025-10-10 15:42:42,082 | INFO | ARGS → mode=None, pct_trigger=None, pct_step=None, atr_trigger=None, atr_step=None, max_mult=None, interval=None
+2025-10-10 15:42:42,082 | INFO | ✅ EFFECTIVE → mode=percent (profile), pct_trigger=0.0070, pct_step=0.0040, atr_trigger=0.25, atr_step=0.20, max_mult=2.50, interval=60s
+2025-10-10 15:42:46,913 | INFO | 🔍 Scanning 9 open positions: AMCR, BKNG, F, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-10 15:42:47,686 | INFO | └─ AMCR: pct_move=0.4128 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 15:42:49,520 | WARNING | submit_order doesn't support reduce_only in this SDK; retrying without it (was True).
+2025-10-10 15:42:49,615 | INFO | 🆕 Created TP for BKNG qty=1 @ 5227.6
+2025-10-10 15:42:49,904 | WARNING | No free qty for new SL on BKNG — TP/SL legs already reserve 1 of 1.
+2025-10-10 15:42:51,427 | INFO | 🆕 Created SL for BKNG qty=1 @ 5176.04
+2025-10-10 15:42:51,523 | INFO | └─ BKNG: reason=unfavorable_or_flat delta=-38.08
+2025-10-10 15:42:52,183 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.82374 min_abs=0.05 min_rel=0.001
+2025-10-10 15:42:52,864 | INFO | └─ GS: pct_move=0.2207 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 15:42:53,523 | INFO | └─ HPQ: dir=SHORT entry=26.872859 live=26.62 delta=0.252859 cur_tp=24.66 new_tp=24.55352 capped=False step_type=% step_pct=0.004 pct_move=0.9409 step_value_abs=0.10648
+2025-10-10 15:42:53,795 | INFO | ⬆️ Replaced TP for HPQ SHORT → 24.55
+2025-10-10 15:42:53,996 | INFO | └─ HPQ: tp_parent_id=None tp_qty_hint=28 tp_coid_prefix=1e668fc3-7fcd-478b-bbe2-8b16753dfa69
+2025-10-10 15:42:54,854 | INFO | └─ PSKY: pct_move=0.5379 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 15:42:55,515 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-18.188
+2025-10-10 15:42:56,188 | INFO | └─ VTRS: reason=tp_step_too_small cur_tp=9.38 new_tp=9.34012 min_abs=0.05 min_rel=0.001
+2025-10-10 15:42:56,857 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-1.065
+2025-10-10 15:42:58,631 | INFO | 📈 Cycle result: extended=1, skipped=8
+2025-10-10 15:42:58,721 | INFO | 🕑 Sleeping 60 sec…
+2025-10-10 15:44:03,545 | INFO | 🔍 Scanning 9 open positions: AMCR, BKNG, F, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-10 15:44:04,112 | INFO | └─ AMCR: pct_move=0.5378 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 15:44:05,636 | INFO | 🆕 Created TP for BKNG qty=1 @ 5227.6
+2025-10-10 15:44:05,917 | WARNING | No free qty for new SL on BKNG — TP/SL legs already reserve 1 of 1.
+2025-10-10 15:44:07,449 | INFO | 🆕 Created SL for BKNG qty=1 @ 5176.04
+2025-10-10 15:44:07,544 | INFO | └─ BKNG: reason=unfavorable_or_flat delta=-38.08
+2025-10-10 15:44:08,206 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.82372 min_abs=0.05 min_rel=0.001
+2025-10-10 15:44:08,883 | INFO | └─ GS: pct_move=0.2207 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 15:44:09,547 | INFO | └─ HPQ: dir=SHORT entry=26.872859 live=26.625 delta=0.247859 cur_tp=24.55 new_tp=24.4435 capped=False step_type=% step_pct=0.004 pct_move=0.9223 step_value_abs=0.1065
+2025-10-10 15:44:09,548 | INFO | └─ HPQ: reason=cooldown_skip since_sec=75 cooldown_min=5
+2025-10-10 15:44:10,140 | INFO | └─ PSKY: pct_move=0.455 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 15:44:10,813 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-18.188
+2025-10-10 15:44:11,476 | INFO | └─ VTRS: reason=tp_step_too_small cur_tp=9.38 new_tp=9.34012 min_abs=0.05 min_rel=0.001
+2025-10-10 15:44:12,148 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-1.055
+2025-10-10 15:44:13,905 | INFO | 📈 Cycle result: extended=0, skipped=9
+2025-10-10 15:44:14,002 | INFO | 🕑 Sleeping 60 sec…
+2025-10-10 15:45:18,915 | INFO | 🔍 Scanning 10 open positions: AMCR, BKNG, F, GS, GWW, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-10 15:45:19,485 | INFO | └─ AMCR: pct_move=0.5378 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 15:45:25,592 | INFO | 🆕 Created TP for BKNG qty=1 @ 5237.79
+2025-10-10 15:45:25,875 | WARNING | No free qty for new SL on BKNG — TP/SL legs already reserve 1 of 1.
+2025-10-10 15:45:27,595 | INFO | 🆕 Created SL for BKNG qty=1 @ 5165.85
+2025-10-10 15:45:27,692 | INFO | └─ BKNG: reason=unfavorable_or_flat delta=-38.08
+2025-10-10 15:45:32,401 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.8237 min_abs=0.05 min_rel=0.001
+2025-10-10 15:45:37,199 | INFO | └─ GS: pct_move=0.2207 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 15:45:40,838 | INFO | 🧩 Baseline TP seeded for GWW SHORT → 974.90 (qty=1)
+2025-10-10 15:45:41,232 | WARNING | No free qty for new SL on GWW — TP/SL legs already reserve 1 of 1.
+2025-10-10 15:45:41,512 | WARNING | Could not cancel order 5849d2ff-6360-4b1e-8c23-bf5a17fd5538 for GWW: order is already in "filled" state
+2025-10-10 15:45:41,512 | WARNING | Proceeding with rebalance even though TP still appears open for GWW.
+2025-10-10 15:45:42,471 | WARNING | No free qty for new SL on GWW after TP rebalance (pos=0).
+2025-10-10 15:45:42,755 | INFO | └─ GWW: reason=unfavorable_or_flat delta=-15.37
+2025-10-10 15:45:44,192 | INFO | 🔒 Submitted SL for GWW SHORT → 981.39 (qty=1)
+2025-10-10 15:45:44,289 | INFO | 🛡️ Hard-failsafe SL ACTIVE for GWW qty=1 @ 981.39
+2025-10-10 15:45:47,046 | WARNING | No free qty for new SL on HPQ — TP/SL legs already reserve 78 of 78.
+2025-10-10 15:45:48,302 | INFO | 🔁 Reposted TP for HPQ qty=11 @ 24.66
+2025-10-10 15:45:48,676 | INFO | 🆕 Created SL for HPQ qty=39 @ 26.82
+2025-10-10 15:45:48,772 | INFO | └─ HPQ: dir=SHORT entry=26.872859 live=26.655 delta=0.217859 cur_tp=24.55 new_tp=24.44338 capped=False step_type=% step_pct=0.004 pct_move=0.8107 step_value_abs=0.10662
+2025-10-10 15:45:48,772 | INFO | └─ HPQ: reason=cooldown_skip since_sec=174 cooldown_min=5
+2025-10-10 15:45:49,377 | INFO | └─ PSKY: pct_move=0.5932 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 15:45:50,068 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-18.188
+2025-10-10 15:45:50,777 | INFO | └─ VTRS: reason=tp_step_too_small cur_tp=9.38 new_tp=9.34012 min_abs=0.05 min_rel=0.001
+2025-10-10 15:45:51,458 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-1.08
+2025-10-10 15:45:53,439 | INFO | 📈 Cycle result: extended=0, skipped=10
+2025-10-10 15:45:53,530 | INFO | 🕑 Sleeping 60 sec…

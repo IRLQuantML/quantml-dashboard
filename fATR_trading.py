@@ -276,6 +276,80 @@ def _refresh_exits_from_baseline(api, pos, live_px: float, atr_val: float | None
     # 2) SL (create or amend)
     place_or_amend_sl(api, pos, target_sl_price=base_sl, sl_order=None, side_exit=side_exit)
 
+def _get_current_exits_with_sides(api, symbol: str, live_px: float | None):
+    """
+    Return (tp_px, sl_px, tp_side, sl_side) for a symbol by scanning open orders.
+    Sides are the *exit* sides ('sell' closes LONG, 'buy' closes SHORT).
+    Picks reasonable candidates by relation to live_px if available.
+    """
+    try:
+        open_orders = api.list_orders(status="open", nested=True) or []
+    except Exception:
+        open_orders = []
+
+    sym = str(symbol).upper()
+    # collect candidates per side
+    cands = {"sell": {"tp": [], "sl": []}, "buy": {"tp": [], "sl": []}}
+
+    for o in open_orders:
+        try:
+            if str(getattr(o, "symbol", "")).upper() != sym:
+                continue
+            side = str(getattr(o, "side", "")).lower()          # 'sell' or 'buy'
+            typ  = (getattr(o, "type", None) or getattr(o, "order_type", "") or "").lower()
+            status = str(getattr(o, "status", "open")).lower()
+            if status not in {"open","accepted","new","partially_filled","replaced","held"}:
+                continue
+
+            lp = getattr(o, "limit_price", None)
+            sp = getattr(o, "stop_price",  None)
+
+            # classify
+            if "limit" in typ and lp is not None:
+                cands.setdefault(side, cands.get(side, {"tp": [], "sl": []}))
+                cands[side]["tp"].append(float(lp))
+            elif ("stop" in typ or sp is not None):
+                price = float(sp if sp is not None else (lp if lp is not None else 0))
+                cands.setdefault(side, cands.get(side, {"tp": [], "sl": []}))
+                cands[side]["sl"].append(price)
+        except Exception:
+            continue
+
+    def _pick_tp(side, arr):
+        if not arr:
+            return None
+        if live_px is None:
+            return arr[0]
+        if side == "sell":
+            above = [p for p in arr if p > live_px]
+            return min(above) if above else min(arr, key=lambda p: abs(p - live_px))
+        else:
+            below = [p for p in arr if p < live_px]
+            return max(below) if below else min(arr, key=lambda p: abs(p - live_px))
+
+    def _pick_sl(side, arr):
+        if not arr:
+            return None
+        if live_px is None:
+            return arr[0]
+        if side == "sell":
+            below = [p for p in arr if p < live_px]
+            return max(below) if below else min(arr, key=lambda p: abs(p - live_px))
+        else:
+            above = [p for p in arr if p > live_px]
+            return min(above) if above else min(arr, key=lambda p: abs(p - live_px))
+
+    # choose exit side with any signals; prefer the side that yields a valid pair first
+    out = (None, None, None, None)
+    for sx in ("sell", "buy"):
+        tp_px = _pick_tp(sx, cands.get(sx, {}).get("tp", []))
+        sl_px = _pick_sl(sx, cands.get(sx, {}).get("sl", []))
+        if (tp_px is not None) or (sl_px is not None):
+            out = (tp_px, sl_px, sx, sx)
+            break
+
+    return out
+
 def run_exits_healthcheck(api: REST, *, label: str = "open") -> None:
     """
     Verify each open position has a protective SL and a TP leg on the correct exit side.
@@ -2817,13 +2891,39 @@ def run_tp_extender_pass(api: REST, mode: str, trigger_pct: float, step_pct: flo
                 elif (tp_order is not None) and (sl_order is None):
                     place_or_amend_sl(api, pos, target_sl_price=sl_price, sl_order=None, side_exit=side_exit)
 
-                # d) both exits exist → nothing baseline to do
-                else:
-                    pass
+                # d) Single-share policy — ensure SL and (if missing) seed a tiny TP
+                elif (pos_qty == 1) and (tp_order is None):
+                    # Always ensure SL for qty=1
+                    if not sl_order:
+                        place_or_amend_sl(api, pos, target_sl_price=sl_price, sl_order=None, side_exit=side_exit)
+                        logging.info("🛡️ SL-only policy applied for %s (qty=1)", symbol)
 
+                    # Optionally seed a 1-share TP if no TP is visible
+                    if bool(globals().get("ALLOW_TP_CREATE_IF_MISSING", True)):
+                        try:
+                            tp_order_check = _get_symbol_open_tp_order_by_relation(api, symbol, side_exit, live_px)
+                        except Exception:
+                            tp_order_check = None
+
+                        if not tp_order_check:
+                            # respect actual availability to avoid 403s
+                            avail = _available_exit_qty(api, symbol, side_exit, pos_qty=1)
+                            if avail > 0:
+                                _submit_order_safe(
+                                    api,
+                                    symbol=symbol,
+                                    qty=min(1, int(avail)),     # cap to free qty
+                                    side=side_exit,
+                                    type="limit",
+                                    time_in_force="gtc",
+                                    limit_price=_round_limit_for_side(tp_price, side_exit),
+                                    reduce_only=True,
+                                )
+                                logging.info("🆕 Seeded tiny TP for %s (qty=1)", symbol)
+                    else:
+                        logging.info("ℹ️ Tiny-TP skipped for %s (qty=1) — no free exit qty available right now.", symbol)
         except Exception as e:
             logging.warning("Baseline exit ensure failed for %s: %s", symbol, e)
-
         # 3) Evaluate TP extension
         direction, side_exit = _position_side_and_exit(pos)   # re-evaluate
         cur_tp_px = _current_tp_price(api, symbol, side_exit)

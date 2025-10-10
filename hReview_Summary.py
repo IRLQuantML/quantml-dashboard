@@ -297,7 +297,14 @@ def mini_trailing_chart_rich(api, symbol: str, tp: float | None, sl: float | Non
         xaxis=dict(showgrid=False, visible=False),
         yaxis=dict(showgrid=True, gridcolor="rgba(0,0,0,0.08)")
     )
-    st.plotly_chart(fig, width='stretch', config=PLOTLY_CONFIG)
+    st.plotly_chart(
+        fig,
+        config=PLOTLY_CONFIG,
+        theme=None,                 # optional: keep QuantML's custom colors
+        key=None,
+        kwargs=dict(width="stretch")  # 👈 this passes the width correctly via config
+    )
+
     # ===== compact explanation (trend • bands • position • TP/SL) =====
     # Trend by EMAs
     ema20_now, ema50_now = float(z["ema20"].iloc[-1]), float(z["ema50"].iloc[-1])
@@ -621,7 +628,13 @@ def render_positions_panel(api, positions: pd.DataFrame, *, atr_mode: dict | Non
             fig.add_hline(y=float(cur_sl), line_dash="dot", annotation_text="SL", annotation_position="bottom right")
         fig.update_layout(height=160, margin=dict(l=10,r=10,t=10,b=10), showlegend=False,
                           xaxis=dict(visible=False), yaxis=dict(visible=False))
-        st.plotly_chart(fig, width='stretch', config=PLOTLY_CONFIG)
+        st.plotly_chart(
+            fig,
+            config=PLOTLY_CONFIG,
+            theme=None,                 # optional: keep QuantML's custom colors
+            key=None,
+            kwargs=dict(width="stretch")  # 👈 this passes the width correctly via config
+        )
 
     # Pull TP/SL for the selected symbol
     row = df[df[sym_col] == focus_symbol].head(1)
@@ -1922,7 +1935,14 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
         fig.update_layout(height=260, margin=dict(l=8, r=8, t=6, b=6),
                           xaxis_title=None, yaxis_title="Daily return (%)",
                           legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0))
-        st.plotly_chart(fig, width='stretch', config=PLOTLY_CONFIG)
+        st.plotly_chart(
+            fig,
+            config=PLOTLY_CONFIG,
+            theme=None,                 # optional: keep QuantML's custom colors
+            key=None,
+            kwargs=dict(width="stretch")  # 👈 this passes the width correctly via config
+        )
+
 
         # ── Bottom BAR CHART (daily close-of-business return summary) ───────
         daily_summary = (
@@ -1985,7 +2005,13 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
             xaxis_title=None, yaxis_title="Daily return (%)",
             legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0)
         )
-        st.plotly_chart(fig, width='stretch', config=PLOTLY_CONFIG)
+        st.plotly_chart(
+            fig,
+            config=PLOTLY_CONFIG,
+            theme=None,                 # optional: keep QuantML's custom colors
+            key=None,
+            kwargs=dict(width="stretch")  # 👈 this passes the width correctly via config
+        )
 
         # ── Bottom BAR CHART (daily close-of-business) ───────────────────────
         x_dates = merged["date"]
@@ -2899,7 +2925,14 @@ def render_portfolio_equity_chart(api: Optional[REST]) -> dict:
     if yrange:
         fig.update_yaxes(range=yrange)
 
-    st.plotly_chart(fig, width='stretch', config=PLOTLY_CONFIG)
+    st.plotly_chart(
+        fig,
+        config=PLOTLY_CONFIG,
+        theme=None,                 # optional: keep QuantML's custom colors
+        key=None,
+        kwargs=dict(width="stretch")  # 👈 this passes the width correctly via config
+    )
+
 
     # Quick stats from the plotted series
     chg_pct = float(df["ret_pct"].iloc[-1]) if len(df) else float("nan")
@@ -3007,15 +3040,71 @@ def pull_account_snapshot(api: Optional[REST]) -> dict:
     data["margin_util_pct"] = (mm / e * 100.0) if (mm and e and e > 0) else None
     return data
 
+# --- Intraday rolling stats for equity-PnL (robust to 1/5/30 min bars)
+def _rolling_window_bars(ts: pd.Series, minutes: int = 10) -> int:
+    if ts is None or ts.empty:
+        return 2
+    diffs = pd.to_datetime(ts, utc=True, errors="coerce").sort_values().diff().dropna()
+    if diffs.empty:
+        return 2
+    # median bar size; default to 5 minutes if weird
+    bar = diffs.median()
+    try:
+        bars = max(2, int(pd.Timedelta(minutes=minutes) / bar))
+    except Exception:
+        bars = 2
+    return bars
+
+def _intraday_rolling_stats(df_1d: pd.DataFrame, minutes: int = 10) -> dict:
+    """
+    df_1d: result of get_portfolio_history_df(..., period='1D'), with ['ts','equity']
+    Returns:
+      {
+        'roll_mean': float, 'roll_vol': float,
+        'ret_series': Series (%),
+        'roll_mean_series': Series (%),
+        'roll_std_series': Series (%),
+        'cum_series': Series (%)   # cumulative intraday %
+      }
+    """
+    if df_1d is None or df_1d.empty:
+        return {"roll_mean": float("nan"), "roll_vol": float("nan"),
+                "ret_series": pd.Series(dtype=float),
+                "roll_mean_series": pd.Series(dtype=float),
+                "roll_std_series": pd.Series(dtype=float),
+                "cum_series": pd.Series(dtype=float)}
+
+    z = df_1d.copy().sort_values("ts")
+    z["ret_pct"] = z["equity"].pct_change() * 100.0
+    z["cum_pct"] = z["ret_pct"].fillna(0).cumsum()
+
+    win = _rolling_window_bars(z["ts"], minutes=minutes)
+    rmean = z["ret_pct"].rolling(win).mean()
+    rstd  = z["ret_pct"].rolling(win).std()
+
+    return {
+        "roll_mean": float(rmean.iloc[-1]) if len(rmean) else float("nan"),
+        "roll_vol": float(rstd.iloc[-1]) if len(rstd) else float("nan"),
+        "ret_series": z["ret_pct"],
+        "roll_mean_series": rmean,
+        "roll_std_series": rstd,
+        "cum_series": z["cum_pct"],
+    }
+
 def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> None:
     """
     Performance KPIs row:
       • Portfolio P&L today (% and $) from Alpaca equity curve
       • Open Positions P&L today (% and $) from position-level intraday P&L
+      • Intraday smoothing panel (10-min μ/σ)
       • Compact caption comparing QuantML intraday vs SPY intraday
     """
     # ===== Intraday equity curve (Portfolio P&L today) =====
     intraday = get_portfolio_history_df(api, period="1D")
+
+    # Rolling 10-minute average & volatility (uses equity curve % changes)
+    roll_stats = _intraday_rolling_stats(intraday, minutes=10)
+
     day_pl_usd = day_pl_pct = np.nan
     start_equity = np.nan
     if not intraday.empty:
@@ -3030,16 +3119,14 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
     if positions is not None and not positions.empty:
         z = compute_derived_metrics(positions).copy()
 
-        # Prefer an intraday $ column if available
         intraday_cols_usd = [
-            "pl_today_usd",                # computed by compute_derived_metrics()
+            "pl_today_usd",                # from compute_derived_metrics()
             "unrealized_intraday_pl",      # Alpaca field
             "intraday_pl_usd",             # any custom alias
         ]
         c_today_usd = next((c for c in intraday_cols_usd if c in z.columns), None)
 
         if c_today_usd is None and {"current_price","prev_close","qty"}.issubset(z.columns):
-            # Fallback: (current - prev close) * qty
             today_vec = (pd.to_numeric(z["current_price"], errors="coerce")
                         - pd.to_numeric(z["prev_close"],  errors="coerce")) \
                         * pd.to_numeric(z["qty"], errors="coerce")
@@ -3058,18 +3145,14 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
         et = timezone.utc
 
     try:
-        # Robust: 5m (fallback 1m→5m), last 2–3 sessions
         spy_5 = _symbol_returns_5min_robust(api, "SPY", days=3)
         if not spy_5.empty:
             spy_5["ts"] = spy_5["ts"].dt.tz_convert(et)
-            # Regular session window
             mopen, mclose = pd.to_datetime("09:30").time(), pd.to_datetime("16:00").time()
             spy_5 = spy_5[(spy_5["ts"].dt.time >= mopen) & (spy_5["ts"].dt.time <= mclose)]
-            # Today (ET)
             today_et = datetime.now(et).date()
             tday = spy_5[spy_5["ts"].dt.date == today_et]
             if not tday.empty:
-                # Compound intraday returns for the day
                 spy_intraday_pct = (np.prod(1.0 + tday["ret"].astype(float).to_numpy()/100.0) - 1.0) * 100.0
     except Exception:
         pass  # keep NaN on any data issue
@@ -3107,9 +3190,125 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
                   f"{arrow} {money(today_total_pl_usd)}",
                   tone)
 
-    # ====================== Compact caption ======================
-    # QuantML vs SPY intraday snapshot (uses brand colours)
-    # ====================== Compact caption (larger) ======================
+    # === Intraday smoothing (last 10 minutes) ===
+    st.markdown("<hr style='margin:10px 0;border:0.5px solid rgba(0,0,0,0.05);'>", unsafe_allow_html=True)
+    st.markdown("**Intraday smoothing (last 10 minutes)**")
+
+    # Optional: regular session only
+    reg_only = st.toggle("Regular session only (09:30–16:00 ET)", value=True, key="roll_reg_only")
+
+    r_all   = roll_stats["ret_series"]
+    rs_all  = roll_stats["roll_mean_series"]
+    rv_all  = roll_stats["roll_std_series"]
+    cum_all = roll_stats["cum_series"]
+
+    # Session filter (ET)
+    r, rs, rv, cum = r_all, rs_all, rv_all, cum_all
+    if reg_only and not r_all.empty:
+        try:
+            et = ZoneInfo("US/Eastern")
+        except Exception:
+            et = timezone.utc
+        idx  = pd.to_datetime(intraday["ts"], utc=True, errors="coerce")
+        hhmm = idx.dt.tz_convert(et).dt.time
+        mask = (hhmm >= pd.to_datetime("09:30").time()) & (hhmm <= pd.to_datetime("16:00").time())
+        r   = r_all.loc[mask.values]
+        rs  = rs_all.loc[mask.values]
+        rv  = rv_all.loc[mask.values]
+        cum = cum_all.loc[mask.values]
+
+    # Focus on a reasonable recent window for readability
+    r  = r.tail(60)   # ~ last 60 bars (auto 1m/5m)
+    rs = rs.reindex_like(r)
+    rv = rv.reindex_like(r)
+
+    cA, cB = st.columns([0.66, 0.34])
+
+    with cA:
+        fig_roll = go.Figure()
+
+        # ±σ band around rolling mean
+        if len(rs) and len(rv):
+            upper = (rs + rv)
+            lower = (rs - rv)
+            fig_roll.add_trace(go.Scatter(
+                x=rs.index, y=upper, mode="lines", line=dict(width=0),
+                hoverinfo="skip", showlegend=False, name="+σ"
+            ))
+            fig_roll.add_trace(go.Scatter(
+                x=rs.index, y=lower, mode="lines", line=dict(width=0),
+                fill="tonexty", fillcolor="rgba(16,185,129,0.10)",  # soft green band
+                hoverinfo="skip", showlegend=False, name="-σ"
+            ))
+
+        # raw intraday Δequity (%)
+        if len(r):
+            fig_roll.add_trace(go.Scatter(x=r.index, y=r.values, mode="lines",
+                                          name="Δ equity (%)", line=dict(width=1.6), marker=dict(size=5)))
+        # 10-min rolling mean
+        if len(rs):
+            fig_roll.add_trace(go.Scatter(x=rs.index, y=rs.values, mode="lines",
+                                          name="10-min avg", line=dict(width=2.2)))
+
+        fig_roll.add_hline(y=0, line_dash="dot", line_color="rgba(0,0,0,.35)")
+
+        # right-edge μ / ±σ labels
+        if len(rs):
+            last_mu = float(rs.iloc[-1])
+            fig_roll.add_annotation(x=rs.index[-1], y=last_mu, text=f"μ {last_mu:+.2f}%", showarrow=False,
+                                    xanchor="left", yanchor="middle", xshift=6, font=dict(size=11))
+        if len(rv):
+            last_sig = float(rv.iloc[-1])
+            fig_roll.add_annotation(x=rv.index[-1], y=float((rs+rv).iloc[-1]), text=f"+σ {last_sig:.2f}%", showarrow=False,
+                                    xanchor="left", yanchor="bottom", xshift=6, font=dict(size=10, color="#6b7280"))
+            fig_roll.add_annotation(x=rv.index[-1], y=float((rs-rv).iloc[-1]), text=f"−σ {last_sig:.2f}%", showarrow=False,
+                                    xanchor="left", yanchor="top", xshift=6, font=dict(size=10, color="#6b7280"))
+
+        # flag > 2σ moves
+        if len(rv) and len(r):
+            thresh = (rv * 2.0).reindex_like(r).fillna(method="ffill")
+            spikes = r[abs(r) > thresh]
+            if not spikes.empty:
+                fig_roll.add_trace(go.Scatter(
+                    x=spikes.index, y=spikes.values, mode="markers",
+                    marker=dict(size=8, symbol="circle"), name=">2σ",
+                    hovertemplate="%{x}<br>%{y:.2f}% (>2σ)<extra></extra>"
+                ))
+
+        fig_roll.update_layout(
+            height=180, margin=dict(l=8, r=8, t=6, b=6), showlegend=False,
+            xaxis=dict(visible=False), yaxis_title="Δ equity (%)"
+        )
+        st.plotly_chart(fig_roll, width="stretch", config=PLOTLY_CONFIG)
+
+        # summary chips + one-line explanation UNDER the sparkline
+        mu  = roll_stats["roll_mean"]
+        sig = roll_stats["roll_vol"]
+        cum_today = float(cum.iloc[-1]) if len(cum) else float("nan")
+        st.markdown(
+            f"<span class='qml-chip {'good' if (mu or 0) >= 0 else 'bad'}'><span class='sw' style='background:#10B981'></span>μ10 {mu:+.2f}%</span> &nbsp;"
+            f"<span class='qml-chip'><span class='sw' style='background:#64748B'></span>σ10 {sig:.2f}%</span> &nbsp;"
+            f"<span class='qml-chip'><span class='sw' style='background:#4F46E5'></span>Today cum {cum_today:+.2f}%</span>",
+            unsafe_allow_html=True,
+        )
+        st.caption(
+            "μ₁₀ is the 10-minute rolling average of intraday P&L; "
+            "σ₁₀ is its volatility (standard deviation); "
+            "and *Today cum* is your cumulative intraday return since market open."
+        )
+
+    with cB:
+        # Volatility gauge (10-min σ)
+        vol = roll_stats["roll_vol"]
+        st.plotly_chart(
+            _banded_gauge(vol if np.isfinite(vol) else 0.0,
+                          title="P&L vol (10-min σ)",
+                          bands=(0.20, 0.50, 1.00),   # green <0.20, amber <0.50, red >=0.50 (%)
+                          good="low"),
+            width="stretch", config=PLOTLY_CONFIG
+        )
+
+    # ====================== Compact caption: QuantML vs SPY ======================
     qm_txt = f"<span style='color:{BRAND['accent']};font-weight:800;font-size:1.6rem;'>QuantML {day_pl_pct:+.2f}%</span>" \
              if np.isfinite(day_pl_pct) else f"<span style='color:{BRAND['accent']};font-weight:800;font-size:1.6rem;'>QuantML —</span>"
     spy_txt = f"<span style='color:{BRAND['primary']};font-weight:800;font-size:1.6rem;'>SPY {spy_intraday_pct:+.2f}%</span>" \
@@ -4620,18 +4819,19 @@ def main() -> None:
     api = _load_alpaca_api()
     render_header(api)  # clock + heading + ticker ribbon
 
-    # Live positions + attach TP/SL and derived metrics
+    # === Load positions once (and enrich) — use everywhere below ===
     positions = pull_live_positions(api)
     positions = merge_tp_sl_from_alpaca_orders(positions, api)
     positions = compute_derived_metrics(positions)
 
-    st.divider()
-    render_perf_and_risk_kpis(api, positions)
-    st.divider()
     # ----- Traffic Lights
     render_traffic_lights(positions)
     st.divider()
     render_color_system_legend()
+    st.divider()
+
+    # Performance KPIs + intraday smoothing (uses intraday equity + positions)
+    render_perf_and_risk_kpis(api, positions)
     st.divider()
 
     # === Your portfolio (Alpaca)
@@ -4649,11 +4849,13 @@ def main() -> None:
     # ===== NEW: Adaptive ATR table (between Current status and Overall Performance) =====
     render_adaptive_atr_table(positions, api)
     st.divider()
+
     # Effective ATR settings (pull from config or show "—" if unknown)
-    effective_atr = {"mode":"ATR", "step_atr":0.50, "trigger_atr":1.00}  # or read from your CFG
+    effective_atr = {"mode":"ATR", "step_atr":0.50, "trigger_atr":1.00}
     render_positions_panel(api, positions, atr_mode=effective_atr)
     st.divider()
-    # Live Positions table (sorted) -----
+
+    # Live Positions table (sorted)
     render_positions_table(positions)
     st.divider()
 
@@ -4670,30 +4872,24 @@ def main() -> None:
     # ----- NEW: Attach your uploaded transaction history file -----
     render_transaction_history_positions(api, days=180)
 
-    # ===== Contributors / Detractors (moved and fixed) =====
+    # ===== Contributors / Detractors =====
     st.divider()
     z = compute_derived_metrics(positions).copy()
-    base_col = "pl_$" if "pl_$" in z.columns else (
-        "pl_today_usd" if "pl_today_usd" in z.columns else None
-    )
+    base_col = "pl_$" if "pl_$" in z.columns else ("pl_today_usd" if "pl_today_usd" in z.columns else None)
     if base_col:
         tmp = pd.DataFrame({
             "Symbol": z.get("Ticker", z.get("symbol")),
             "P&L $": pd.to_numeric(z[base_col], errors="coerce"),
         })
         winners = tmp.sort_values("P&L $", ascending=False).head(3)
-        losers = tmp.sort_values("P&L $", ascending=True).head(3)
+        losers  = tmp.sort_values("P&L $", ascending=True).head(3)
         c1, c2 = st.columns(2)
         with c1:
             st.markdown("**Top contributors (since entry)**")
-            st.table(
-                winners.assign(**{"P&L $": winners["P&L $"].map(lambda x: f"{x:,.2f}")})
-            )
+            st.table(winners.assign(**{"P&L $": winners["P&L $"].map(lambda x: f"{x:,.2f}")}))
         with c2:
             st.markdown("**Top detractors (since entry)**")
-            st.table(
-                losers.assign(**{"P&L $": losers["P&L $"].map(lambda x: f"{x:,.2f}")})
-            )
+            st.table(losers.assign(**{"P&L $": losers["P&L $"].map(lambda x: f"{x:,.2f}")}))
 
 if __name__ == "__main__":
     main()

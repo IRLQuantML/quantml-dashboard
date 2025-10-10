@@ -1,0 +1,24 @@
+2025-10-10 15:42:04,048 | INFO | ARGV → d:/QuantML/VS_QuantML_PROD/fATR_trading.py
+2025-10-10 15:42:04,048 | INFO | 🔧 Using config file: d:\QuantML\VS_QuantML_PROD\config.py
+2025-10-10 15:42:04,049 | INFO | CFG → mode=percent, pct_trigger=0.0300, pct_step=0.0100, atr_trigger=1.00, atr_step=0.50, max_mult=2.50, interval=120s
+2025-10-10 15:42:04,049 | INFO | ARGS → mode=None, pct_trigger=None, pct_step=None, atr_trigger=None, atr_step=None, max_mult=None, interval=None
+2025-10-10 15:42:04,049 | INFO | ✅ EFFECTIVE → mode=percent (profile), pct_trigger=0.0070, pct_step=0.0040, atr_trigger=0.25, atr_step=0.20, max_mult=2.50, interval=60s
+2025-10-10 15:42:08,991 | INFO | 🔍 Scanning 9 open positions: AMCR, BKNG, F, GS, HPQ, PSKY, TDG, VTRS, WBD
+2025-10-10 15:42:09,780 | INFO | └─ AMCR: pct_move=0.3504 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 15:42:11,410 | WARNING | submit_order doesn't support reduce_only in this SDK; retrying without it (was True).
+2025-10-10 15:42:11,502 | INFO | 🆕 Created TP for BKNG qty=1 @ 5227.6
+2025-10-10 15:42:11,791 | WARNING | No free qty for new SL on BKNG — TP/SL legs already reserve 1 of 1.
+2025-10-10 15:42:13,509 | INFO | 🆕 Created SL for BKNG qty=1 @ 5176.04
+2025-10-10 15:42:13,606 | INFO | └─ BKNG: reason=unfavorable_or_flat delta=-38.08
+2025-10-10 15:42:14,284 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.82372 min_abs=0.05 min_rel=0.001
+2025-10-10 15:42:14,948 | INFO | └─ GS: pct_move=0.2207 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 15:42:15,610 | INFO | └─ HPQ: dir=SHORT entry=26.872859 live=26.625 delta=0.247859 cur_tp=24.77 new_tp=24.6635 capped=False step_type=% step_pct=0.004 pct_move=0.9223 step_value_abs=0.1065
+2025-10-10 15:42:15,888 | INFO | ⬆️ Replaced TP for HPQ SHORT → 24.66
+2025-10-10 15:42:16,090 | INFO | └─ HPQ: tp_parent_id=None tp_qty_hint=50 tp_coid_prefix=8d52c940-9c9d-4c0c-a0a8-4ab7f8adfb4d
+2025-10-10 15:42:16,276 | INFO | 🔒 Replaced SL for HPQ SHORT → 26.64
+2025-10-10 15:42:17,034 | INFO | └─ PSKY: pct_move=0.4826 trigger_pct=0.007 reason=trigger_not_met
+2025-10-10 15:42:17,710 | INFO | └─ TDG: reason=unfavorable_or_flat delta=-18.188
+2025-10-10 15:42:18,389 | INFO | └─ VTRS: reason=tp_step_too_small cur_tp=9.38 new_tp=9.34012 min_abs=0.05 min_rel=0.001
+2025-10-10 15:42:19,063 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-1.04
+2025-10-10 15:42:20,919 | INFO | 📈 Cycle result: extended=1, skipped=8
+2025-10-10 15:42:21,009 | INFO | 🕑 Sleeping 60 sec…
