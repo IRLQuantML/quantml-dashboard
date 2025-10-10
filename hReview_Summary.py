@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Optional
 from datetime import datetime, timedelta, timezone
 from textwrap import dedent
-import uuid
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -111,8 +110,48 @@ def apply_branding() -> None:
             border-radius:16px;background:#0E1B3A15;border:1px solid #0E1B3A44;}
       .dot{width:12px;height:12px;border-radius:50%;display:inline-block;}
       .label{font-weight:600;font-size:0.9rem;color:#0E1B3A;}
+      /* === Confidence pills (compact SL/TP cards) === */
+      .qml-pill{border:1px solid #e5e7eb;border-left:6px solid #16a34a;border-radius:10px;padding:10px 12px;margin:6px 0;background:#fff}
+      .qml-pill.warn{border-left-color:#f59e0b}
+      .qml-pill.danger{border-left-color:#dc2626}
+      .qml-pill .hdr{font-weight:700;margin-bottom:4px}
+      .qml-pill .line{font-size:.92rem;color:#374151}
+      .qml-pill .mini{height:8px;border-radius:6px;background:#f3f4f6;overflow:hidden;margin-top:6px;position:relative}
+      .qml-pill .sl{position:absolute;left:0;top:0;height:100%;background:#ef4444}
+      .qml-pill .tp{position:absolute;right:0;top:0;height:100%;background:#16a34a}
+      /* micro kpis under confidence pill */
+      .qml-mini { display:flex; gap:14px; margin:6px 2px 2px 2px; flex-wrap:wrap; }
+      .qml-mini .itm { font-size:.92rem; color:#4b5563; }
+      .qml-mini .lbl { font-weight:600; color:#111827; margin-right:6px; }
+      .qml-rr.good  { color:#16a34a; font-weight:700; }
+      .qml-rr.warn  { color:#f59e0b; font-weight:700; }
+      .qml-rr.bad   { color:#dc2626; font-weight:700; }
+      /* small note under each confidence pill */
+      .qml-note { font-size:.85rem; color:#64748B; margin:4px 2px 0; line-height:1.25; }
+      .qml-note .em { color:#111827; font-weight:600; }
+      /* mini chart legend chips */
+      .qml-chip {display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border:1px solid #e5e7eb;border-radius:999px;font-size:.85rem;color:#374151;background:#fff}
+      .qml-chip .sw {width:10px;height:10px;border-radius:2px;display:inline-block}
+      .qml-chip.good {border-color:#16a34a22}
+      .qml-chip.warn {border-color:#f59e0b22}
+      .qml-chip.bad  {border-color:#dc262622}
+      .qml-mini-explain{font-size:.9rem;color:#64748B;margin-top:6px}
+      /* session chip colours (legend for mini chart) */
+      .qml-chip.pre  .sw{ background:#fde68a }  /* soft amber */
+      .qml-chip.post .sw{ background:#c7d2fe }  /* soft indigo */
+      .qml-chip.reg  .sw{ background:#bbf7d0 }  /* soft green */
+      /* arrow tint for EMA trend chip */
+      .qml-chip.up    { border-color:#16a34a33 }
+      .qml-chip.down  { border-color:#dc262633 }
+      .qml-chip.flat  { border-color:#9ca3af33 }
+      .qml-chip.up   { color:#15803d; }
+      .qml-chip.down { color:#b91c1c; }
+      .qml-chip.flat { color:#334155; }
+
+
     </style>
     """, unsafe_allow_html=True)
+
 
 apply_branding()
 
@@ -125,7 +164,628 @@ try:
 except Exception:
     _PORTFOLIO_BUDGET = 5000.0
 
-# ===================== Sorting + Drawdown helpers =====================
+
+from plotly.subplots import make_subplots
+
+def mini_trailing_chart_rich(api, symbol: str, tp: float | None, sl: float | None, *,
+                             days:int=5, window:int=50, entry: float | None=None, atr: float | None=None):
+    """
+    Compact, information-dense mini chart:
+    • Price (last ~50 samples) + EMA(20), EMA(50)
+    • Bollinger bands(20,2) using close
+    • Last price dot + 'Updated Xm ago' badge
+    • Shaded TP/SL zones with % & ATR distances
+    """
+    bars = _get_symbol_bars(api, symbol, "5Min", days=days).tail(max(60, window))
+    if bars is None or bars.empty:
+        st.info("No recent bars for mini chart.")
+        return
+
+    z = bars.copy()
+    z["close"] = pd.to_numeric(z["close"], errors="coerce")
+    z = z.dropna(subset=["close"])
+    z["ema20"] = z["close"].ewm(span=20, adjust=False).mean()
+    z["ema50"] = z["close"].ewm(span=50, adjust=False).mean()
+
+    # Bollinger (20,2)
+    mid = z["close"].rolling(20).mean()
+    std = z["close"].rolling(20).std(ddof=0)
+    z["bb_mid"], z["bb_up"], z["bb_dn"] = mid, mid + 2*std, mid - 2*std
+
+    x = z["ts"]; y = z["close"]
+    # ----- Session shading (pre / regular / post) in US/Eastern -----
+    from zoneinfo import ZoneInfo
+    et = ZoneInfo("US/Eastern")
+    zt = pd.to_datetime(z["ts"], utc=True, errors="coerce").dt.tz_convert(et)
+    z = z.assign(ts_et=zt)
+
+    from datetime import time as _t
+
+    def _day_bounds(_d):
+        # Pre: 04:00–09:30  · Reg: 09:30–16:00  · Post: 16:00–20:00 (US/Eastern)
+        d0_naive = datetime.combine(_d, _t(4, 0))
+        p1_naive = datetime.combine(_d, _t(9, 30))
+        r1_naive = datetime.combine(_d, _t(16, 0))
+        q1_naive = datetime.combine(_d, _t(20, 0))
+
+        d0 = pd.Timestamp(d0_naive).tz_localize(et)
+        p1 = pd.Timestamp(p1_naive).tz_localize(et)
+        r1 = pd.Timestamp(r1_naive).tz_localize(et)
+        q1 = pd.Timestamp(q1_naive).tz_localize(et)
+        return d0, p1, r1, q1
+
+    shapes = []
+    for d, g in z.groupby(z["ts_et"].dt.date):
+        d0, p1, r1, q1 = _day_bounds(d)
+        # convert back to UTC for Plotly shapes (our x-axis is UTC)
+        def U(t): return pd.Timestamp(t).tz_convert("UTC")
+        # Pre-market region
+        pre = g[(g["ts_et"] >= d0) & (g["ts_et"] < p1)]
+        if not pre.empty:
+            shapes.append(dict(type="rect", xref="x", yref="paper",
+                            x0=U(pre["ts_et"].iloc[0]), x1=U(pre["ts_et"].iloc[-1]),
+                            y0=0, y1=1, fillcolor="rgba(253,230,138,0.15)", line_width=0, layer="below"))
+        # Post-market region
+        post = g[(g["ts_et"] >= r1) & (g["ts_et"] < q1)]
+        if not post.empty:
+            shapes.append(dict(type="rect", xref="x", yref="paper",
+                            x0=U(post["ts_et"].iloc[0]), x1=U(post["ts_et"].iloc[-1]),
+                            y0=0, y1=1, fillcolor="rgba(199,210,254,0.18)", line_width=0, layer="below"))
+    # regular session left unshaded for clarity
+
+    last_px = float(y.iloc[-1])
+    last_ts = pd.to_datetime(x.iloc[-1], utc=True, errors="coerce")
+
+    # Compute % & ATR distances (safe if None)
+    def _pct(a,b): 
+        try: return (a-b)/b
+        except: return None
+    tp_pct = _pct(tp, last_px) if tp is not None else None
+    sl_pct = _pct(last_px, sl) if sl is not None else None
+    tp_atr = (abs((tp or last_px) - last_px) / atr) if (tp is not None and atr and atr>0) else None
+    sl_atr = (abs(last_px - (sl or last_px)) / atr) if (sl is not None and atr and atr>0) else None
+
+    fig = go.Figure()
+    # Price + EMAs
+    fig.add_trace(go.Scatter(x=x, y=y, mode="lines", name="Price", line=dict(width=2)))
+    fig.add_trace(go.Scatter(x=x, y=z["ema20"], mode="lines", name="EMA20", line=dict(width=1)))
+    fig.add_trace(go.Scatter(x=x, y=z["ema50"], mode="lines", name="EMA50", line=dict(width=1)))
+
+    # Bands (as area)
+    fig.add_trace(go.Scatter(x=x, y=z["bb_up"], line=dict(width=0), name="BB(20,2)",
+                             hoverinfo="skip", showlegend=False,
+                             fill=None))
+    fig.add_trace(go.Scatter(x=x, y=z["bb_dn"], line=dict(width=0), name="BB(20,2)",
+                             hoverinfo="skip", showlegend=False,
+                             fill='tonexty', fillcolor="rgba(99,102,241,0.12)"))
+
+    # TP/SL guides + zones
+    ymax = max(float(np.nanmax(y)), float(tp) if tp else float(np.nanmax(y)))
+    ymin = min(float(np.nanmin(y)), float(sl) if sl else float(np.nanmin(y)))
+    if tp is not None:
+        fig.add_hline(y=float(tp), line_dash="dot",
+                      annotation_text=f"TP • {tp_pct:+.2%}" + (f" ({tp_atr:.2f} ATR)" if tp_atr else ""),
+                      annotation_position="top right")
+        fig.add_shape(type="rect", x0=x.iloc[0], x1=x.iloc[-1], y0=float(tp), y1=ymax,
+                      fillcolor="rgba(16,185,129,0.08)", line_width=0, layer="below")
+    if sl is not None:
+        fig.add_hline(y=float(sl), line_dash="dot",
+                      annotation_text=f"SL • {sl_pct:+.2%}" + (f" ({sl_atr:.2f} ATR)" if sl_atr else ""),
+                      annotation_position="bottom right")
+        fig.add_shape(type="rect", x0=x.iloc[0], x1=x.iloc[-1], y0=ymin, y1=float(sl),
+                      fillcolor="rgba(239,68,68,0.08)", line_width=0, layer="below")
+
+    # Entry line (optional)
+    if entry is not None and np.isfinite(entry):
+        fig.add_hline(y=float(entry), line_dash="dash", annotation_text="Entry")
+
+    # Last price dot + updated time
+    fig.add_trace(go.Scatter(x=[x.iloc[-1]], y=[last_px], mode="markers",
+                             marker=dict(size=7), name="Last", showlegend=False))
+    if pd.notna(last_ts):
+        mins = int((pd.Timestamp.utcnow() - last_ts).total_seconds() // 60)
+        fig.add_annotation(xref="paper", yref="paper", x=1, y=1.15, showarrow=False,
+                           text=f"Updated {mins}m ago")
+
+    # Apply session shading rectangles (must be before plotting)
+    if shapes:
+        fig.update_layout(shapes=shapes)
+
+    fig.update_layout(
+        height=200, margin=dict(l=10, r=10, t=30, b=10),
+        showlegend=False,
+        xaxis=dict(showgrid=False, visible=False),
+        yaxis=dict(showgrid=True, gridcolor="rgba(0,0,0,0.08)")
+    )
+    st.plotly_chart(fig, width='stretch', config=PLOTLY_CONFIG)
+    # ===== compact explanation (trend • bands • position • TP/SL) =====
+    # Trend by EMAs
+    ema20_now, ema50_now = float(z["ema20"].iloc[-1]), float(z["ema50"].iloc[-1])
+    ema_slope = np.sign(z["ema20"].diff().iloc[-1])
+    trend = ("up" if (ema20_now >= ema50_now and ema_slope >= 0) else
+            "down" if (ema20_now <= ema50_now and ema_slope <= 0) else
+            "mixed")
+
+    # Band width percentile (squeeze vs expanding)
+    bw = (z["bb_up"] - z["bb_dn"]) / z["bb_mid"]
+    bw_last = float(bw.iloc[-1]) if np.isfinite(bw.iloc[-1]) else np.nan
+    pctile = (np.nanpercentile(bw, 20), np.nanpercentile(bw, 80))
+    band_state = ("squeeze" if bw_last <= pctile[0] else
+                "expanding" if bw_last >= pctile[1] else
+                "normal")
+    # Price position vs bands
+    pos = ("below band" if last_px < float(z["bb_dn"].iloc[-1]) else
+        "above band" if last_px > float(z["bb_up"].iloc[-1]) else
+        "inside band")
+
+    # TP/SL distances summary
+    tp_txt = (f"{tp_pct:+.2%}" if tp_pct is not None else "—")
+    sl_txt = (f"{sl_pct:+.2%}" if sl_pct is not None else "—")
+
+    # Optional ATR text
+    atr_txt = []
+    if tp_atr: atr_txt.append(f"TP {tp_atr:.2f} ATR")
+    if sl_atr: atr_txt.append(f"SL {sl_atr:.2f} ATR")
+    atr_txt = (" • " + " · ".join(atr_txt)) if atr_txt else ""
+
+    # Arrow for EMA trend
+    arrow = "▲" if trend=="up" else ("▼" if trend=="down" else "↔")
+    trend_cls = "up" if trend=="up" else ("down" if trend=="down" else "flat")
+
+    trend_chip = f"<span class='qml-chip {trend_cls}'><span class='sw' style='background:#4f46e5'></span>EMA trend: {arrow} {trend}</span>"
+    band_chip  = f"<span class='qml-chip {'warn' if band_state=='squeeze' else 'good' if band_state=='expanding' else ''}'><span class='sw' style='background:#6366f1'></span>Bands: {band_state}</span>"
+
+    # ✅ ADD THIS LINE (defines pos_chip)
+    pos_chip   = f"<span class='qml-chip'><span class='sw' style='background:#94a3b8'></span>Price: {pos}</span>"
+
+    pre_chip  = "<span class='qml-chip pre'><span class='sw'></span>Pre</span>"
+    reg_chip  = "<span class='qml-chip reg'><span class='sw'></span>Regular</span>"
+    post_chip = "<span class='qml-chip post'><span class='sw'></span>Post</span>"
+
+    st.markdown(
+        f"""
+        <div class="qml-mini-explain">
+        {trend_chip} &nbsp; {band_chip} &nbsp; {pos_chip} &nbsp; {pre_chip} &nbsp; {reg_chip} &nbsp; {post_chip}<br>
+        Price is <b>{tp_txt}</b> from TP and <b>{sl_txt}</b> from SL{atr_txt}.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+def _safe_rr(tp_buf: float, sl_buf: float) -> float:
+    """Finite RR: ∞ if SL buffer==0 and TP>0; 0 if both zero; otherwise TP/SL."""
+    if not np.isfinite(tp_buf): tp_buf = 0.0
+    if not np.isfinite(sl_buf): sl_buf = 0.0
+    if sl_buf <= 0:
+        return float("inf") if tp_buf > 0 else 0.0
+    return tp_buf / sl_buf
+
+def _fmt_rr(rr: float) -> str:
+    if not np.isfinite(rr):  # inf
+        return "∞"
+    return f"{rr:.2f}"
+
+def _rr_class(rr: float | None) -> str:
+    if rr is None or not np.isfinite(rr): return "warn"
+    if rr >= 2.0:  return "good"   # strong
+    if rr >= 1.0:  return "warn"   # okay
+    return "bad"                   # < 1 = asymmetric risk
+
+def _pill_severity(sl_atr: float | None) -> str:
+    """Return '', 'warn', or 'danger' for the left border colour based on SL distance in ATRs."""
+    if sl_atr is None or not np.isfinite(sl_atr):
+        return "warn"      # unknown → amber
+    if sl_atr < 0.4:
+        return "danger"    # < 0.4 ATR is risky
+    if sl_atr < 0.75:
+        return "warn"      # OK-ish
+    return ""              # healthy
+
+def confidence_bar(ticker, side, price, tp, sl, atr=None):
+    if not price: return
+
+    # Distances (signed by side)
+    if str(side).lower() == "long":
+        tp_d  = max((tp - price), 0) if tp else 0
+        sl_d  = max((price - sl), 0) if sl else 0
+    else:
+        tp_d  = max((price - tp), 0) if tp else 0
+        sl_d  = max((sl - price), 0) if sl else 0
+
+    tot = max(tp_d + sl_d, 1e-9)
+    tp_pct = tp_d / price if price else 0
+    sl_pct = sl_d / price if price else 0
+    tp_atr = (tp_d / atr) if atr else np.nan
+    sl_atr = (sl_d / atr) if atr else np.nan
+    rr = (tp_d / sl_d) if sl_d > 0 else np.inf
+
+    # Alert tints based on ATR buffers
+    sl_color = "#ef4444" if (atr and sl_atr < 0.40) else "#f97316" if (atr and sl_atr < 0.75) else "#ef4444"
+    tp_color = "#22c55e" if (atr and tp_atr >= 0.50) else "#d4d4d4"
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=[sl_d], y=[ticker], orientation="h", name="SL buffer", marker_color=sl_color,
+        hovertemplate=f"SL buffer: ${sl_d:.2f} ({sl_pct:.2%})<br>ATR: {sl_atr:.2f}<extra></extra>"
+    ))
+    fig.add_trace(go.Bar(
+        x=[tp_d], y=[ticker], orientation="h", name="TP buffer", marker_color=tp_color,
+        hovertemplate=f"TP buffer: ${tp_d:.2f} ({tp_pct:.2%})<br>ATR: {tp_atr:.2f}<extra></extra>"
+    ))
+    fig.update_layout(
+        barmode="stack", height=70, margin=dict(l=8,r=8,t=22,b=8),
+        xaxis=dict(visible=False, range=[0, tot]), yaxis=dict(visible=False), showlegend=False,
+        annotations=[dict(
+            x=tot, y=0, xref="x", yref="y", showarrow=False,
+            text=f"RR {rr:.2f}× • TP {tp_pct:.2%} / SL {sl_pct:.2%}" + (f" • ({tp_atr:.2f}/{sl_atr:.2f} ATR)" if atr else ""),
+            xanchor="right", yanchor="bottom", font=dict(size=11)
+        )]
+    )
+    st.plotly_chart(fig, width='stretch')
+
+import streamlit as st
+def kpi_triplet(tp_pct, sl_pct, rr, *, tp_atr=None, sl_atr=None):
+    c1, c2, c3 = st.columns([1, 1, 1])
+    fmt = lambda v: f"{v:.2%}" if np.isfinite(v) else "—"
+    c1.metric("→ TP buffer", fmt(tp_pct), None,
+              help=None if tp_atr is None else f"{tp_atr:.2f} ATR")
+    c2.metric("← SL buffer", fmt(sl_pct), None,
+              help=None if sl_atr is None else f"{sl_atr:.2f} ATR")
+    c3.metric("Risk / Reward", f"{rr:.2f}×")
+
+# === Unified Positions Panel (grouping + ATR badge + mini charts + confidence bars + filters) ===
+def trailing_chart_with_context(bars, *, price_now, tp, sl, entry, atr,
+                                last_tp_ts=None, last_sl_ts=None, updated_ts=None):
+    # bars: DataFrame with columns ['ts','close'] (recent -> newest at end)
+    x = bars['ts']; y = bars['close']
+
+    # Distances
+    def pct(a,b): 
+        try: return (a-b)/b
+        except: return np.nan
+    tp_pct = pct(tp, price_now); sl_pct = pct(price_now, sl)
+    tp_atr = (abs(tp - price_now) / atr) if atr else np.nan
+    sl_atr = (abs(price_now - sl) / atr) if atr else np.nan
+
+    fig = go.Figure()
+
+    # Price line
+    fig.add_trace(go.Scatter(x=x, y=y, mode="lines", name="Price", hovertemplate="%{x}<br>%{y:.2f}",))
+
+    # Background zones (shaded)
+    ymax = max(np.nanmax(y), tp if pd.notna(tp) else np.nanmax(y)) * 1.001
+    ymin = min(np.nanmin(y), sl if pd.notna(sl) else np.nanmin(y)) * 0.999
+    if pd.notna(tp):
+        fig.add_shape(type="rect", x0=x.iloc[0], x1=x.iloc[-1], y0=tp, y1=ymax,
+                      fillcolor="rgba(16,185,129,0.08)", line_width=0, layer="below")  # TP zone (green tint)
+    if pd.notna(sl):
+        fig.add_shape(type="rect", x0=x.iloc[0], x1=x.iloc[-1], y0=ymin, y1=sl,
+                      fillcolor="rgba(239,68,68,0.08)", line_width=0, layer="below")  # SL zone (red tint)
+
+    # Guide lines
+    if pd.notna(tp):    fig.add_hline(y=tp, line_dash="dot", annotation_text=f"TP  • {tp_pct:+.2%} ({tp_atr:.2f} ATR)")
+    if pd.notna(sl):    fig.add_hline(y=sl, line_dash="dot", annotation_text=f"SL  • {sl_pct:+.2%} ({sl_atr:.2f} ATR)",
+                                      annotation_position="bottom right")
+    if pd.notna(entry): fig.add_hline(y=entry, line_dash="dash", annotation_text="Entry")
+
+    # Mark last ratchets (optional)
+    def _mark(ts, label):
+        if ts is None: return
+        ts = pd.to_datetime(ts)
+        row = bars.iloc[(bars['ts']-ts).abs().argsort()[:1]]
+        fig.add_trace(go.Scatter(x=row['ts'], y=row['close'],
+                                 mode="markers+text", text=[label], textposition="top center",
+                                 marker=dict(size=8, symbol="triangle-up")))
+    _mark(last_tp_ts, "TP↑")
+    _mark(last_sl_ts, "SL↑")
+
+    # Footer badge
+    if updated_ts:
+        ago_min = int((datetime.now(timezone.utc) - pd.to_datetime(updated_ts, utc=True)).total_seconds()//60)
+        fig.add_annotation(xref="paper", yref="paper", x=1, y=1.12, showarrow=False,
+                           text=f"Updated {ago_min}m ago")
+
+    fig.update_layout(height=200, margin=dict(l=10,r=10,t=30,b=10),
+                      showlegend=False, xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, gridcolor="rgba(0,0,0,0.08)"))
+    st.plotly_chart(fig, width='stretch')
+
+def state_badge(*, last_tp_ts, last_sl_ts, cooldown_min, move_atr, trigger_atr):
+    import pandas as pd, numpy as np, datetime as dt
+    now = pd.Timestamp.utcnow()
+    cool = False
+    if last_tp_ts is not None:
+        cool = (now - pd.to_datetime(last_tp_ts, utc=True)).total_seconds() < cooldown_min*60
+    if cool:
+        st.caption("⏳ Cooling down")
+    elif np.isfinite(move_atr) and move_atr >= trigger_atr:
+        st.caption("✅ Ready to ratchet")
+    else:
+        st.caption("ℹ️ Watching…")
+
+def render_positions_panel(api, positions: pd.DataFrame, *, atr_mode: dict | None = None) -> None:
+    """
+    positions: live positions df from pull_live_positions() / compute_derived_metrics()
+    atr_mode:  e.g. {"mode":"ATR","step_atr":0.50,"trigger_atr":1.00} or None
+    """
+    st.subheader("Positions — Overview")
+
+    # --- Fetch Adaptive ATR table so we can attach TP/SL + last update for filters
+    atr_df = build_adaptive_atr_df(api, positions)
+    # keep only the bits we need for merge
+    keep_cols = ["Ticker","Side","Current Price","Current TP","Current SL","Updated (ET)"]
+    atr_df = atr_df[[c for c in keep_cols if c in atr_df.columns]].copy()
+
+    # Side-normalize for merge
+    z = positions.copy()
+    sym_col = "Ticker" if "Ticker" in z.columns else "symbol"
+    z[sym_col] = z[sym_col].astype(str).str.upper()
+    atr_df["Ticker"] = atr_df["Ticker"].astype(str).str.upper()
+
+    merged = z.merge(atr_df, left_on=sym_col, right_on="Ticker", how="left", suffixes=("", "_atr"))
+
+    # ===================== Header w/ ATR badge =====================
+    eff = atr_mode or {"mode":"ATR","step_atr":"—","trigger_atr":"—"}
+    st.markdown(
+        f"""
+        <div style="display:flex;gap:10px;align-items:center;">
+          <span style="font-weight:600;font-size:18px;">Dynamic Stop trailing (Adaptive ATR)</span>
+          <span style="background:{BRAND['accent']};color:white;border-radius:999px;padding:3px 10px;font-size:12px;">
+            {eff.get('mode','ATR')} • Step={eff.get('step_atr','—')} • Trigger={eff.get('trigger_atr','—')}
+          </span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # ===================== Filters (Long/Short + recent updates) =====================
+    c1, c2, c3 = st.columns([1,1,2])
+    with c1:
+        side_filter = st.segmented_control("Side", ["All", "Longs", "Shorts"], default="All", key="pos_side_filter")
+    with c2:
+        recent_only = st.toggle("Only Updated in last 30m", value=False, key="pos_recent_toggle")
+    with c3:
+        focus_symbol = st.selectbox(
+            "Mini chart symbol", 
+            sorted(merged[sym_col].unique()),
+            index=0 if merged.empty else 0,
+            key="pos_focus_symbol"
+        )
+
+    df = merged.copy()
+    # Apply side filter
+    if side_filter == "Longs":
+        df = df[df.get("Side","Long").astype(str).str.lower().eq("long")]
+    elif side_filter == "Shorts":
+        df = df[df.get("Side","Long").astype(str).str.lower().eq("short")]
+
+    # Apply recency filter using Updated (ET) if present
+    if recent_only and "Updated (ET)" in df.columns:
+        ts = pd.to_datetime(df["Updated (ET)"], errors="coerce", utc=True)
+        df = df[ts >= (pd.Timestamp.utcnow() - pd.Timedelta(minutes=30))]
+
+    # ===================== Grouped tables (Long / Short) =====================
+    def _show_group(title, gdf):
+        if gdf is None or gdf.empty:
+            st.markdown(f"**{title}** — none")
+            return
+        view = pd.DataFrame({
+            "Ticker":        gdf[sym_col],
+            "Side":          gdf.get("Side","Long"),
+            "Qty":           pd.to_numeric(gdf.get("qty"), errors="coerce"),
+            "Avg Entry":     pd.to_numeric(gdf.get("entry_price"), errors="coerce"),
+            "Current Price": pd.to_numeric(gdf.get("Current Price", gdf.get("current_price")), errors="coerce"),
+            "Current TP":    pd.to_numeric(gdf.get("Current TP"), errors="coerce"),
+            "Current SL":    pd.to_numeric(gdf.get("Current SL"), errors="coerce"),
+            "P&L $":         pd.to_numeric(gdf.get("pl_$", gdf.get("pl_usd")), errors="coerce"),
+            "P&L %":         pd.to_numeric(gdf.get("pl_%"), errors="coerce"),
+            "Updated (ET)":  gdf.get("Updated (ET)",""),
+        })
+        st.markdown(f"**{title}**")
+        st.dataframe(
+            view.sort_values("P&L %", ascending=False).style.format({
+                "Qty":"{:.0f}",
+                "Avg Entry":"{:.2f}",
+                "Current Price":"{:.2f}",
+                "Current TP":"{:.2f}",
+                "Current SL":"{:.2f}",
+                "P&L $":"${:,.2f}",
+                "P&L %":"{:+.2f}%",
+            }, na_rep="—"),
+            width='stretch', hide_index=True
+        )
+
+    long_df  = df[df.get("Side","Long").astype(str).str.lower().eq("long")]
+    short_df = df[df.get("Side","Long").astype(str).str.lower().eq("short")]
+
+    g1, g2 = st.columns(2)
+    with g1: _show_group("Long", long_df)
+    with g2: _show_group("Short", short_df)
+
+    st.divider()
+
+    # ===================== Mini trailing visualization (last ~50 bars) =====================
+    def mini_trailing_chart(symbol: str, cur_tp: float | None, cur_sl: float | None):
+        # Try 5Min, fallback handled inside _get_symbol_bars()
+        bars = _get_symbol_bars(api, symbol, "5Min", days=5).tail(50)
+        if bars is None or bars.empty:
+            st.info("No recent bars for mini chart.")
+            return
+        x = bars["ts"]; y = pd.to_numeric(bars["close"], errors="coerce")
+
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=x, y=y, mode="lines", name="Price"))
+        if pd.notna(cur_tp or np.nan):
+            fig.add_hline(y=float(cur_tp), line_dash="dot", annotation_text="TP", annotation_position="top right")
+        if pd.notna(cur_sl or np.nan):
+            fig.add_hline(y=float(cur_sl), line_dash="dot", annotation_text="SL", annotation_position="bottom right")
+        fig.update_layout(height=160, margin=dict(l=10,r=10,t=10,b=10), showlegend=False,
+                          xaxis=dict(visible=False), yaxis=dict(visible=False))
+        st.plotly_chart(fig, width='stretch', config=PLOTLY_CONFIG)
+
+    # Pull TP/SL for the selected symbol
+    row = df[df[sym_col] == focus_symbol].head(1)
+    tp_val = float(row["Current TP"].iloc[0]) if ("Current TP" in row.columns and len(row)) else None
+    sl_val = float(row["Current SL"].iloc[0]) if ("Current SL" in row.columns and len(row)) else None
+
+    st.markdown("**Mini trailing chart**")
+    mini_trailing_chart_rich(api, str(focus_symbol), tp_val, sl_val)
+
+    # ===================== SL/TP Confidence bar (per row) =====================
+    st.markdown("**SL/TP confidence bars**")
+    def _buffers(side: str, price: float, tp: float | None, sl: float | None) -> tuple[float,float]:
+        """Returns (tp_buffer_pct, sl_buffer_pct) as proportions of price."""
+        if not (np.isfinite(price) and price > 0): return (0.0, 0.0)
+        def _safe(v): 
+            try: return float(v)
+            except: return np.nan
+        tp = _safe(tp); sl = _safe(sl)
+        if str(side).lower() == "long":
+            tp_buf = max(((tp - price) / price) if pd.notna(tp) else 0.0, 0.0)
+            sl_buf = max(((price - sl) / price) if pd.notna(sl) else 0.0, 0.0)
+        else:
+            tp_buf = max(((price - tp) / price) if pd.notna(tp) else 0.0, 0.0)
+            sl_buf = max(((sl - price) / price) if pd.notna(sl) else 0.0, 0.0)
+        return (tp_buf, sl_buf)
+
+    # --- At-risk filter (SL distance < 0.5 ATR) + sort by risk ---
+    atr_col = next((c for c in df.columns if c.lower() in ("atr","atr_14","atr14")), None)
+
+    if atr_col and {"Current Price","Current SL"}.issubset(df.columns):
+        # SL distance expressed in ATRs
+        df["sl_atr"] = (
+            (pd.to_numeric(df["Current Price"], errors="coerce") -
+            pd.to_numeric(df["Current SL"],    errors="coerce")).abs()
+            / pd.to_numeric(df[atr_col], errors="coerce")
+        )
+
+        at_risk = st.toggle("Show only at-risk (SL < 0.5 ATR)", value=False, key="pos_at_risk_toggle")
+        if at_risk:
+            df = df[pd.to_numeric(df["sl_atr"], errors="coerce") < 0.5]
+
+        # Lowest SL buffer first
+        df = df.sort_values("sl_atr", ascending=True, na_position="last")
+    else:
+        # Fallback if no ATR column: use absolute SL % distance (0.5% of price as rough proxy)
+        if "SL %" in df.columns:
+            df["sl_abs_pct"] = pd.to_numeric(df["SL %"], errors="coerce").abs() / 100.0
+            at_risk = st.toggle("Show only at-risk (SL < 0.5% of price)", value=False, key="pos_at_risk_pct_toggle")
+            if at_risk:
+                df = df[df["sl_abs_pct"] < 0.005]
+            df = df.sort_values("sl_abs_pct", ascending=True, na_position="last")
+
+    # Show a compact stacked bar per ticker
+    # === Compact pill rows (sorted by riskiest first) ===
+    rows = df[[sym_col,"Side","Current Price","Current TP","Current SL"]].dropna(subset=[sym_col]).copy()
+
+    # compute buffers (% of price) and SL distance in ATRs
+    atr_col = next((c for c in df.columns if c.lower() in ("atr","atr_14","atr14")), None)
+    def _calc(row):
+        side  = str(row.get("Side","Long")).lower()
+        p     = float(row.get("Current Price") or np.nan)
+        tp    = float(row.get("Current TP")   or np.nan)
+        sl    = float(row.get("Current SL")   or np.nan)
+        if not (np.isfinite(p) and p > 0):
+            return pd.Series({"tp_buf":np.nan,"sl_buf":np.nan,"sl_atr":np.nan})
+        if side == "long":
+            tp_buf = max(((tp - p)/p) if np.isfinite(tp) else 0.0, 0.0)
+            sl_buf = max(((p - sl)/p) if np.isfinite(sl) else 0.0, 0.0)
+        else:
+            tp_buf = max(((p - tp)/p) if np.isfinite(tp) else 0.0, 0.0)
+            sl_buf = max(((sl - p)/p) if np.isfinite(sl) else 0.0, 0.0)
+        sl_atr = np.nan
+        if atr_col and np.isfinite(p) and np.isfinite(sl) and np.isfinite(float(row.get(atr_col) or np.nan)):
+            sl_atr = abs(p - sl) / float(row[atr_col])
+        return pd.Series({"tp_buf":tp_buf,"sl_buf":sl_buf,"sl_atr":sl_atr})
+
+    rows[["tp_buf","sl_buf","sl_atr"]] = rows.apply(_calc, axis=1)
+
+    # sort: riskiest first (smallest sl_atr), then lower RR
+    rows["rr"] = np.where(
+        pd.to_numeric(rows["sl_buf"], errors="coerce") > 0,
+        pd.to_numeric(rows["tp_buf"], errors="coerce") / pd.to_numeric(rows["sl_buf"], errors="coerce"),
+        np.inf  # sort ∞ last by second key (we still rank by sl_atr first)
+    )
+    rows = rows.sort_values(["sl_atr","rr"], ascending=[True, True], na_position="last").head(12)
+
+    # grid (3 per row feels right)
+    cols = st.columns(3)
+    for i, (_, r) in enumerate(rows.iterrows()):
+        with cols[i % 3]:
+            tkr   = str(r[sym_col])
+            side  = r.get("Side","Long")
+            p     = float(r.get("Current Price") or np.nan)
+            tpbuf = float(r.get("tp_buf") or 0.0)
+            slbuf = float(r.get("sl_buf") or 0.0)
+            p     = float(r.get("Current Price") or 0.0)
+
+            # get SL distance in ATRs from the precomputed column
+            slatr = float(r["sl_atr"]) if ("sl_atr" in r and pd.notna(r["sl_atr"])) else None
+
+            # ---- SAFE RR + color class
+            rr     = _safe_rr(tpbuf, slbuf)          # ∞ if SL=0 & TP>0; 0 if both zero
+            rr_cls = _rr_class(rr)                   # 'good' / 'warn' / 'bad'
+            rr_txt = _fmt_rr(rr) + "×"
+
+            # ---- Pill severity: if NOT danger and RR is good, force green border
+            sev = _pill_severity(slatr)              # '', 'warn', 'danger'
+            if sev != "danger" and rr_cls == "good":
+                sev = ""                             # default (green) border
+
+            # mini bar widths
+            slw = max(0.0, min(100.0, slbuf*100))
+            tpw = max(0.0, min(100.0, tpbuf*100))
+
+            # render pill
+            st.markdown(
+                f"""
+                <div class="qml-pill {sev}">
+                <div class="hdr">{tkr} · {side}</div>
+                <div class="line">
+                    TP {tpbuf:.2%} &nbsp;&middot;&nbsp; SL {slbuf:.2%} &nbsp;&middot;&nbsp; RR {rr_txt}
+                    {f"&nbsp;&middot;&nbsp; SL {slatr:.2f} ATR" if slatr is not None and np.isfinite(slatr) else ""}
+                </div>
+                <div class="mini">
+                    <span class="sl" style="width:{slw}%"></span>
+                    <span class="tp" style="width:{tpw}%"></span>
+                </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+            # ---- Compact micro-KPIs row (smaller + colour-coded RR) ----
+            rr_cls = _rr_class(rr)  # uses thresholds defined above (good/warn/bad)
+            st.markdown(
+                f"""
+                <div class="qml-mini">
+                <div class="itm"><span class="lbl">→ TP buffer</span>{tpbuf:.2%}</div>
+                <div class="itm"><span class="lbl">← SL buffer</span>{slbuf:.2%}</div>
+                <div class="itm"><span class="lbl">Risk / Reward</span><span class="qml-rr {rr_cls}">{rr_txt}</span></div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+            # ---- 1–2 line natural language summary under each pill ----
+            stance = ("favourable" if rr_cls == "good" else
+                    "balanced"   if rr_cls == "warn" else
+                    "unfavourable")
+
+            sl_txt = (f"{slatr:.2f} ATR" if (slatr is not None and np.isfinite(slatr)) else "ATR n/a")
+            dir_txt = "above" if str(side).lower()=="long" else "below"   # orientation hint
+
+            st.markdown(
+                f"""
+                <div class="qml-note">
+                Price is <span class="em">{tpbuf:.2%}</span> from TP ({dir_txt}) and
+                <span class="em">{slbuf:.2%}</span> from SL.
+                Risk/Reward is <span class="em">{rr_txt}</span> → <span class="em">{stance}</span>
+                (SL distance: {sl_txt}).
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
 
 # --- helper: add TP% / SL% columns beside Current TP / SL ---
 def _add_tp_sl_percent_cols(df: pd.DataFrame) -> pd.DataFrame:
@@ -1262,7 +1922,7 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
         fig.update_layout(height=260, margin=dict(l=8, r=8, t=6, b=6),
                           xaxis_title=None, yaxis_title="Daily return (%)",
                           legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0))
-        st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
+        st.plotly_chart(fig, width='stretch', config=PLOTLY_CONFIG)
 
         # ── Bottom BAR CHART (daily close-of-business return summary) ───────
         daily_summary = (
@@ -1325,7 +1985,7 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
             xaxis_title=None, yaxis_title="Daily return (%)",
             legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0)
         )
-        st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
+        st.plotly_chart(fig, width='stretch', config=PLOTLY_CONFIG)
 
         # ── Bottom BAR CHART (daily close-of-business) ───────────────────────
         x_dates = merged["date"]
@@ -1383,7 +2043,7 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
         # If anything is non-finite, skip annotations quietly
         pass
 
-    st.plotly_chart(bar_fig, use_container_width=True, config=PLOTLY_CONFIG)
+    st.plotly_chart(bar_fig, width='stretch', config=PLOTLY_CONFIG)
 
 # ===================== Alpaca Portfolio History =====================
 @st.cache_data(ttl=60, show_spinner=False)
@@ -2189,7 +2849,7 @@ def render_header(api):
 # ===================== Equity Chart (replicates Alpaca Home) =====================
 def render_portfolio_equity_chart(api: Optional[REST]) -> dict:
     """Render Alpaca portfolio equity with period toggles and tight y-range."""
-    st.subheader("Your portfolio (Alpaca)")
+    st.subheader("Your portfolio (Live from Alpaca broker)")
 
     # Period selector
     period = st.radio(
@@ -2239,7 +2899,7 @@ def render_portfolio_equity_chart(api: Optional[REST]) -> dict:
     if yrange:
         fig.update_yaxes(range=yrange)
 
-    st.plotly_chart(fig, use_container_width=True, config=PLOTLY_CONFIG)
+    st.plotly_chart(fig, width='stretch', config=PLOTLY_CONFIG)
 
     # Quick stats from the plotted series
     chg_pct = float(df["ret_pct"].iloc[-1]) if len(df) else float("nan")
@@ -2496,7 +3156,7 @@ def render_broker_balances(acct: dict) -> None:
     if acct.get("margin_util_pct") is not None:
         st.plotly_chart(_banded_gauge(float(acct["margin_util_pct"]), "Margin Utilization",
                                       bands=(25, 50, 100), good="low"),
-                        use_container_width=True, config=PLOTLY_CONFIG)
+                        width='stretch', config=PLOTLY_CONFIG)
         st.caption("= Maintenance margin ÷ equity. Lower is safer.")
 
 # =============================================================================
@@ -3301,12 +3961,12 @@ def render_updated_dials(positions: pd.DataFrame, api: Optional[REST]) -> None:
 
     with d1:
         st.markdown("<div style='font-weight:600;margin:0 0 4px 2px;'>% of stocks up today</div>", unsafe_allow_html=True)
-        st.plotly_chart(_gauge_percent(up_today_pct, title="", good="high", bands=(40,60,80)), use_container_width=True, config=PLOTLY_CONFIG)
+        st.plotly_chart(_gauge_percent(up_today_pct, title="", good="high", bands=(40,60,80)), width='stretch', config=PLOTLY_CONFIG)
         st.markdown("<div style='text-align:center;font-size:13px;color:#64748B;'>Dial 1: positive intraday P&L</div>", unsafe_allow_html=True)
 
     with d2:
         st.markdown("<div style='font-weight:600;margin:0 0 4px 2px;'># open since start of day</div>", unsafe_allow_html=True)
-        st.plotly_chart(_gauge_count(still_open_since_sod, max(1, npos), title=""), use_container_width=True, config=PLOTLY_CONFIG)
+        st.plotly_chart(_gauge_count(still_open_since_sod, max(1, npos), title=""), width='stretch', config=PLOTLY_CONFIG)
         st.markdown("<div style='text-align:center;font-size:13px;color:#64748B;'>Dial 2: untouched by fills today</div>", unsafe_allow_html=True)
 
     with d3:
@@ -3316,7 +3976,7 @@ def render_updated_dials(positions: pd.DataFrame, api: Optional[REST]) -> None:
                         title="Total P/L % (open positions)",
                         good="high",
                         bands=(1.0, 2.0, 3.0)),   # bands relative to 3 %
-            use_container_width=True, config=PLOTLY_CONFIG
+            width='stretch', config=PLOTLY_CONFIG
         )
         st.markdown("<div style='text-align:center;font-size:13px;color:#64748B;'>Dial 3: weighted open P&L %</div>", unsafe_allow_html=True)
 
@@ -3989,7 +4649,10 @@ def main() -> None:
     # ===== NEW: Adaptive ATR table (between Current status and Overall Performance) =====
     render_adaptive_atr_table(positions, api)
     st.divider()
-
+    # Effective ATR settings (pull from config or show "—" if unknown)
+    effective_atr = {"mode":"ATR", "step_atr":0.50, "trigger_atr":1.00}  # or read from your CFG
+    render_positions_panel(api, positions, atr_mode=effective_atr)
+    st.divider()
     # Live Positions table (sorted) -----
     render_positions_table(positions)
     st.divider()
@@ -4010,20 +4673,16 @@ def main() -> None:
     # ===== Contributors / Detractors (moved and fixed) =====
     st.divider()
     z = compute_derived_metrics(positions).copy()
-
     base_col = "pl_$" if "pl_$" in z.columns else (
         "pl_today_usd" if "pl_today_usd" in z.columns else None
     )
-
     if base_col:
         tmp = pd.DataFrame({
             "Symbol": z.get("Ticker", z.get("symbol")),
             "P&L $": pd.to_numeric(z[base_col], errors="coerce"),
         })
-
         winners = tmp.sort_values("P&L $", ascending=False).head(3)
         losers = tmp.sort_values("P&L $", ascending=True).head(3)
-
         c1, c2 = st.columns(2)
         with c1:
             st.markdown("**Top contributors (since entry)**")
@@ -4035,6 +4694,6 @@ def main() -> None:
             st.table(
                 losers.assign(**{"P&L $": losers["P&L $"].map(lambda x: f"{x:,.2f}")})
             )
-    
+
 if __name__ == "__main__":
     main()
