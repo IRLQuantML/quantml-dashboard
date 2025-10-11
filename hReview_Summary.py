@@ -300,9 +300,7 @@ def mini_trailing_chart_rich(api, symbol: str, tp: float | None, sl: float | Non
     st.plotly_chart(
         fig,
         config=PLOTLY_CONFIG,
-        theme=None,                 # optional: keep QuantML's custom colors
-        key=None,
-        kwargs=dict(width="stretch")  # 👈 this passes the width correctly via config
+        use_container_width=True
     )
 
     # ===== compact explanation (trend • bands • position • TP/SL) =====
@@ -429,7 +427,7 @@ def confidence_bar(ticker, side, price, tp, sl, atr=None):
             xanchor="right", yanchor="bottom", font=dict(size=11)
         )]
     )
-    st.plotly_chart(fig, config={**PLOTLY_CONFIG, "responsive": True})
+    st.plotly_chart(fig, config={**PLOTLY_CONFIG, "responsive": True}, use_container_width=True)
 
 import streamlit as st
 def kpi_triplet(tp_pct, sl_pct, rr, *, tp_atr=None, sl_atr=None):
@@ -495,7 +493,7 @@ def trailing_chart_with_context(bars, *, price_now, tp, sl, entry, atr,
 
     fig.update_layout(height=200, margin=dict(l=10,r=10,t=30,b=10),
                       showlegend=False, xaxis=dict(showgrid=False), yaxis=dict(showgrid=True, gridcolor="rgba(0,0,0,0.08)"))
-    st.plotly_chart(fig, config={**PLOTLY_CONFIG, "responsive": True})
+    st.plotly_chart(fig, config={**PLOTLY_CONFIG, "responsive": True}, use_container_width=True)
 
 def state_badge(*, last_tp_ts, last_sl_ts, cooldown_min, move_atr, trigger_atr):
     import pandas as pd, numpy as np, datetime as dt
@@ -1962,7 +1960,7 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
         fig.update_layout(height=260, margin=dict(l=8, r=8, t=6, b=6),
                           xaxis_title=None, yaxis_title="Daily return (%)",
                           legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0))
-        st.plotly_chart(fig, config={**PLOTLY_CONFIG, "responsive": True})
+        st.plotly_chart(fig, config={**PLOTLY_CONFIG, "responsive": True}, use_container_width=True)
 
         # ── Bottom BAR CHART (daily close-of-business return summary) ───────
         daily_summary = (
@@ -2023,7 +2021,7 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
             xaxis_title=None, yaxis_title="Daily return (%)",
             legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0)
         )
-        st.plotly_chart(fig, config={**PLOTLY_CONFIG, "responsive": True})
+        st.plotly_chart(fig, config={**PLOTLY_CONFIG, "responsive": True}, use_container_width=True)
 
         # ── Bottom BAR CHART (daily close-of-business) ───────────────────────
         x_dates = merged["date"]
@@ -2962,7 +2960,7 @@ def render_portfolio_equity_chart(api: Optional[REST]) -> dict:
         fig.update_yaxes(tickformat="$,.0f")
 
     # --- Render chart ---
-    st.plotly_chart(fig, config={**PLOTLY_CONFIG, "responsive": True})
+    st.plotly_chart(fig, config={**PLOTLY_CONFIG, "responsive": True}, use_container_width=True)
 
     # === Quick summary stats ===
     chg_pct = float(df["ret_pct"].iloc[-1]) if len(df) else float("nan")
@@ -3312,7 +3310,7 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
             height=180, margin=dict(l=8, r=8, t=6, b=6), showlegend=False,
             xaxis=dict(visible=False), yaxis_title="Δ equity (%)"
         )
-        st.plotly_chart(fig_roll, config={**PLOTLY_CONFIG, "responsive": True})
+        st.plotly_chart(fig_roll, config={**PLOTLY_CONFIG, "responsive": True}, use_container_width=True)
 
         # summary chips + one-line explanation UNDER the sparkline
         mu  = roll_stats["roll_mean"]
@@ -3388,7 +3386,7 @@ def render_broker_balances(acct: dict) -> None:
     if acct.get("margin_util_pct") is not None:
         st.plotly_chart(_banded_gauge(float(acct["margin_util_pct"]), "Margin Utilization",
                                       bands=(25, 50, 100), good="low"),
-                        width='stretch', config={**PLOTLY_CONFIG, "responsive": True})
+                        width='stretch', config={**PLOTLY_CONFIG, "responsive": True}, use_container_width=True)
         st.caption("= Maintenance margin ÷ equity. Lower is safer.")
 
 # =============================================================================

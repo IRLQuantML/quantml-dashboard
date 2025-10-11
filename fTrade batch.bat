@@ -2,7 +2,7 @@
 setlocal
 
 REM === Path & env ===
-cd /d D:\QuantML\VS_QuantML_PROD
+cd /d D:\QuantML\VS_QuantML_PROD_US
 if exist "venv\Scripts\activate.bat" call "venv\Scripts\activate.bat"
 
 REM === Prefer config over any args inside the script ===
