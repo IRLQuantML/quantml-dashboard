@@ -1,0 +1,62 @@
+2025-10-14 10:24:37,526 | INFO | ARGV → d:/QuantML/VS_QuantML_PROD_US/fATR_trading.py
+2025-10-14 10:24:37,526 | INFO | 🔧 Using config file: d:\QuantML\VS_QuantML_PROD_US\config.py
+2025-10-14 10:24:37,527 | INFO | CFG → mode=percent, pct_trigger=0.0300, pct_step=0.0100, atr_trigger=1.00, atr_step=0.50, max_mult=2.50, interval=120s
+2025-10-14 10:24:37,527 | INFO | ARGS → mode=None, pct_trigger=None, pct_step=None, atr_trigger=None, atr_step=None, max_mult=None, interval=None
+2025-10-14 10:24:37,527 | INFO | ✅ EFFECTIVE → mode=percent (profile), pct_trigger=0.0070, pct_step=0.0040, atr_trigger=0.25, atr_step=0.20, max_mult=2.50, interval=60s
+2025-10-14 10:24:42,608 | INFO | 🔍 Scanning 14 open positions: ALV, AMCR, AZO, ENR, F, HLN, MTX, NG, PSKY, SAP …
+2025-10-14 10:24:44,049 | INFO | 🔁 Reposted TP for ALV qty=2 @ 117.59
+2025-10-14 10:24:44,371 | WARNING | Failed to submit SL (retry) for ALV: invalid stop_price 116.35678100150065. sub-penny increment does not fulfill minimum pricing criteria
+2025-10-14 10:24:44,797 | WARNING | TP submit failed for ALV: invalid limit_price 117.58321899849935. sub-penny increment does not fulfill minimum pricing criteria
+2025-10-14 10:24:44,909 | WARNING | SL not fully ensured for ALV, but some SL qty exists — proceeding.
+2025-10-14 10:24:45,021 | INFO | └─ ALV: reason=unfavorable_or_flat delta=-1.401935
+2025-10-14 10:24:45,889 | WARNING | No free qty for new TP on AMCR — existing exits consume the position.
+2025-10-14 10:24:46,002 | INFO | └─ AMCR: pct_move=0.2254 trigger_pct=0.007 reason=trigger_not_met
+2025-10-14 10:24:46,652 | INFO | Single-share position for AZO — skipping TP to preserve SL safety.
+2025-10-14 10:24:46,763 | INFO | └─ AZO: reason=unfavorable_or_flat delta=-35.03
+2025-10-14 10:24:48,062 | INFO | 🔁 Reposted TP for ENR qty=2 @ 23.95
+2025-10-14 10:24:48,380 | WARNING | Failed to submit SL (retry) for ENR: invalid stop_price 23.56620695729615. sub-penny increment does not fulfill minimum pricing criteria
+2025-10-14 10:24:48,801 | WARNING | TP submit failed for ENR: invalid limit_price 23.94379304270385. sub-penny increment does not fulfill minimum pricing criteria
+2025-10-14 10:24:48,910 | WARNING | SL not fully ensured for ENR, but some SL qty exists — proceeding.
+2025-10-14 10:24:49,021 | INFO | └─ ENR: reason=unfavorable_or_flat delta=-0.074254
+2025-10-14 10:24:50,312 | WARNING | TP reduce failed for F: potential wash trade detected. use complex orders
+2025-10-14 10:24:50,737 | WARNING | TP submit failed for F: invalid limit_price 11.462976251642822. sub-penny increment does not fulfill minimum pricing criteria
+2025-10-14 10:24:50,849 | WARNING | SL not fully ensured for F, but some SL qty exists — proceeding.
+2025-10-14 10:24:50,960 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.82384 min_abs=0.05 min_rel=0.001
+2025-10-14 10:24:52,253 | WARNING | TP reduce failed for HLN: potential wash trade detected. use complex orders
+2025-10-14 10:24:52,678 | WARNING | TP submit failed for HLN: invalid limit_price 9.0175. sub-penny increment does not fulfill minimum pricing criteria
+2025-10-14 10:24:52,787 | WARNING | SL not fully ensured for HLN, but some SL qty exists — proceeding.
+2025-10-14 10:24:52,897 | INFO | └─ HLN: reason=unfavorable_or_flat delta=-0.042873
+2025-10-14 10:24:54,190 | INFO | 🔁 Reposted TP for MTX qty=18 @ 59.19
+2025-10-14 10:24:54,515 | WARNING | Failed to submit SL (retry) for MTX: invalid stop_price 58.59948879581554. sub-penny increment does not fulfill minimum pricing criteria
+2025-10-14 10:24:54,941 | WARNING | TP submit failed for MTX: invalid limit_price 59.18051120418446. sub-penny increment does not fulfill minimum pricing criteria
+2025-10-14 10:24:55,052 | WARNING | SL not fully ensured for MTX, but some SL qty exists — proceeding.
+2025-10-14 10:24:55,161 | INFO | └─ MTX: reason=unfavorable_or_flat delta=-0.76
+2025-10-14 10:24:56,018 | WARNING | No free qty for new TP on NG — existing exits consume the position.
+2025-10-14 10:24:56,126 | INFO | └─ NG: reason=unfavorable_or_flat delta=0.0
+2025-10-14 10:24:56,977 | WARNING | No free qty for new TP on PSKY — existing exits consume the position.
+2025-10-14 10:24:57,088 | INFO | └─ PSKY: dir=SHORT entry=17.326452 live=17.095 delta=0.231452 cur_tp=11.33 new_tp=11.26162 capped=False step_type=% step_pct=0.004 pct_move=1.3358 step_value_abs=0.06838
+2025-10-14 10:24:57,416 | INFO | ⬆️ Replaced TP for PSKY SHORT → 11.26
+2025-10-14 10:24:57,617 | INFO | └─ PSKY: tp_parent_id=None tp_qty_hint=1 tp_coid_prefix=62ccb730-cf73-4762-b23e-67b2278850b4
+2025-10-14 10:24:57,831 | INFO | 🔒 Replaced SL for PSKY SHORT → 17.22
+2025-10-14 10:24:58,797 | WARNING | No free qty for new TP on SAP — existing exits consume the position.
+2025-10-14 10:24:58,906 | INFO | └─ SAP: dir=LONG entry=267.341429 live=269.75 delta=2.408571 cur_tp=272.688258 new_tp=273.767258 capped=False step_type=% step_pct=0.004 pct_move=0.9009 step_value_abs=1.079
+2025-10-14 10:24:59,116 | WARNING | No open TP order found for SAP (LONG) — cannot amend TP.
+2025-10-14 10:24:59,225 | WARNING | No free qty for new TP on SAP — existing exits consume the position.
+2025-10-14 10:24:59,979 | INFO | Single-share position for TDG — skipping TP to preserve SL safety.
+2025-10-14 10:25:00,088 | INFO | └─ TDG: pct_move=0.1721 trigger_pct=0.007 reason=trigger_not_met
+2025-10-14 10:25:01,386 | WARNING | TP reduce failed for TSCO: potential wash trade detected. use complex orders
+2025-10-14 10:25:01,818 | WARNING | TP submit failed for TSCO: invalid limit_price 54.63375000786952. sub-penny increment does not fulfill minimum pricing criteria
+2025-10-14 10:25:01,928 | WARNING | SL not fully ensured for TSCO, but some SL qty exists — proceeding.
+2025-10-14 10:25:02,043 | INFO | └─ TSCO: reason=unfavorable_or_flat delta=-0.66902
+2025-10-14 10:25:02,902 | WARNING | Failed to submit SL for VTRS: invalid stop_price 9.9075. sub-penny increment does not fulfill minimum pricing criteria
+2025-10-14 10:25:03,441 | WARNING | TP reduce failed for VTRS: potential wash trade detected. use complex orders
+2025-10-14 10:25:03,877 | WARNING | TP submit failed for VTRS: invalid limit_price 9.7825. sub-penny increment does not fulfill minimum pricing criteria
+2025-10-14 10:25:03,989 | WARNING | SL not fully ensured for VTRS, but some SL qty exists — proceeding.
+2025-10-14 10:25:04,100 | INFO | └─ VTRS: reason=tp_step_too_small cur_tp=9.830585 new_tp=9.791205 min_abs=0.05 min_rel=0.001
+2025-10-14 10:25:05,399 | WARNING | TP reduce failed for WBD: potential wash trade detected. use complex orders
+2025-10-14 10:25:05,829 | WARNING | TP submit failed for WBD: invalid limit_price 17.531966267134973. sub-penny increment does not fulfill minimum pricing criteria
+2025-10-14 10:25:05,937 | WARNING | SL not fully ensured for WBD, but some SL qty exists — proceeding.
+2025-10-14 10:25:06,049 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.39
+2025-10-14 10:25:09,155 | INFO | 📈 Cycle result: extended=1, skipped=13
+2025-10-14 10:25:13,962 | INFO | 🏥 Healthcheck(close) done — fixed=0, missing_sl=0, missing_tp=0
+2025-10-14 10:25:13,963 | INFO | 🔔 Market closed — stopping monitor loop.

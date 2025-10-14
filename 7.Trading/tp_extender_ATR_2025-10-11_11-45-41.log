@@ -1,0 +1,34 @@
+2025-10-11 11:45:41,896 | INFO | ARGV → fATR_trading.py
+2025-10-11 11:45:41,897 | INFO | 🔧 Using config file: D:\QuantML\VS_QuantML_PROD_US\config.py
+2025-10-11 11:45:41,897 | INFO | CFG → mode=percent, pct_trigger=0.0300, pct_step=0.0100, atr_trigger=1.00, atr_step=0.50, max_mult=2.50, interval=120s
+2025-10-11 11:45:41,897 | INFO | ARGS → mode=None, pct_trigger=None, pct_step=None, atr_trigger=None, atr_step=None, max_mult=None, interval=None
+2025-10-11 11:45:41,897 | INFO | ✅ EFFECTIVE → mode=percent (profile), pct_trigger=0.0070, pct_step=0.0040, atr_trigger=0.25, atr_step=0.20, max_mult=2.50, interval=60s
+2025-10-11 11:45:47,002 | INFO | 🔍 Scanning 7 open positions: AMCR, F, GS, HPQ, PSKY, VTRS, WBD
+2025-10-11 11:45:47,762 | INFO | └─ AMCR: pct_move=0.6627 trigger_pct=0.007 reason=trigger_not_met
+2025-10-11 11:45:48,424 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.82428 min_abs=0.05 min_rel=0.001
+2025-10-11 11:45:49,163 | WARNING | Could not cancel order 85c4013c-61e7-4108-9a2c-40f46b6415ee for GS: order pending cancel
+2025-10-11 11:45:49,164 | WARNING | Proceeding with SL→TP rebalance even though SL still appears open for GS.
+2025-10-11 11:45:49,545 | WARNING | No free qty for new TP on GS after SL rebalance (pos=1).
+2025-10-11 11:45:49,823 | INFO | └─ GS: dir=SHORT entry=775.952857 live=764.77 delta=11.182857 cur_tp=760.4338 new_tp=757.37472 capped=False step_type=% step_pct=0.004 pct_move=1.4412 step_value_abs=3.05908
+2025-10-11 11:45:50,006 | WARNING | No open TP order found for GS (SHORT) — cannot amend TP.
+2025-10-11 11:45:50,007 | INFO | Single-share position for GS — skipping TP create to preserve SL safety.
+2025-10-11 11:45:50,748 | WARNING | Could not cancel order 8f4bd403-81fa-4084-a2de-a9a0dbc2b1c9 for HPQ: order pending cancel
+2025-10-11 11:45:50,748 | WARNING | Proceeding with SL→TP rebalance even though SL still appears open for HPQ.
+2025-10-11 11:45:51,130 | WARNING | No free qty for new TP on HPQ after SL rebalance (pos=1).
+2025-10-11 11:45:51,407 | INFO | └─ HPQ: dir=SHORT entry=26.83 live=25.56 delta=1.27 cur_tp=26.2934 new_tp=26.19116 capped=False step_type=% step_pct=0.004 pct_move=4.7335 step_value_abs=0.10224
+2025-10-11 11:45:51,587 | WARNING | No open TP order found for HPQ (SHORT) — cannot amend TP.
+2025-10-11 11:45:51,587 | INFO | Single-share position for HPQ — skipping TP create to preserve SL safety.
+2025-10-11 11:45:52,247 | INFO | └─ PSKY: dir=SHORT entry=17.82 live=17.005 delta=0.815 cur_tp=11.4 new_tp=11.33198 capped=False step_type=% step_pct=0.004 pct_move=4.5735 step_value_abs=0.06802
+2025-10-11 11:45:52,517 | WARNING | replace_order failed for PSKY: order already pending replacement — falling back to cancel+submit
+2025-10-11 11:45:52,604 | WARNING | Could not cancel existing TP for PSKY: order pending replacement
+2025-10-11 11:45:53,262 | INFO | └─ VTRS: reason=tp_step_too_small cur_tp=9.38 new_tp=9.34108 min_abs=0.05 min_rel=0.001
+2025-10-11 11:45:53,918 | INFO | └─ WBD: dir=SHORT entry=17.37 live=17.115 delta=0.255 cur_tp=15.23 new_tp=15.16154 capped=False step_type=% step_pct=0.004 pct_move=1.468 step_value_abs=0.06846
+2025-10-11 11:45:54,192 | WARNING | replace_order failed for WBD: order already pending replacement — falling back to cancel+submit
+2025-10-11 11:45:54,281 | WARNING | Could not cancel existing TP for WBD: order pending replacement
+2025-10-11 11:45:55,653 | INFO | 📈 Cycle result: extended=0, skipped=7
+2025-10-11 11:45:56,877 | WARNING | No free qty for new SL on GS — TP/SL legs already reserve 1 of 1.
+2025-10-11 11:45:57,060 | WARNING | Rebalance requested, but no TP found to reduce for GS.
+2025-10-11 11:45:57,622 | WARNING | No free qty for new SL on HPQ — TP/SL legs already reserve 1 of 1.
+2025-10-11 11:45:57,812 | WARNING | Rebalance requested, but no TP found to reduce for HPQ.
+2025-10-11 11:45:58,760 | INFO | 🏥 Healthcheck(close) done — fixed=0, missing_sl=0, missing_tp=0
+2025-10-11 11:45:58,760 | INFO | 🔔 Market closed — stopping monitor loop.

@@ -3339,21 +3339,38 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
             config={**PLOTLY_CONFIG, "responsive": True}
         )
 
-    # ====================== Compact caption: QuantML vs SPY ======================
-    qm_txt = f"<span style='color:{BRAND['accent']};font-weight:800;font-size:1.6rem;'>QuantML {day_pl_pct:+.2f}%</span>" \
-             if np.isfinite(day_pl_pct) else f"<span style='color:{BRAND['accent']};font-weight:800;font-size:1.6rem;'>QuantML —</span>"
-    spy_txt = f"<span style='color:{BRAND['primary']};font-weight:800;font-size:1.6rem;'>SPY {spy_intraday_pct:+.2f}%</span>" \
-              if np.isfinite(spy_intraday_pct) else f"<span style='color:{BRAND['primary']};font-weight:800;font-size:1.6rem;'>SPY —</span>"
+# ====================== Compact caption: Open Positions vs SPY ======================
+def _signed_pct(v):
+    return f"{v:+.2f}%" if (v is not None and np.isfinite(v)) else "—"
 
-    st.markdown(
-        f"""
-        <div style='text-align:center;margin-top:12px;margin-bottom:4px;'>
-            {qm_txt} &nbsp;&nbsp;vs&nbsp;&nbsp; {spy_txt}<br>
-            <span style='font-size:1.1rem;color:#64748B;'>(intraday, regular session only)</span>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+def _col(v):
+    # green if >= 0, else red
+    if v is None or not np.isfinite(v):
+        return "#6B7280"  # neutral grey if missing
+    return BRAND["success"] if v >= 0 else BRAND["danger"]
+
+open_pos_pct = today_total_pl_pct  # already computed above
+spy_pct      = spy_intraday_pct    # already computed above
+
+open_html = (
+    f"<span style='color:{_col(open_pos_pct)};font-weight:800;font-size:1.6rem;'>"
+    f"Open&nbsp;Positions {_signed_pct(open_pos_pct)}</span>"
+)
+
+spy_html = (
+    f"<span style='color:{_col(spy_pct)};font-weight:800;font-size:1.6rem;'>"
+    f"SPY {_signed_pct(spy_pct)}</span>"
+)
+
+st.markdown(
+    f"""
+    <div style='text-align:center;margin-top:12px;margin-bottom:4px;'>
+        {open_html} &nbsp;&nbsp;vs&nbsp;&nbsp; {spy_html}<br>
+        <span style='font-size:1.1rem;color:#64748B;'>(intraday, regular session only)</span>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 def render_broker_balances(acct: dict) -> None:
     st.subheader("Broker Balance & Buying Power (Alpaca)")

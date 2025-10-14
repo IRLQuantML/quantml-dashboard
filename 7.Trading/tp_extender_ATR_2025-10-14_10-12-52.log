@@ -1,0 +1,109 @@
+2025-10-14 10:12:52,876 | INFO | ARGV → d:/QuantML/VS_QuantML_PROD_US/fATR_trading.py
+2025-10-14 10:12:52,876 | INFO | 🔧 Using config file: d:\QuantML\VS_QuantML_PROD_US\config.py
+2025-10-14 10:12:52,876 | INFO | CFG → mode=percent, pct_trigger=0.0300, pct_step=0.0100, atr_trigger=1.00, atr_step=0.50, max_mult=2.50, interval=120s
+2025-10-14 10:12:52,876 | INFO | ARGS → mode=None, pct_trigger=None, pct_step=None, atr_trigger=None, atr_step=None, max_mult=None, interval=None
+2025-10-14 10:12:52,876 | INFO | ✅ EFFECTIVE → mode=percent (profile), pct_trigger=0.0070, pct_step=0.0040, atr_trigger=0.25, atr_step=0.20, max_mult=2.50, interval=60s
+2025-10-14 10:12:58,088 | INFO | 🔍 Scanning 14 open positions: ALV, AMCR, AZO, ENR, F, HLN, MTX, NG, PSKY, SAP …
+2025-10-14 10:12:58,888 | WARNING | replace_order failed for ALV: order parameters are not changed — falling back to cancel+submit
+2025-10-14 10:12:59,099 | WARNING | submit_order doesn't support reduce_only in this SDK; retrying without it (was True).
+2025-10-14 10:12:59,208 | INFO | ⬆️ Extended TP (new order) for ALV LONG → 117.59 (qty=6)
+2025-10-14 10:12:59,626 | WARNING | No free qty for new SL on ALV — TP/SL legs already reserve 6.0 of 6.0.
+2025-10-14 10:13:00,155 | INFO | 🔁 Reposted TP for ALV qty=3 @ 117.59
+2025-10-14 10:13:00,583 | INFO | 🆕 Created SL for ALV qty=3 @ 116.35
+2025-10-14 10:13:00,692 | INFO | └─ ALV: reason=unfavorable_or_flat delta=-1.401935
+2025-10-14 10:13:01,224 | WARNING | No open TP order found for AMCR (SHORT) — cannot amend TP.
+2025-10-14 10:13:01,333 | WARNING | No free qty for new TP on AMCR — existing exits consume the position.
+2025-10-14 10:13:01,658 | WARNING | No free qty for new SL on AMCR — TP/SL legs already reserve 244.0 of 244.0.
+2025-10-14 10:13:01,869 | WARNING | Rebalance requested, but no TP found to reduce for AMCR.
+2025-10-14 10:13:03,198 | WARNING | No free qty for new SL on AMCR — TP/SL legs already reserve 244.0 of 244.0.
+2025-10-14 10:13:03,418 | WARNING | Rebalance requested, but no TP found to reduce for AMCR.
+2025-10-14 10:13:03,527 | CRITICAL | 🛡️ Failsafe: could not place SL for AMCR after freeing. Investigate immediately.
+2025-10-14 10:13:03,640 | INFO | └─ AMCR: pct_move=0.2254 trigger_pct=0.007 reason=trigger_not_met
+2025-10-14 10:13:04,179 | WARNING | No open TP order found for AZO (LONG) — cannot amend TP.
+2025-10-14 10:13:04,180 | INFO | Single-share position for AZO — skipping TP create to preserve SL safety.
+2025-10-14 10:13:04,401 | WARNING | No free qty for new SL on AZO — TP/SL legs already reserve 1.0 of 1.0.
+2025-10-14 10:13:04,617 | WARNING | Rebalance requested, but no TP found to reduce for AZO.
+2025-10-14 10:13:05,949 | WARNING | No free qty for new SL on AZO — TP/SL legs already reserve 1.0 of 1.0.
+2025-10-14 10:13:06,165 | WARNING | Rebalance requested, but no TP found to reduce for AZO.
+2025-10-14 10:13:06,275 | CRITICAL | 🛡️ Failsafe: could not place SL for AZO after freeing. Investigate immediately.
+2025-10-14 10:13:06,384 | INFO | └─ AZO: reason=unfavorable_or_flat delta=-35.03
+2025-10-14 10:13:07,034 | INFO | ⬆️ Replaced TP for ENR LONG → 23.95
+2025-10-14 10:13:07,461 | WARNING | No free qty for new SL on ENR — TP/SL legs already reserve 5.0 of 5.0.
+2025-10-14 10:13:08,205 | INFO | 🔁 Reposted TP for ENR qty=3 @ 23.95
+2025-10-14 10:13:08,646 | INFO | 🆕 Created SL for ENR qty=2 @ 23.56
+2025-10-14 10:13:08,755 | INFO | └─ ENR: reason=unfavorable_or_flat delta=-0.074254
+2025-10-14 10:13:09,406 | INFO | ⬆️ Replaced TP for F SHORT → 11.46
+2025-10-14 10:13:10,111 | WARNING | Failed to submit SL for F: insufficient qty available for order (requested: 114, available: 0)
+2025-10-14 10:13:10,442 | WARNING | Failed to submit SL (retry) for F: insufficient qty available for order (requested: 205, available: 0)
+2025-10-14 10:13:10,770 | ERROR | Failed to submit SL (retry) for F: insufficient qty available for order (requested: 205, available: 0)
+2025-10-14 10:13:12,212 | WARNING | Failed to submit SL for F: insufficient qty available for order (requested: 205, available: 0)
+2025-10-14 10:13:12,538 | WARNING | Failed to submit SL (retry) for F: insufficient qty available for order (requested: 205, available: 0)
+2025-10-14 10:13:12,867 | ERROR | Failed to submit SL (retry) for F: insufficient qty available for order (requested: 205, available: 0)
+2025-10-14 10:13:12,977 | CRITICAL | 🛡️ Failsafe: could not place SL for F after freeing. Investigate immediately.
+2025-10-14 10:13:13,088 | INFO | └─ F: reason=tp_step_too_small cur_tp=10.87 new_tp=10.82384 min_abs=0.05 min_rel=0.001
+2025-10-14 10:13:13,738 | INFO | ⬆️ Replaced TP for HLN SHORT → 9.01
+2025-10-14 10:13:14,265 | WARNING | Failed to submit SL for HLN: insufficient qty available for order (requested: 221, available: 0)
+2025-10-14 10:13:14,595 | WARNING | Failed to submit SL (retry) for HLN: insufficient qty available for order (requested: 221, available: 0)
+2025-10-14 10:13:14,924 | ERROR | Failed to submit SL (retry) for HLN: insufficient qty available for order (requested: 221, available: 0)
+2025-10-14 10:13:16,369 | WARNING | Failed to submit SL for HLN: insufficient qty available for order (requested: 221, available: 0)
+2025-10-14 10:13:16,698 | WARNING | Failed to submit SL (retry) for HLN: insufficient qty available for order (requested: 221, available: 0)
+2025-10-14 10:13:17,024 | ERROR | Failed to submit SL (retry) for HLN: insufficient qty available for order (requested: 221, available: 0)
+2025-10-14 10:13:17,134 | CRITICAL | 🛡️ Failsafe: could not place SL for HLN after freeing. Investigate immediately.
+2025-10-14 10:13:17,242 | INFO | └─ HLN: reason=unfavorable_or_flat delta=-0.042873
+2025-10-14 10:13:17,895 | INFO | ⬆️ Replaced TP for MTX LONG → 59.19
+2025-10-14 10:13:18,421 | WARNING | Failed to submit SL for MTX: insufficient qty available for order (requested: 23, available: 0)
+2025-10-14 10:13:18,747 | WARNING | Failed to submit SL (retry) for MTX: insufficient qty available for order (requested: 23, available: 0)
+2025-10-14 10:13:19,076 | ERROR | Failed to submit SL (retry) for MTX: insufficient qty available for order (requested: 23, available: 0)
+2025-10-14 10:13:20,517 | WARNING | Failed to submit SL for MTX: insufficient qty available for order (requested: 23, available: 0)
+2025-10-14 10:13:20,845 | WARNING | Failed to submit SL (retry) for MTX: insufficient qty available for order (requested: 23, available: 0)
+2025-10-14 10:13:21,173 | ERROR | Failed to submit SL (retry) for MTX: insufficient qty available for order (requested: 23, available: 0)
+2025-10-14 10:13:21,282 | CRITICAL | 🛡️ Failsafe: could not place SL for MTX after freeing. Investigate immediately.
+2025-10-14 10:13:21,391 | INFO | └─ MTX: reason=unfavorable_or_flat delta=-0.76
+2025-10-14 10:13:22,041 | INFO | ⬆️ Replaced TP for NG LONG → 10.13
+2025-10-14 10:13:22,466 | WARNING | No free qty for new SL on NG — TP/SL legs already reserve 87.0 of 87.0.
+2025-10-14 10:13:23,211 | INFO | 🔁 Reposted TP for NG qty=1 @ 10.13
+2025-10-14 10:13:23,640 | INFO | 🆕 Created SL for NG qty=43 @ 9.87
+2025-10-14 10:13:23,752 | INFO | └─ NG: reason=unfavorable_or_flat delta=0.0
+2025-10-14 10:13:24,401 | INFO | ⬆️ Replaced TP for PSKY SHORT → 16.85
+2025-10-14 10:13:24,820 | WARNING | No free qty for new SL on PSKY — TP/SL legs already reserve 31.0 of 31.0.
+2025-10-14 10:13:28,521 | INFO | 🆕 Created SL for PSKY qty=15 @ 17.34
+2025-10-14 10:13:28,632 | INFO | └─ PSKY: dir=SHORT entry=17.326452 live=17.095 delta=0.231452 cur_tp=11.4 new_tp=11.33162 capped=False step_type=% step_pct=0.004 pct_move=1.3358 step_value_abs=0.06838
+2025-10-14 10:13:28,950 | INFO | ⬆️ Replaced TP for PSKY SHORT → 11.33
+2025-10-14 10:13:29,151 | INFO | └─ PSKY: tp_parent_id=None tp_qty_hint=1 tp_coid_prefix=3d26cb81-9b2c-46bd-8dbd-1e5794d562ed
+2025-10-14 10:13:29,366 | INFO | 🔒 Replaced SL for PSKY SHORT → 17.28
+2025-10-14 10:13:30,133 | INFO | ⬆️ Replaced TP for SAP LONG → 270.93
+2025-10-14 10:13:30,555 | WARNING | No free qty for new SL on SAP — TP/SL legs already reserve 4.0 of 4.0.
+2025-10-14 10:13:31,416 | INFO | 🆕 Created SL for SAP qty=2 @ 268.57
+2025-10-14 10:13:31,526 | INFO | └─ SAP: dir=LONG entry=267.341429 live=269.75 delta=2.408571 cur_tp=272.688258 new_tp=273.767258 capped=False step_type=% step_pct=0.004 pct_move=0.9009 step_value_abs=1.079
+2025-10-14 10:13:31,742 | WARNING | No open TP order found for SAP (LONG) — cannot amend TP.
+2025-10-14 10:13:31,851 | WARNING | No free qty for new TP on SAP — existing exits consume the position.
+2025-10-14 10:13:32,503 | INFO | Single-share position for TDG — skipping TP amend to preserve SL safety.
+2025-10-14 10:13:32,723 | WARNING | No free qty for new SL on TDG — TP/SL legs already reserve 1.0 of 1.0.
+2025-10-14 10:13:34,637 | INFO | 🆕 Created SL for TDG qty=1 @ 1287.18
+2025-10-14 10:13:34,748 | INFO | └─ TDG: pct_move=0.1721 trigger_pct=0.007 reason=trigger_not_met
+2025-10-14 10:13:35,401 | INFO | ⬆️ Replaced TP for TSCO SHORT → 54.63
+2025-10-14 10:13:35,821 | WARNING | No free qty for new SL on TSCO — TP/SL legs already reserve 26.0 of 26.0.
+2025-10-14 10:13:37,201 | INFO | 🔁 Reposted TP for TSCO qty=13 @ 54.63
+2025-10-14 10:13:37,634 | INFO | 🆕 Created SL for TSCO qty=13 @ 55.23
+2025-10-14 10:13:37,746 | INFO | └─ TSCO: reason=unfavorable_or_flat delta=-0.66902
+2025-10-14 10:13:38,392 | INFO | ⬆️ Replaced TP for VTRS SHORT → 9.78
+2025-10-14 10:13:38,815 | WARNING | No free qty for new SL on VTRS — TP/SL legs already reserve 850.0 of 850.0.
+2025-10-14 10:13:42,519 | WARNING | SL create failed for VTRS (insufficient qty available for order (requested: 425, available: 297)). Retrying with fresh available qty…
+2025-10-14 10:13:42,735 | ERROR | Failed to create SL (retry) for VTRS: insufficient qty available for order (requested: 425, available: 297)
+2025-10-14 10:13:44,167 | WARNING | Failed to submit SL for VTRS: insufficient qty available for order (requested: 573, available: 297)
+2025-10-14 10:13:44,498 | WARNING | Failed to submit SL (retry) for VTRS: insufficient qty available for order (requested: 573, available: 297)
+2025-10-14 10:13:44,827 | ERROR | Failed to submit SL (retry) for VTRS: insufficient qty available for order (requested: 573, available: 297)
+2025-10-14 10:13:44,938 | CRITICAL | 🛡️ Failsafe: could not place SL for VTRS after freeing. Investigate immediately.
+2025-10-14 10:13:45,049 | INFO | └─ VTRS: reason=tp_step_too_small cur_tp=9.38 new_tp=9.34062 min_abs=0.05 min_rel=0.001
+2025-10-14 10:13:45,692 | INFO | ⬆️ Replaced TP for WBD SHORT → 17.53
+2025-10-14 10:13:46,220 | WARNING | Failed to submit SL for WBD: insufficient qty available for order (requested: 13, available: 0)
+2025-10-14 10:13:46,551 | WARNING | Failed to submit SL (retry) for WBD: insufficient qty available for order (requested: 13, available: 0)
+2025-10-14 10:13:46,881 | ERROR | Failed to submit SL (retry) for WBD: insufficient qty available for order (requested: 13, available: 0)
+2025-10-14 10:13:48,322 | WARNING | Failed to submit SL for WBD: insufficient qty available for order (requested: 13, available: 0)
+2025-10-14 10:13:48,647 | WARNING | Failed to submit SL (retry) for WBD: insufficient qty available for order (requested: 13, available: 0)
+2025-10-14 10:13:48,971 | ERROR | Failed to submit SL (retry) for WBD: insufficient qty available for order (requested: 13, available: 0)
+2025-10-14 10:13:49,082 | CRITICAL | 🛡️ Failsafe: could not place SL for WBD after freeing. Investigate immediately.
+2025-10-14 10:13:49,193 | INFO | └─ WBD: reason=unfavorable_or_flat delta=-0.39
+2025-10-14 10:13:52,299 | INFO | 📈 Cycle result: extended=1, skipped=13
+2025-10-14 10:13:57,101 | INFO | 🏥 Healthcheck(close) done — fixed=0, missing_sl=0, missing_tp=0
+2025-10-14 10:13:57,101 | INFO | 🔔 Market closed — stopping monitor loop.

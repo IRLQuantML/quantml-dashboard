@@ -1,0 +1,30 @@
+2025-10-13 18:01:47,893 | INFO | ARGV → fATR_trading.py
+2025-10-13 18:01:47,893 | INFO | 🔧 Using config file: D:\QuantML\VS_QuantML_PROD_US\config.py
+2025-10-13 18:01:47,893 | INFO | CFG → mode=percent, pct_trigger=0.0300, pct_step=0.0100, atr_trigger=1.00, atr_step=0.50, max_mult=2.50, interval=120s
+2025-10-13 18:01:47,893 | INFO | ARGS → mode=None, pct_trigger=None, pct_step=None, atr_trigger=None, atr_step=None, max_mult=None, interval=None
+2025-10-13 18:01:47,894 | INFO | ✅ EFFECTIVE → mode=percent (profile), pct_trigger=0.0070, pct_step=0.0040, atr_trigger=0.25, atr_step=0.20, max_mult=2.50, interval=60s
+2025-10-13 18:01:53,119 | INFO | 🔍 Scanning 15 open positions: ALV, AMCR, AZO, COST, ENR, F, HLN, MTX, NG, PSKY …
+2025-10-13 18:01:53,776 | INFO | ⬆️ Replaced TP for ALV LONG → 118.12
+2025-10-13 18:01:54,169 | WARNING | submit_order doesn't support reduce_only in this SDK; retrying without it (was True).
+2025-10-13 18:01:54,265 | WARNING | Failed to submit SL for ALV: insufficient qty available for order (requested: 4, available: 0)
+2025-10-13 18:01:54,556 | WARNING | Failed to submit SL (retry) for ALV: insufficient qty available for order (requested: 10, available: 0)
+2025-10-13 18:01:54,848 | ERROR | Failed to submit SL (retry) for ALV: insufficient qty available for order (requested: 10, available: 0)
+2025-10-13 18:01:56,234 | WARNING | Failed to submit SL for ALV: insufficient qty available for order (requested: 10, available: 0)
+2025-10-13 18:01:56,520 | WARNING | Failed to submit SL (retry) for ALV: insufficient qty available for order (requested: 10, available: 0)
+2025-10-13 18:01:56,804 | ERROR | Failed to submit SL (retry) for ALV: insufficient qty available for order (requested: 10, available: 0)
+2025-10-13 18:01:56,897 | CRITICAL | 🛡️ Failsafe: could not place SL for ALV after freeing. Investigate immediately.
+2025-10-13 18:01:56,991 | INFO | └─ ALV: reason=unfavorable_or_flat delta=-0.871935
+2025-10-13 18:01:57,558 | WARNING | replace_order failed for AMCR: order parameters are not changed — falling back to cancel+submit
+2025-10-13 18:01:57,748 | WARNING | No free qty for new TP on AMCR — existing exits consume the position.
+2025-10-13 18:01:58,125 | INFO | 🔒 Submitted SL for AMCR SHORT → 8.06 (qty=122)
+2025-10-13 18:01:58,221 | INFO | └─ AMCR: pct_move=0.1004 trigger_pct=0.007 reason=trigger_not_met
+2025-10-13 18:01:58,696 | WARNING | No open TP order found for AZO (LONG) — cannot amend TP.
+2025-10-13 18:01:58,696 | INFO | Single-share position for AZO — skipping TP create to preserve SL safety.
+2025-10-13 18:01:58,892 | WARNING | No free qty for new SL on AZO — TP/SL legs already reserve 1.0 of 1.0.
+2025-10-13 18:01:59,080 | WARNING | Rebalance requested, but no TP found to reduce for AZO.
+2025-10-13 18:02:00,371 | WARNING | No free qty for new SL on AZO — TP/SL legs already reserve 1.0 of 1.0.
+2025-10-13 18:02:00,559 | WARNING | Rebalance requested, but no TP found to reduce for AZO.
+2025-10-13 18:02:00,661 | CRITICAL | 🛡️ Failsafe: could not place SL for AZO after freeing. Investigate immediately.
+2025-10-13 18:02:00,757 | INFO | └─ AZO: reason=unfavorable_or_flat delta=-26.71
+2025-10-13 18:02:01,223 | INFO | Single-share position for COST — skipping TP amend to preserve SL safety.
+2025-10-13 18:02:01,412 | WARNING | No free qty for new SL on COST — TP/SL legs already reserve 1.0 of 1.0.

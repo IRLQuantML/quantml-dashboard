@@ -1,0 +1,70 @@
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\mking\AppData\Local\Programs\Python\Python313\Lib\logging\__init__.py", line 1154, in emit
+    stream.write(msg + self.terminator)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mking\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\U0001f680' in position 33: character maps to <undefined>
+Call stack:
+  File "D:\QuantML\VS_QuantML_PROD_US\fTrade.py", line 1218, in <module>
+    main()
+  File "D:\QuantML\VS_QuantML_PROD_US\fTrade.py", line 1190, in main
+    logging.info("\U0001f680 Starting trade execution | live=%s | dry_run=%s", USE_LIVE_TRADING, dry_run)
+Message: '\U0001f680 Starting trade execution | live=%s | dry_run=%s'
+Arguments: (False, False)
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\mking\AppData\Local\Programs\Python\Python313\Lib\logging\__init__.py", line 1154, in emit
+    stream.write(msg + self.terminator)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mking\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\U0001f4bc' in position 33: character maps to <undefined>
+Call stack:
+  File "D:\QuantML\VS_QuantML_PROD_US\fTrade.py", line 1218, in <module>
+    main()
+  File "D:\QuantML\VS_QuantML_PROD_US\fTrade.py", line 1194, in main
+    _print_account_summary(api)
+  File "D:\QuantML\VS_QuantML_PROD_US\fTrade.py", line 699, in _print_account_summary
+    logging.info(
+Message: '\U0001f4bc Alpaca Account | equity=%s | cash=%s | buying_power=%s | portfolio_value=%s'
+Arguments: ('98984.99', '130279.22', '329311.31', '98984.99')
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\mking\AppData\Local\Programs\Python\Python313\Lib\logging\__init__.py", line 1154, in emit
+    stream.write(msg + self.terminator)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mking\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\U0001f552' in position 33: character maps to <undefined>
+Call stack:
+  File "D:\QuantML\VS_QuantML_PROD_US\fTrade.py", line 1218, in <module>
+    main()
+  File "D:\QuantML\VS_QuantML_PROD_US\fTrade.py", line 1198, in main
+    logging.info("\U0001f552 Waiting for market open + %s min… (toggle with WAIT_FOR_OPEN)", WAIT_OPEN_OFFSET_MIN)
+Message: '\U0001f552 Waiting for market open + %s min… (toggle with WAIT_FOR_OPEN)'
+Arguments: (2,)
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\mking\AppData\Local\Programs\Python\Python313\Lib\logging\__init__.py", line 1154, in emit
+    stream.write(msg + self.terminator)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\mking\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\U0001f319' in position 33: character maps to <undefined>
+Call stack:
+  File "D:\QuantML\VS_QuantML_PROD_US\fTrade.py", line 1218, in <module>
+    main()
+  File "D:\QuantML\VS_QuantML_PROD_US\fTrade.py", line 1199, in main
+    wait_until_open_plus_offset(
+  File "D:\QuantML\VS_QuantML_PROD_US\fTrade.py", line 255, in wait_until_open_plus_offset
+    logging.info("\U0001f319 Market closed. Next open %s; waiting %s seconds until %s", next_open, int(secs), target)
+Message: '\U0001f319 Market closed. Next open %s; waiting %s seconds until %s'
+Arguments: (Timestamp('2025-10-13 13:30:00+0000', tz='UTC'), 96185, Timestamp('2025-10-13 13:32:00+0000', tz='UTC'))
+2025-10-12 11:49:24,385 | INFO | … 96155 sec remaining
+^C

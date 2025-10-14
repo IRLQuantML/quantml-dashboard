@@ -11,6 +11,7 @@ Run examples:
   python quantml_tp_extender.py --mode atr --trigger-atr 1.0 --step-atr 0.5
 """
 # --- Standard library ---
+from __future__ import annotations
 import os
 import sys
 import time
@@ -25,6 +26,9 @@ from decimal import Decimal, ROUND_FLOOR, ROUND_CEILING
 # --- Third-party ---
 import pandas as pd
 from alpaca_trade_api.rest import REST, TimeFrame
+from time import sleep
+from typing import Dict, Tuple, Optional
+from decimal import Decimal, ROUND_HALF_UP
 
 # Yahoo fallback (optional)
 try:
@@ -237,8 +241,293 @@ _replace_counts: dict[str, int] = {}
 
 from decimal import Decimal, ROUND_FLOOR, ROUND_CEILING
 
+# ---- helpers_brackets.py ----------------------------------------------------
+
+TICK = Decimal("0.01")  # you can map per-symbol tick sizes if needed
+CANCEL_POLL_SECS = 0.35
+CANCEL_POLL_MAX = 15      # ~5s total
+REPLACE_RETRY_MAX = 3
+POST_RETRY_MAX = 3
+SAFETY_EPS = Decimal("0.02")  # keep stops/limits away from last trade by 2c
+
+def d(x) -> Decimal:
+    return Decimal(str(x))
+
+def round_tick(price: Decimal, tick: Decimal=TICK) -> Decimal:
+    # Banker's rounding risks. Use HALF_UP to match most venues.
+    q = (price / tick).quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+    return (q * tick).quantize(tick)
+
+def fetch_orders_by_symbol(api, symbol: str) -> Dict[str, list]:
+    # Include 'open' and recent 'new'/'accepted' to catch in-flight orders
+    orders = api.list_orders(status="open", limit=200) or []
+    sym = symbol.upper()
+    tps, sls, others = [], [], []
+    for o in orders:
+        osym = (getattr(o, "symbol", None) or getattr(o, "asset_symbol", "")).upper()
+        if osym != sym:
+            continue
+        oc = getattr(o, "order_class", None) or getattr(o, "type", None) or ""
+        leg = getattr(o, "client_order_id", "") or ""
+        # Heuristics: TP leg often 'limit' with profit-ish price relative to side; SL is 'stop'/'stop_limit'
+        typ = (getattr(o, "type", "") or "").lower()
+        if "stop" in typ:
+            sls.append(o)
+        elif typ == "limit":
+            tps.append(o)
+        else:
+            others.append(o)
+    return {"tp": tps, "sl": sls, "other": others}
+
+def sum_reserved_qty(orders: list) -> int:
+    s = 0
+    for o in orders:
+        try:
+            s += int(getattr(o, "qty", None) or getattr(o, "quantity", 0) or 0)
+        except Exception:
+            pass
+    return s
+
+
+def manual_free_qty(position_qty: int, tp_orders: list, sl_orders: list) -> int:
+    # "reduce_only" emulation: free = pos - (tp+sl reserved)
+    reserved = sum_reserved_qty(tp_orders) + sum_reserved_qty(sl_orders)
+    free = max(0, int(position_qty) - reserved)
+    return free
+
+def replace_qty_price(api, order, new_qty: int=None, new_limit: Optional[Decimal]=None, new_stop: Optional[Decimal]=None):
+    # Prefer replace to avoid wash/self-trade + cancel races
+    payload = {}
+    if new_qty is not None:
+        payload["qty"] = int(new_qty)
+    if new_limit is not None:
+        payload["limit_price"] = float(new_limit)
+    if new_stop is not None:
+        payload["stop_price"]  = float(new_stop)
+    for _ in range(REPLACE_RETRY_MAX):
+        try:
+            return api.replace_order(order.id, **payload)
+        except Exception as e:
+            sleep(0.4)
+    raise RuntimeError("replace_order failed repeatedly")
+
+def ensure_min_move(old_px: Decimal, new_px: Decimal, min_abs: Decimal, min_rel: Decimal) -> Tuple[bool, Decimal]:
+    # returns (ok_to_move, rounded_new)
+    rounded = round_tick(new_px)
+    abs_ok = (old_px - rounded).copy_abs() >= min_abs
+    rel_ok = ((old_px - rounded).copy_abs() / (old_px.copy_abs() if old_px != 0 else Decimal("1"))) >= min_rel
+    return (abs_ok or rel_ok), rounded
+
+def free_and_post_sl(api, symbol: str, side: str, pos_qty: int, desired_qty: int, stop_price: Decimal) -> bool:
+    """Free qty by shrinking an existing TP if needed, then post SL."""
+    books = fetch_orders_by_symbol(api, symbol)
+    tps, sls = books["tp"], books["sl"]
+    free = manual_free_qty(pos_qty, tps, sls)
+    need = max(0, desired_qty - free)
+    # 1) shrink an existing TP if necessary
+    if need > 0 and tps:
+        # pick the largest TP to downsize
+        biggest = max(tps, key=lambda o: int(getattr(o, "qty", 0) or 0))
+        oldq = int(getattr(biggest, "qty", 0) or 0)
+        newq = max(0, oldq - need)
+        if newq == 0:
+            cancel_and_await(api, biggest.id)
+        else:
+            replace_qty_price(api, biggest, new_qty=newq)
+    # 2) (re)compute free and try SL
+    books = fetch_orders_by_symbol(api, symbol)
+    tps, sls = books["tp"], books["sl"]
+    free = manual_free_qty(pos_qty, tps, sls)
+    post_qty = min(desired_qty, free)
+    if post_qty <= 0:
+        return False
+    # post SL (simple stop or stop-limit; prefer stop to avoid wash-trade on thin names)
+    for _ in range(POST_RETRY_MAX):
+        try:
+            api.submit_order(
+                symbol=symbol,
+                side="sell" if side.lower()=="long" else "buy",
+                type="stop",
+                time_in_force="day",
+                qty=post_qty,
+                stop_price=float(round_tick(stop_price))
+            )
+            return True
+        except Exception as e:
+            sleep(0.5)
+    return False
+
+def sync_tp(api, symbol: str, side: str, pos_qty: int, target_limit: Decimal, desired_qty: int):
+    books = fetch_orders_by_symbol(api, symbol)
+    tps = books["tp"]
+    if tps:
+        # Replace the largest TP to target price & qty; leave others intact
+        largest = max(tps, key=lambda o: int(getattr(o, "qty", 0) or 0))
+        old_lim = d(getattr(largest, "limit_price", getattr(largest, "limit_price", 0)) or 0)
+        ok, new_px = ensure_min_move(old_lim if old_lim>0 else target_limit, target_limit, Decimal("0.05"), Decimal("0.001"))
+        if ok:
+            replace_qty_price(api, largest, new_qty=min(desired_qty, pos_qty), new_limit=new_px)
+        else:
+            # tiny move; skip
+            pass
+    else:
+        # No TP: just post one using available free qty
+        books = fetch_orders_by_symbol(api, symbol)
+        free = manual_free_qty(pos_qty, books["tp"], books["sl"])
+        post_qty = min(desired_qty, free if free>0 else pos_qty)  # fall back to pos if nothing reserved
+        if post_qty <= 0:
+            return
+        api.submit_order(
+            symbol=symbol,
+            side="sell" if side.lower()=="long" else "buy",
+            type="limit",
+            time_in_force="day",
+            qty=post_qty,
+            limit_price=float(round_tick(target_limit))
+        )
+
 def _tick_for_price(px: float) -> Decimal:
     return Decimal("0.01") if px >= 1 else Decimal("0.0001")
+
+def cancel_and_await(api, order_id: str, *, timeout_s: float = 2.5, poll_s: float = 0.1) -> bool:
+    """
+    Cancel an order once, then poll until it disappears or is marked canceled/expired/rejected/done/filled.
+    Returns True if confirmed not-active within timeout, else False.
+    """
+    try:
+        api.cancel_order(order_id)
+    except Exception as e:
+        logging.warning("cancel_order failed for %s: %s", order_id, e)
+
+    import time
+    t0 = time.time()
+    while time.time() - t0 < timeout_s:
+        try:
+            o = api.get_order_by_id(order_id)
+            st = str(getattr(o, "status", "")).lower()
+            if st in {"canceled", "expired", "rejected", "done_for_day", "filled"}:
+                return True
+        except Exception:
+            # Not found ⇒ treated as gone
+            return True
+        time.sleep(poll_s)
+    return False
+
+
+def _cancel_and_wait(api, order_id: str, symbol: str, side_exit: str,
+                     timeout_s: float = 2.5, poll_s: float = 0.1) -> bool:
+    """
+    Thin wrapper used elsewhere; delegates to cancel_and_await with logging.
+    """
+    ok = cancel_and_await(api, order_id, timeout_s=timeout_s, poll_s=poll_s)
+    if not ok:
+        logging.warning("Order %s for %s still visible after cancel timeout.", order_id, symbol)
+    return ok
+
+
+def _wait_until_not_pending(api, order_id: str, timeout_s: float = 2.5, poll_s: float = 0.1) -> bool:
+    """Wait until an order is no longer in a transient 'pending_*' state."""
+    t0 = time.time()
+    while time.time() - t0 < timeout_s:
+        try:
+            o = api.get_order_by_id(order_id)
+            st = str(getattr(o, "status", "")).lower()
+            if st not in {"pending_cancel", "pending_replace"}:
+                return True
+        except Exception:
+            return True  # not found → consider done
+        time.sleep(poll_s)
+    return False
+
+def _free_qty_for_tp(api, pos, sl_orders, tp_orders, profile_cfg) -> int:
+    """
+    Ensure some free qty exists to amend/create TP.
+    Strategy:
+      1) Trim SL down to BASELINE_SL_FRACTION (default ~0.60) if 100% consumed by exits.
+      2) If still no free qty, cancel and recreate SL at baseline with target fraction.
+    Returns estimated free qty after rebalance (0 if none).
+    """
+    qty_total = abs(int(float(getattr(pos, "qty", 0) or 0)))
+    if qty_total <= 0:
+        return 0
+
+    # compute currently-reserved qty
+    sl_reserved = sum(int(abs(float(getattr(o, "qty", 0) or 0))) for o in sl_orders)
+    tp_reserved = sum(int(abs(float(getattr(o, "qty", 0) or 0))) for o in tp_orders)
+    free_qty    = max(0, qty_total - sl_reserved - tp_reserved)
+    if free_qty > 0:
+        return free_qty
+
+    # target baseline fraction for SL (free the rest for TP)
+    target_frac = float(profile_cfg.get("BASELINE_SL_FRACTION", 0.60))
+    target_sl   = max(1, int(round(qty_total * target_frac)))
+    target_tp   = max(0, qty_total - target_sl)
+
+    # If current SL > target_sl -> reduce SL
+    # Simplest: cancel all SL orders and recreate a single SL for target_sl
+    for o in sl_orders:
+        _cancel_and_wait(api, getattr(o, "id", None), timeout_s=2.0, poll_s=0.1)
+    # Recreate SL at baseline price
+    side     = "LONG" if float(getattr(pos, "avg_entry_price", 0) or 0) <= float(getattr(pos, "market_value", 0) or 0) else "SHORT"
+    entry_px = float(getattr(pos, "avg_entry_price", 0) or 0)
+    atr      = float(getattr(pos, "atr_hint", 0) or 0)
+    symbol   = str(getattr(pos, "symbol", getattr(pos, "asset_symbol", "")))
+    baseline_sl_px = _compute_baseline_sl_price(side, entry_px, atr, profile_cfg)
+    if baseline_sl_px is not None and target_sl > 0:
+        _create_stop_loss(api, symbol, side, target_sl, baseline_sl_px)
+
+    # Free qty now equals target_tp (since TP was not re-created yet)
+    return target_tp
+
+def healthcheck_close(api, pos, profile_cfg):
+    """
+    Run at end-of-cycle / end-of-day to ensure exits coherent.
+    Avoid NameError: compute baseline SL locally and guard all None cases.
+    """
+    try:
+        symbol   = str(getattr(pos, "symbol", getattr(pos, "asset_symbol", "")))
+        side     = "LONG" if float(getattr(pos, "avg_entry_price", 0) or 0) <= float(getattr(pos, "market_value", 0) or 0) else "LONG"  # side may be on pos; keep your original logic here
+        entry_px = float(getattr(pos, "avg_entry_price", 0) or 0)
+        atr      = float(getattr(pos, "atr_hint", 0) or 0)  # however you compute/load ATR in your script
+
+        baseline_sl = _compute_baseline_sl_price(side, entry_px, atr, profile_cfg)
+
+        # fetch open orders / sanity
+        orders = api.list_orders(status="open", symbols=[symbol]) or []
+        sl_orders = [o for o in orders if getattr(o, "type", "").lower() == "stop" or "stop" in str(getattr(o, "order_class", "")).lower()]
+        tp_orders = [o for o in orders if getattr(o, "type", "").lower() == "limit" and "take" in str(getattr(o, "order_class", "")).lower()]
+
+        # if SL is missing and baseline exists → seed one
+        if not sl_orders and baseline_sl is not None:
+            qty = abs(int(float(getattr(pos, "qty", 0) or 0)))
+            if qty > 0:
+                _create_stop_loss(api, symbol, side, qty, baseline_sl)  # call your existing creator
+        # no exception thrown if baseline_sl is None — simply skip
+    except Exception as e:
+        print(f"WARNING | Healthcheck(close) error on {symbol}: {e}")
+
+def _compute_baseline_sl_price(side: str, entry: float, atr: float, cfg: dict) -> float | None:
+    """
+    Baseline SL from profile: ATR or percent. Returns price or None if disabled.
+    """
+    if not cfg.get("EXTENDER_BASE_SL_ENABLE", True):
+        return None
+    atr_mult = cfg.get("EXTENDER_BASE_SL_ATR_MULT")
+    pct      = cfg.get("EXTENDER_BASE_SL_PCT")
+    if atr_mult is None and pct is None:
+        return None
+
+    if atr_mult is not None and atr is not None:
+        if side == "LONG":
+            return max(0.01, entry - atr_mult * atr)
+        else:
+            return entry + atr_mult * atr
+    if pct is not None:
+        if side == "LONG":
+            return entry * (1.0 - float(pct))
+        else:
+            return entry * (1.0 + float(pct))
+    return None
 
 def _refresh_exits_from_baseline(api, pos, live_px: float, atr_val: float | None):
     """
@@ -488,6 +777,32 @@ def run_exits_healthcheck(api: REST, *, label: str = "open") -> None:
             if not live_px or not math.isfinite(live_px) or live_px <= 0:
                 _hc_log(sym, "skip_no_live_price")
                 continue
+
+            # --- NEW: compute baseline exits & ATR once per symbol ---
+            # resolve ATR (best-effort)
+            try:
+                atr_val, _atr_src = _resolve_atr_for_symbol(api, sym, {})
+            except Exception:
+                atr_val = None
+            eff_atr = None
+            try:
+                if atr_val and float(atr_val) > 0:
+                    eff_atr = max(float(atr_val), float(globals().get("ATR_DOLLAR_FLOOR", 0.0)))
+            except Exception:
+                eff_atr = None
+
+            # baseline offset: prefer ATR, else 1%
+            if eff_atr:
+                offset = float(globals().get("EXTENDER_BASE_SL_ATR_MULT", 0.35)) * eff_atr
+            else:
+                offset = 0.01 * float(live_px)
+
+            # direction / exit side
+            direction, side_exit = _position_side_and_exit(pos)
+
+            # baseline prices for this symbol
+            base_tp = (live_px + offset) if direction == "LONG" else (live_px - offset)
+            base_sl = (live_px - offset) if direction == "LONG" else (live_px + offset)
 
             # current exits
             tp_px = sl_px = None
@@ -922,7 +1237,13 @@ def _cancel_order_and_wait(api, order_id: str, symbol: str, side_exit: str,
     Returns True if it disappears within timeout, else False.
     """
     try:
-        api.cancel_order(order_id)
+        if not cancel_and_await(api, order_id):
+            logger.warning(f"Order {order_id} still visible; will replace instead of re-posting to avoid race.")
+            try:
+                replace_qty_price(api, existing_order, new_qty=smaller_qty)  # safer path
+            except Exception:
+                pass
+
     except Exception as e:
         logging.warning("Could not cancel order %s for %s: %s", order_id, symbol, e)
         return False
@@ -1065,9 +1386,44 @@ def _rebalance_tp_to_make_room_for_sl(
 
     avail = _available_exit_qty(api, symbol, side_exit, pos_qty)
     if avail <= 0:
-        logging.warning("No free qty for new SL on %s after TP rebalance (pos=%s).", symbol, pos_qty)
+        logging.warning("No free qty for new TP on %s — existing exits consume the position.", symbol)
+
+        # 🔧 Try to free qty by trimming SL if both legs consume the position
+        try:
+            sl_orders = [
+                o for o in (api.list_orders(status="open", nested=True) or [])
+                if str(getattr(o, "symbol", "")).upper() == symbol
+                and "stop" in str(getattr(o, "type", "")).lower()
+            ]
+            tp_orders = [
+                o for o in (api.list_orders(status="open", nested=True) or [])
+                if str(getattr(o, "symbol", "")).upper() == symbol
+                and "limit" in str(getattr(o, "type", "")).lower()
+            ]
+
+            # Use the dynamic free-qty helper
+            from math import isfinite
+            free_after = _free_qty_for_tp(api, pos, sl_orders, tp_orders, globals())
+
+            if free_after > 0 and isfinite(float(free_after)):
+                logging.info("♻️ Freed %s qty for TP on %s after SL rebalance.", free_after, symbol)
+                _submit_order_safe(
+                    api,
+                    symbol=symbol,
+                    qty=int(free_after),
+                    side=side_exit,
+                    type="limit",
+                    time_in_force="gtc",
+                    limit_price=rounded_tp,
+                    reduce_only=True,
+                )
+                logging.info("🆕 Created TP for %s (qty=%s)", symbol, free_after)
+                return True, None, int(free_after), None
+        except Exception as e:
+            logging.warning("Free-qty TP rebalance failed for %s: %s", symbol, e)
+
         _debug_dump_open_orders_for_symbol(api, symbol, side_exit)
-        return bool(ok_tp and False)
+        return False, None, None, None
 
     req_sl_qty = min(int(desired_sl_qty), int(avail))
     try:
@@ -1598,7 +1954,13 @@ def tighten_stop_loss_to_match_step(
 
     pos_qty = _position_qty_for_submit(pos)
     if pos_qty <= 0:
-        return False
+        logging.error("Cannot create TP for %s: position qty <= 0 (raw=%r)", symbol, getattr(pos, "qty", None))
+        return False, None, None, None
+
+    # NEW: single-share guard — prefer safety (SL) over TP when qty==1
+    if int(pos_qty) == 1:
+        logging.info("Single-share position for %s — skipping TP create to preserve SL safety.", symbol)
+        return False, None, None, None
 
     avail = _available_exit_qty(api, symbol, side_exit, pos_qty)
     if avail <= 0:
@@ -1859,6 +2221,37 @@ def _position_side_and_exit(pos):
     side_exit = "sell" if direction == "LONG" else "buy"
     return direction, side_exit
 
+def ensure_take_profit(api, symbol: str, desired_qty: int, tp_price: float, *, single_share_skip=True) -> bool:
+    """
+    Ensure a TP exists up to `desired_qty` *after* SL priority. Skips when it would remove SL protection.
+    """
+    pos_qty = _position_qty(api, symbol)
+    if pos_qty <= 0:
+        return True
+
+    if single_share_skip and pos_qty == 1:
+        logging.info("Single-share position for %s — skipping TP to preserve SL safety.", symbol)
+        return True
+
+    # After SL is ensured, compute what's left for TP
+    avail = _available_qty_now(api, symbol)
+    if avail <= 0:
+        logging.warning("No free qty for new TP on %s — existing exits consume the position.", symbol)
+        return False
+
+    req = _clamp_qty(min(desired_qty, pos_qty), avail)
+    if req <= 0:
+        return False
+
+    try:
+        api.submit_order(symbol=symbol, qty=req, side="sell", type="limit",
+                         time_in_force="gtc", limit_price=tp_price)
+        logging.info("⬆️ Created/Amended TP for %s qty=%s @ %s", symbol, req, tp_price)
+        return True
+    except Exception as e:
+        logging.warning("TP submit failed for %s: %s", symbol, e)
+        return False
+
 def evaluate_tp_extension(
     pos, live_px: float, atr_val: float, mode: str,
     trigger_pct: float, step_pct: float, trigger_atr: float, step_atr: float,
@@ -2029,6 +2422,152 @@ def evaluate_tp_extension(
         rsn["move_atr"] = round(move_atr, 4)
 
     return True, rsn, proposed
+
+def ensure_stop_loss(api, symbol: str, desired_qty: int, sl_price: float) -> bool:
+    """
+    Ensure an SL exists for `desired_qty`. If not enough free qty, reduce TP to free space.
+    Returns True if an SL exists after this call, else False (but never loops).
+    """
+    pos_qty = _position_qty(api, symbol)
+    if pos_qty <= 0:
+        logging.info("No position for %s — skip SL.", symbol)
+        return True
+
+    # If we already have any SLs, consider them sufficient when they cover full pos or desired qty
+    tps, sls = _list_open_exit_orders(api, symbol)
+    current_sl = _reserved_qty(sls)
+    if current_sl >= min(desired_qty, pos_qty):
+        return True
+
+    # Try with fresh available
+    avail = _available_qty_now(api, symbol)
+    want = min(desired_qty, pos_qty)
+    req = _clamp_qty(want - current_sl, avail)
+
+    if req > 0:
+        try:
+            api.submit_order(symbol=symbol, qty=req, side="sell", type="stop",
+                             time_in_force="gtc", stop_price=sl_price)
+            logging.info("🆕 Created SL for %s qty=%s @ %s", symbol, req, sl_price)
+            return True
+        except Exception as e:
+            logging.warning("Failed to submit SL for %s: %s", symbol, e)
+
+    # No free qty — attempt a single-shot TP reduction to free space
+    tps, sls = _list_open_exit_orders(api, symbol)
+    if not tps:
+        # Nothing to reduce: if SL already fully reserves pos, we’re fine; otherwise we cannot conjure qty.
+        if _reserved_qty(sls) >= pos_qty:
+            logging.info("SL-only bracket locking full position for %s — skipping TP and extra SL.", symbol)
+            return True
+        logging.warning("Rebalance requested, but no TP found to reduce for %s.", symbol)
+        return False
+
+    # Reduce a TP once to free the needed qty
+    tp_to_reduce = tps[0]
+    try:
+        tp_q = int(abs(int(getattr(tp_to_reduce, "qty", getattr(tp_to_reduce, "quantity", 0)))))
+    except Exception:
+        tp_q = 0
+
+    if tp_q <= 1:
+        logging.info("TP too small to reduce for %s — preserving SL priority.", symbol)
+        return False
+
+    # Cancel and re-post smaller TP
+    try:
+        oid = getattr(tp_to_reduce, "id", None)
+        if oid:
+            cancel_and_await(api, oid, timeout_s=2.5)
+        # Free exactly what we need
+        fresh_avail = _available_qty_now(api, symbol)
+        need = min(want - current_sl, pos_qty)
+        take_from_tp = min(tp_q, max(need - fresh_avail, 0))
+        new_tp_qty = max(tp_q - take_from_tp, 1)
+
+        # Repost TP at same limit price (or last known TP price if you have it)
+        tp_px = getattr(tp_to_reduce, "limit_price", None) or getattr(tp_to_reduce, "price", None)
+        if tp_px is None:
+            logging.warning("Missing TP price for %s — cannot repost TP cleanly.", symbol)
+        else:
+            api.submit_order(symbol=symbol, qty=new_tp_qty, side="sell", type="limit",
+                             time_in_force="gtc", limit_price=tp_px)
+            logging.info("🔁 Reposted TP for %s qty=%s @ %s", symbol, new_tp_qty, tp_px)
+    except Exception as e:
+        logging.warning("TP reduce failed for %s: %s", symbol, e)
+        return False
+
+    # Try SL again with fresh availability
+    fresh_avail = _available_qty_now(api, symbol)
+    req2 = _clamp_qty(min(want - current_sl, pos_qty), fresh_avail)
+    if req2 <= 0:
+        logging.warning("Still no free qty for new SL on %s after TP reduce.", symbol)
+        return False
+
+    try:
+        api.submit_order(symbol=symbol, qty=req2, side="sell", type="stop",
+                         time_in_force="gtc", stop_price=sl_price)
+        logging.info("🆕 Created SL for %s qty=%s @ %s", symbol, req2, sl_price)
+        return True
+    except Exception as e:
+        logging.warning("Failed to submit SL (retry) for %s: %s", symbol, e)
+        return False
+
+
+def _position_qty(api, symbol: str) -> int:
+    try:
+        p = api.get_position(symbol)
+        q = getattr(p, "qty", None)
+        if q is None:
+            q = getattr(p, "qty_available", None)
+        return int(abs(int(q))) if q is not None else 0
+    except Exception:
+        return 0
+
+
+def _list_open_exit_orders(api, symbol: str):
+    """
+    Returns two lists: (tps, sls) of open exit orders for symbol.
+    """
+    tps, sls = [], []
+    try:
+        for o in api.list_orders(status="open", limit=500) or []:
+            osym = getattr(o, "symbol", None) or getattr(o, "asset_symbol", None)
+            if (osym or "").upper() != symbol.upper():
+                continue
+            otype = str(getattr(o, "type", "")).lower()
+            # Parent/child tags vary; use side+type as fallback
+            if "take_profit" in (getattr(o, "order_class", "") or "").lower() or "take-profit" in otype or "limit" in otype:
+                tps.append(o)
+            if "stop_loss" in (getattr(o, "order_class", "") or "").lower() or "stop" in otype:
+                sls.append(o)
+    except Exception:
+        pass
+    return tps, sls
+
+
+def _reserved_qty(orders) -> int:
+    total = 0
+    for o in orders or []:
+        q = getattr(o, "qty", None) or getattr(o, "quantity", None)
+        try:
+            total += int(abs(int(q)))
+        except Exception:
+            continue
+    return total
+
+
+def _available_qty_now(api, symbol: str) -> int:
+    pos = _position_qty(api, symbol)
+    tps, sls = _list_open_exit_orders(api, symbol)
+    reserved = _reserved_qty(tps) + _reserved_qty(sls)
+    avail = max(pos - reserved, 0)
+    return avail
+
+
+def _clamp_qty(requested: int, available: int) -> int:
+    rq = max(int(requested), 0)
+    return min(rq, max(int(available), 0))
 
 def _position_qty_for_submit(pos) -> float:
     # Alpaca positions often expose qty as a string
@@ -2368,6 +2907,11 @@ def place_or_amend_tp(api, pos, new_tp):
             logging.error("Cannot create TP for %s: position qty <= 0 (raw=%r)", symbol, getattr(pos, "qty", None))
             return False, None, None, None
 
+        # Single-share policy: keep the SL, skip TP creation
+        if int(pos_qty) == 1:
+            logging.info("Single-share position for %s — skipping TP create to preserve SL safety.", symbol)
+            return False, None, None, None
+
         avail = _available_exit_qty(api, symbol, side_exit, pos_qty)
         if avail <= 0:
             logging.warning("No free qty for new TP on %s — existing exits consume the position.", symbol)
@@ -2404,6 +2948,11 @@ def place_or_amend_tp(api, pos, new_tp):
         logging.error("Failed to amend TP for %s: position qty <= 0 (raw=%r)", symbol, getattr(pos, "qty", None))
         return False, _parent_of(tp_order), _qty_of(tp_order), _coid_prefix(tp_order)
 
+    # NEW: single-share policy in amend path too
+    if int(pos_qty) == 1:
+        logging.info("Single-share position for %s — skipping TP amend to preserve SL safety.", symbol)
+        return False, _parent_of(tp_order), _qty_of(tp_order), _coid_prefix(tp_order)
+
     if REPLACE_ORDER_FIRST:
         try:
             api.replace_order(getattr(tp_order, "id", None), limit_price=rounded_tp)
@@ -2415,6 +2964,9 @@ def place_or_amend_tp(api, pos, new_tp):
                 pass
             return True, _parent_of(tp_order), _qty_of(tp_order), _coid_prefix(tp_order)
         except Exception as e:
+            msg = str(e).lower()
+            if "pending" in msg:
+                _wait_until_not_pending(api, getattr(tp_order, "id", None))
             logging.warning("replace_order failed for %s: %s — falling back to cancel+submit", symbol, e)
 
     # Cancel existing TP then submit a fresh one using remaining qty
@@ -2423,6 +2975,8 @@ def place_or_amend_tp(api, pos, new_tp):
     except Exception as e:
         logging.warning("Could not cancel existing TP for %s: %s", symbol, e)
         return False, _parent_of(tp_order), _qty_of(tp_order), _coid_prefix(tp_order)
+    # NEW: wait out pending-cancel/replace before continuing
+    _wait_until_not_pending(api, getattr(tp_order, "id", None))
 
     avail = _available_exit_qty(api, symbol, side_exit, pos_qty)
     if avail <= 0:
@@ -2733,6 +3287,7 @@ def run_tp_extender_pass(api: REST, mode: str, trigger_pct: float, step_pct: flo
     # --- ⏰ Market-close safety guard (skip updates after 15:55 ET) ---
     from datetime import datetime, time
     from zoneinfo import ZoneInfo
+    from time import sleep as _sleep
 
     now_et = datetime.now(ZoneInfo("US/Eastern")).time()
     if now_et >= time(15, 55):
@@ -2755,7 +3310,7 @@ def run_tp_extender_pass(api: REST, mode: str, trigger_pct: float, step_pct: flo
 
     # Build ATR hints once for the pass
     atr_hints = _build_atr_hints()
-    _fallback_cache = None
+    _fallback_cache = None  # (kept for compatibility if referenced downstream)
 
     # Get positions
     try:
@@ -2824,170 +3379,38 @@ def run_tp_extender_pass(api: REST, mode: str, trigger_pct: float, step_pct: flo
         tp_price = (live_px + offset) if direction == "LONG" else (live_px - offset)
         sl_price = (live_px - offset) if direction == "LONG" else (live_px + offset)
 
-        # 2) Baseline exit ensure — runs EVERY pass (even if TP hasn't ratcheted yet)
-        try:
-            if bool(globals().get("EXTENDER_BASE_SL_ENABLE", True)):
-                sl_order = _get_symbol_open_sl_order_by_relation(api, symbol, side_exit, live_px)
-                tp_order = _get_symbol_open_tp_order_by_relation(api, symbol, side_exit, live_px)
+        # --- Atomic TP/SL maintenance (ensure SL first, then TP) ---
+        pos_qty = _position_qty_for_submit(pos)
+        if pos_qty <= 0:
+            reason_log(symbol, reason="no_pos_qty")
+            continue
 
-                pos_qty = _position_qty_for_submit(pos)
-                avail0 = _available_exit_qty(api, symbol, side_exit, pos_qty) if pos_qty > 0 else 0
+        # Decide targets from the prices you already computed above
+        new_tp = tp_price
+        new_sl = sl_price
 
-                # a) Both exits missing → seed small TP first, then SL
-                if (tp_order is None) and (sl_order is None) and pos_qty > 0:
-                    base_sl_frac = float(globals().get("BASELINE_SL_FRACTION", 0.60))
-                    base_sl_frac = min(max(base_sl_frac, 0.10), 0.90)
-                    tp_frac = 1.0 - base_sl_frac
+        # Qty split (same baseline you use elsewhere)
+        sl_frac = float(globals().get("HEALTHCHECK_BASE_SL_FRAC", 0.60))
+        desired_sl_qty = max(1, int(round(pos_qty * sl_frac)))
+        desired_tp_qty = max(0, int(pos_qty) - desired_sl_qty)
 
-                    tp_req = max(1, int(tp_frac * pos_qty)) if avail0 > 0 else 0
-                    tp_req = min(tp_req, int(avail0))
-                    if tp_req > 0:
-                        try:
-                            _submit_order_safe(
-                                api,
-                                symbol=symbol,
-                                qty=tp_req,
-                                side=side_exit,
-                                type="limit",
-                                time_in_force="gtc",
-                                limit_price=_round_limit_for_side(tp_price, side_exit),
-                                reduce_only=True,
-                            )
-                            logging.info("🧩 Baseline TP seeded for %s %s → %.2f (qty=%d)",
-                                         symbol, direction, tp_price, tp_req)
-                            try:
-                                import time; time.sleep(0.2)
-                            except Exception:
-                                pass
-                        except Exception as e:
-                            logging.warning("Baseline TP seed failed for %s: %s", symbol, e)
+        # 2) SL first (never escalate to CRITICAL if min-step or single-share issues)
+        ok_sl = ensure_stop_loss(api, symbol, desired_sl_qty, sl_price=new_sl)
 
-                    # now create SL with remaining qty (capped & rebalance-safe)
-                    place_or_amend_sl(api, pos, target_sl_price=sl_price, sl_order=None, side_exit=side_exit)
+        # 3) TP second, only if SL is in place or partially covered
+        ok_tp = ensure_take_profit(api, symbol, desired_tp_qty, tp_price=new_tp, single_share_skip=True)
 
-                # b) SL exists but TP missing → shrink SL to free qty and create TP
-                elif (tp_order is None) and (sl_order is not None) and pos_qty > 0:
-                    try:
-                        desired_tp_qty = max(1, int((1.0 - float(globals().get("BASELINE_SL_FRACTION", 0.60))) * max(1, pos_qty)))
-                    except Exception:
-                        desired_tp_qty = max(1, int(0.40 * max(1, pos_qty)))
-
-                    _rebalance_sl_to_make_room_for_tp(
-                        api=api,
-                        symbol=symbol,
-                        side_exit=side_exit,
-                        desired_tp_qty=desired_tp_qty,
-                        tp_price=_round_limit_for_side(tp_price, side_exit),
-                    )
-                    # Ensure SL still exists after the rebalance
-                    try:
-                        sl_check = _get_symbol_open_sl_order_by_relation(api, symbol, side_exit, live_px)
-                        if not sl_check:
-                            place_or_amend_sl(api, pos, target_sl_price=sl_price, sl_order=None, side_exit=side_exit)
-                    except Exception as e:
-                        logging.warning("Post-rebalance SL ensure failed for %s: %s", symbol, e)
-
-                # c) TP exists but SL missing → just create SL
-                elif (tp_order is not None) and (sl_order is None):
-                    place_or_amend_sl(api, pos, target_sl_price=sl_price, sl_order=None, side_exit=side_exit)
-
-                # d) Single-share policy — always end the pass with BOTH exits present
-                elif pos_qty == 1:
-                    tp_missing = (tp_order is None)
-                    sl_missing = (sl_order is None)
-
-                    # (i) If BOTH missing, use your baseline seeding (TP first, then SL)
-                    if tp_missing and sl_missing:
-                        base_sl_frac = float(globals().get("BASELINE_SL_FRACTION", 0.60))
-                        base_sl_frac = min(max(base_sl_frac, 0.10), 0.90)
-                        tp_px = _round_limit_for_side(tp_price, side_exit)
-
-                        # seed TP for 1 share (we only have qty=1)
-                        try:
-                            _submit_order_safe(
-                                api,
-                                symbol=symbol,
-                                qty=1,
-                                side=side_exit,
-                                type="limit",
-                                time_in_force="gtc",
-                                limit_price=tp_px,
-                                reduce_only=True,
-                            )
-                            logging.info("🧩 Baseline TP seeded for %s (qty=1) @ %.2f", symbol, tp_px)
-                        except Exception as e:
-                            logging.warning("Baseline TP seed failed for %s: %s", symbol, e)
-
-                        # then create SL
-                        place_or_amend_sl(api, pos, target_sl_price=sl_price, sl_order=None, side_exit=side_exit)
-
-                    # (ii) If EXACTLY ONE leg exists, cancel it to free qty and repost BOTH
-                    elif tp_missing ^ sl_missing:
-                        try:
-                            lone = sl_order if tp_missing else tp_order
-                            lone_id = getattr(lone, "id", None) if lone else None
-                            if lone_id:
-                                try:
-                                    _cancel_order_safe(api, symbol, lone_id)
-                                except NameError:
-                                    # fallback if helper not present
-                                    try:
-                                        api.cancel_order(lone_id)
-                                    except Exception:
-                                        pass
-                                logging.info("♻️  Cancelled lone %s leg for %s to free qty", "SL" if tp_missing else "TP", symbol)
-                        except Exception as e:
-                            logging.warning("Could not cancel lone leg for %s: %s", symbol, e)
-
-                        # repost both legs fresh (SL first for safety, then TP)
-                        place_or_amend_sl(api, pos, target_sl_price=sl_price, sl_order=None, side_exit=side_exit)
-                        try:
-                            _submit_order_safe(
-                                api,
-                                symbol=symbol,
-                                qty=1,
-                                side=side_exit,
-                                type="limit",
-                                time_in_force="gtc",
-                                limit_price=_round_limit_for_side(tp_price, side_exit),
-                                reduce_only=True,
-                            )
-                            logging.info("🆕 Reposted TP for %s (qty=1)", symbol)
-                        except Exception as e:
-                            logging.warning("Repost TP failed for %s: %s", symbol, e)
-
-                    # (iii) If only TP is missing but we prefer not to cancel, try a tiny TP if free qty exists
-                    elif tp_missing:
-                        # Always ensure SL present
-                        if not sl_order:
-                            place_or_amend_sl(api, pos, target_sl_price=sl_price, sl_order=None, side_exit=side_exit)
-
-                        if bool(globals().get("ALLOW_TP_CREATE_IF_MISSING", True)):
-                            try:
-                                tp_order_check = _get_symbol_open_tp_order_by_relation(api, symbol, side_exit, live_px)
-                            except Exception:
-                                tp_order_check = None
-
-                            if not tp_order_check:
-                                avail = _available_exit_qty(api, symbol, side_exit, pos_qty=1)
-                                if avail > 0:
-                                    _submit_order_safe(
-                                        api,
-                                        symbol=symbol,
-                                        qty=min(1, int(avail)),
-                                        side=side_exit,
-                                        type="limit",
-                                        time_in_force="gtc",
-                                        limit_price=_round_limit_for_side(tp_price, side_exit),
-                                        reduce_only=True,
-                                    )
-                                    logging.info("🆕 Seeded tiny TP for %s (qty=1)", symbol)
-                                else:
-                                    logging.info("ℹ️ Tiny-TP skipped for %s (qty=1) — no free exit qty available right now.", symbol)
-        except Exception as e:
-            logging.warning("Baseline exit ensure failed for %s: %s", symbol, e)
-        # 3) Evaluate TP extension
-        direction, side_exit = _position_side_and_exit(pos)   # re-evaluate
+        # 4) Logging / severity rules
+        if not ok_sl:
+            # Only CRITICAL if there is ZERO SL across all exits (safety gap), not just a failed amend.
+            tps, sls = _list_open_exit_orders(api, symbol)
+            if _reserved_qty(sls) == 0:
+                logging.critical("🛡️ Failsafe: no SL active for %s after one rebalance attempt.", symbol)
+            else:
+                logging.warning("SL not fully ensured for %s, but some SL qty exists — proceeding.", symbol)
+        # --- TP extension evaluation ---
+        # Re-evaluate side/exit (ok if unchanged; mirrors your existing flow)
+        direction, side_exit = _position_side_and_exit(pos)
         cur_tp_px = _current_tp_price(api, symbol, side_exit)
 
         ok, rsn, new_tp = evaluate_tp_extension(
@@ -3124,6 +3547,7 @@ def run_tp_extender_pass(api: REST, mode: str, trigger_pct: float, step_pct: flo
 
         except Exception as e:
             logging.warning("Hard-failsafe SL attempt failed for %s: %s", symbol, e)
+
     # 🔎 Post-pass audit: every open position must have a visible SL
     try:
         price_cache = {}
@@ -3146,6 +3570,7 @@ def run_tp_extender_pass(api: REST, mode: str, trigger_pct: float, step_pct: flo
 
     logging.info("📈 Cycle result: extended=%d, skipped=%d",
                  extended, max(0, len(open_positions) - extended))
+
 
 def monitor_positions_loop(api: REST,
                            mode: str,
