@@ -3137,7 +3137,7 @@ def _render_open_vs_spy_caption(open_pct: float | None, spy_pct: float | None) -
 
     open_html = (
         f"<span style='color:{_col(open_pct)};font-weight:800;font-size:1.6rem;'>"
-        f"Open&nbsp;Positions&nbsp;P&L&nbsp;(Today) {_signed_pct(open_pct)}</span>"
+        f"QuantML {_signed_pct(open_pct)}</span>"
     )
     spy_html = (
         f"<span style='color:{_col(spy_pct)};font-weight:800;font-size:1.6rem;'>"
