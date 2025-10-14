@@ -4894,42 +4894,42 @@ def main() -> None:
     positions = compute_derived_metrics(positions)
 
     # === QuantML vs SPY (Intraday comparison + Mini trailing chart) ===
-    render_perf_and_risk_kpis(api, positions)
-    st.divider()
+   # render_perf_and_risk_kpis(api, positions)
+    # st.divider()
 
     # ----- Traffic Lights (moved below QuantML vs SPY) -----
-    render_traffic_lights(positions)
-    render_color_system_legend()
-    st.divider()
+    # render_traffic_lights(positions)
+    # render_color_system_legend()
+    # st.divider()
 
     # === Your portfolio (Alpaca)
-    info = render_portfolio_equity_chart(api)
-    st.divider()
+    #info = render_portfolio_equity_chart(api)
+    #st.divider()
 
     # NEW — SPY vs QuantML (daily returns) using same period
-    render_spy_vs_quantml_daily(api, period=(info or {}).get("period", "1M"))
-    st.divider()
+    # render_spy_vs_quantml_daily(api, period=(info or {}).get("period", "1M"))
+    # st.divider()
 
     # ----- Current status (mini-grid) + colour legend -----
-    render_current_status_grid(positions)
-    st.divider()
+    # render_current_status_grid(positions)
+    # st.divider()
 
     # ===== NEW: Adaptive ATR table (between Current status and Overall Performance) =====
-    render_adaptive_atr_table(positions, api)
-    st.divider()
+    # render_adaptive_atr_table(positions, api)
+    # st.divider()
 
     # Effective ATR settings (pull from config or show "—" if unknown)
-    effective_atr = {"mode":"ATR", "step_atr":0.50, "trigger_atr":1.00}
-    render_positions_panel(api, positions, atr_mode=effective_atr)
-    st.divider()
+    # effective_atr = {"mode":"ATR", "step_atr":0.50, "trigger_atr":1.00}
+    # render_positions_panel(api, positions, atr_mode=effective_atr)
+    # st.divider()
 
     # Live Positions table (sorted)
-    render_positions_table(positions)
-    st.divider()
+    # render_positions_table(positions)
+    # st.divider()
 
     # ----- Dials (existing) -----
-    render_updated_dials(positions, api)
-    st.divider()
+    # render_updated_dials(positions, api)
+    # st.divider()
 
     # ----- Portfolio Ledger (existing) -----
     #hist_days = st.slider("History window (days)", min_value=5, max_value=60, value=14, step=1)
@@ -4958,6 +4958,7 @@ def main() -> None:
         with c2:
             st.markdown("**Top detractors (since entry)**")
             st.table(losers.assign(**{"P&L $": losers["P&L $"].map(lambda x: f"{x:,.2f}")}))
+
     st.divider()
     st.divider()
 
