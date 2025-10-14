@@ -3122,6 +3122,37 @@ def _intraday_rolling_stats(df_1d: pd.DataFrame, minutes: int = 10) -> dict:
         "cum_series": z["cum_pct"],
     }
 
+def _render_open_vs_spy_caption(open_pct: float | None, spy_pct: float | None) -> None:
+    import numpy as np
+    def _signed_pct(v):
+        return f"{float(v):+.2f}%" if (v is not None and np.isfinite(float(v))) else "—"
+    def _col(v):
+        if v is None:
+            return "#6B7280"
+        try:
+            v = float(v)
+        except Exception:
+            return "#6B7280"
+        return BRAND["success"] if v >= 0 else BRAND["danger"]
+
+    open_html = (
+        f"<span style='color:{_col(open_pct)};font-weight:800;font-size:1.6rem;'>"
+        f"Open&nbsp;Positions&nbsp;P&L&nbsp;(Today) {_signed_pct(open_pct)}</span>"
+    )
+    spy_html = (
+        f"<span style='color:{_col(spy_pct)};font-weight:800;font-size:1.6rem;'>"
+        f"SPY {_signed_pct(spy_pct)}</span>"
+    )
+    st.markdown(
+        f"""
+        <div style='text-align:center;margin-top:12px;margin-bottom:4px;'>
+            {open_html} &nbsp;&nbsp;vs&nbsp;&nbsp; {spy_html}<br>
+            <span style='font-size:1.1rem;color:#64748B;'>(intraday, regular session only)</span>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
 def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> None:
     """
     Performance KPIs row:
@@ -3220,6 +3251,9 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
         _kpi_card("💹 Open Positions P&L (Today, $)",
                   f"{arrow} {money(today_total_pl_usd)}",
                   tone)
+
+    # === Open Positions vs SPY caption (color-coded) ===
+    _render_open_vs_spy_caption(today_total_pl_pct, spy_intraday_pct)
 
     # === Intraday smoothing (last 10 minutes) ===
     st.markdown("<hr style='margin:10px 0;border:0.5px solid rgba(0,0,0,0.05);'>", unsafe_allow_html=True)
@@ -3338,39 +3372,6 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
                         good="low"),
             config={**PLOTLY_CONFIG, "responsive": True}
         )
-
-# ====================== Compact caption: Open Positions vs SPY ======================
-def _signed_pct(v):
-    return f"{v:+.2f}%" if (v is not None and np.isfinite(v)) else "—"
-
-def _col(v):
-    # green if >= 0, else red
-    if v is None or not np.isfinite(v):
-        return "#6B7280"  # neutral grey if missing
-    return BRAND["success"] if v >= 0 else BRAND["danger"]
-
-open_pos_pct = today_total_pl_pct  # already computed above
-spy_pct      = spy_intraday_pct    # already computed above
-
-open_html = (
-    f"<span style='color:{_col(open_pos_pct)};font-weight:800;font-size:1.6rem;'>"
-    f"Open&nbsp;Positions {_signed_pct(open_pos_pct)}</span>"
-)
-
-spy_html = (
-    f"<span style='color:{_col(spy_pct)};font-weight:800;font-size:1.6rem;'>"
-    f"SPY {_signed_pct(spy_pct)}</span>"
-)
-
-st.markdown(
-    f"""
-    <div style='text-align:center;margin-top:12px;margin-bottom:4px;'>
-        {open_html} &nbsp;&nbsp;vs&nbsp;&nbsp; {spy_html}<br>
-        <span style='font-size:1.1rem;color:#64748B;'>(intraday, regular session only)</span>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
 
 def render_broker_balances(acct: dict) -> None:
     st.subheader("Broker Balance & Buying Power (Alpaca)")
