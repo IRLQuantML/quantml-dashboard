@@ -1,12 +1,15 @@
 # ============================================
-# QuantML — Exclude everything by default
-# Only hReview_Summary.py and .gitignore allowed
+# QuantML — Ignore everything by default
+# Only selected files and folders are tracked
 # ============================================
 
 # Ignore everything
 *
 
-# Allow only these specific files
+# Allow only these specific files/folders
 !.gitignore
 !hReview_Summary.py
 !hReview Git Push.bat
+!QuantML.png
+!requirements.txt
+!Clock/
