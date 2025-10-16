@@ -521,13 +521,39 @@ def render_positions_panel(api, positions: pd.DataFrame, *, atr_mode: dict | Non
     keep_cols = ["Ticker","Side","Current Price","Current TP","Current SL","Updated (ET)"]
     atr_df = atr_df[[c for c in keep_cols if c in atr_df.columns]].copy()
 
-    # Side-normalize for merge
+    # --------------------- Side-normalize for merge (ROBUST) ---------------------
     z = positions.copy()
-    sym_col = "Ticker" if "Ticker" in z.columns else "symbol"
+
+    # pick a symbol column if one exists; else create "Ticker" from index
+    sym_col = _first_existing_col(z, "Ticker", "symbol", "Asset", "Symbol", "asset")
+    if sym_col is None:
+        # synthesize a Ticker column from the index so downstream never crashes
+        z = z.copy()
+        z["Ticker"] = z.index.astype(str)
+        sym_col = "Ticker"
+
+    # normalize symbols to UPPER
     z[sym_col] = z[sym_col].astype(str).str.upper()
+
+    # ensure ATR table has a "Ticker" column in UPPER for the join
+    if "Ticker" not in atr_df.columns:
+        cand = _first_existing_col(atr_df, "Ticker", "symbol", "Asset", "Symbol", "asset")
+        if cand is not None:
+            atr_df = atr_df.copy()
+            atr_df["Ticker"] = atr_df[cand].astype(str).str.upper()
+        else:
+            atr_df = atr_df.copy()
+            atr_df["Ticker"] = ""
+
     atr_df["Ticker"] = atr_df["Ticker"].astype(str).str.upper()
 
-    merged = z.merge(atr_df, left_on=sym_col, right_on="Ticker", how="left", suffixes=("", "_atr"))
+    merged = z.merge(
+        atr_df,
+        left_on=sym_col,
+        right_on="Ticker",
+        how="left",
+        suffixes=("", "_atr")
+    )
 
     # ===================== Header w/ ATR badge =====================
     eff = atr_mode or {"mode":"ATR","step_atr":"—","trigger_atr":"—"}
@@ -737,8 +763,37 @@ def render_positions_panel(api, positions: pd.DataFrame, *, atr_mode: dict | Non
         return pd.Series({"tp_buf":tp_buf,"sl_buf":sl_buf,"sl_atr":sl_atr})
 
     # compute buffers (% of price) and SL distance in ATRs
-    calc = rows.apply(_calc, axis=1, result_type="expand")  # expand to DataFrame
-    rows[["tp_buf","sl_buf","sl_atr"]] = calc[["tp_buf","sl_buf","sl_atr"]]
+    # compute buffers (% of price) and SL distance in ATRs
+    atr_col = next((c for c in df.columns if c.lower() in ("atr","atr_14","atr14")), None)
+
+    def _calc(row):
+        side  = str(row.get("Side","Long")).lower()
+        p     = float(row.get("Current Price") or np.nan)
+        tp    = float(row.get("Current TP")   or np.nan)
+        sl    = float(row.get("Current SL")   or np.nan)
+        if not (np.isfinite(p) and p > 0):
+            return pd.Series({"tp_buf": np.nan, "sl_buf": np.nan, "sl_atr": np.nan})
+        if side == "long":
+            tp_buf = max(((tp - p)/p) if np.isfinite(tp) else 0.0, 0.0)
+            sl_buf = max(((p - sl)/p) if np.isfinite(sl) else 0.0, 0.0)
+        else:
+            tp_buf = max(((p - tp)/p) if np.isfinite(tp) else 0.0, 0.0)
+            sl_buf = max(((sl - p)/p) if np.isfinite(sl) else 0.0, 0.0)
+        sl_atr = np.nan
+        if atr_col and np.isfinite(p) and np.isfinite(sl) and np.isfinite(float(row.get(atr_col) or np.nan)):
+            sl_atr = abs(p - sl) / float(row[atr_col])
+        return pd.Series({"tp_buf": tp_buf, "sl_buf": sl_buf, "sl_atr": sl_atr})
+
+    # Safe expand → ensure expected columns exist even if rows is empty
+    calc = rows.apply(_calc, axis=1, result_type="expand") if not rows.empty else pd.DataFrame()
+    calc = calc.reindex(columns=["tp_buf", "sl_buf", "sl_atr"], fill_value=np.nan)
+
+    if rows.empty:
+        # nothing to render below; bail out gracefully
+        st.info("No positions match the current filters.")
+        return
+
+    rows[["tp_buf", "sl_buf", "sl_atr"]] = calc[["tp_buf", "sl_buf", "sl_atr"]]
 
     # sort: riskiest first (smallest sl_atr), then lower RR
     rows["rr"] = np.where(
@@ -4894,70 +4949,70 @@ def main() -> None:
     positions = compute_derived_metrics(positions)
 
     # === QuantML vs SPY (Intraday comparison + Mini trailing chart) ===
-   # render_perf_and_risk_kpis(api, positions)
-    # st.divider()
+    render_perf_and_risk_kpis(api, positions)
+    st.divider()
 
     # ----- Traffic Lights (moved below QuantML vs SPY) -----
-    # render_traffic_lights(positions)
-    # render_color_system_legend()
-    # st.divider()
+    render_traffic_lights(positions)
+    render_color_system_legend()
+    st.divider()
 
     # === Your portfolio (Alpaca)
-    #info = render_portfolio_equity_chart(api)
-    #st.divider()
+    info = render_portfolio_equity_chart(api)
+    st.divider()
 
     # NEW — SPY vs QuantML (daily returns) using same period
-    # render_spy_vs_quantml_daily(api, period=(info or {}).get("period", "1M"))
-    # st.divider()
+    render_spy_vs_quantml_daily(api, period=(info or {}).get("period", "1M"))
+    st.divider()
 
     # ----- Current status (mini-grid) + colour legend -----
-    # render_current_status_grid(positions)
-    # st.divider()
+    render_current_status_grid(positions)
+    st.divider()
 
     # ===== NEW: Adaptive ATR table (between Current status and Overall Performance) =====
-    # render_adaptive_atr_table(positions, api)
-    # st.divider()
+    render_adaptive_atr_table(positions, api)
+    st.divider()
 
     # Effective ATR settings (pull from config or show "—" if unknown)
-    # effective_atr = {"mode":"ATR", "step_atr":0.50, "trigger_atr":1.00}
-    # render_positions_panel(api, positions, atr_mode=effective_atr)
-    # st.divider()
+    effective_atr = {"mode":"ATR", "step_atr":0.50, "trigger_atr":1.00}
+    render_positions_panel(api, positions, atr_mode=effective_atr)
+    st.divider()
 
     # Live Positions table (sorted)
-    # render_positions_table(positions)
-    # st.divider()
+    render_positions_table(positions)
+    st.divider()
 
     # ----- Dials (existing) -----
-    # render_updated_dials(positions, api)
-    # st.divider()
+    render_updated_dials(positions, api)
+    st.divider()
 
     # ----- Portfolio Ledger (existing) -----
-    #hist_days = st.slider("History window (days)", min_value=5, max_value=60, value=14, step=1)
-    #hist_df, realized_total = build_history_rows_from_fills(api, positions, days=int(hist_days))
-    #render_portfolio_ledger_table(positions, realized_pnl_total=realized_total, history_rows=hist_df)
+    # hist_days = st.slider("History window (days)", min_value=5, max_value=60, value=14, step=1)
+    # hist_df, realized_total = build_history_rows_from_fills(api, positions, days=int(hist_days))
+    # render_portfolio_ledger_table(positions, realized_pnl_total=realized_total, history_rows=hist_df)
 
-    #st.divider()
+    # st.divider()
     # ----- NEW: Attach your uploaded transaction history file -----
-    #render_transaction_history_positions(api, days=180)
+    # render_transaction_history_positions(api, days=180)
 
     # ===== Contributors / Detractors =====
-    st.divider()
-    z = compute_derived_metrics(positions).copy()
-    base_col = "pl_$" if "pl_$" in z.columns else ("pl_today_usd" if "pl_today_usd" in z.columns else None)
-    if base_col:
-        tmp = pd.DataFrame({
-            "Symbol": z.get("Ticker", z.get("symbol")),
-            "P&L $": pd.to_numeric(z[base_col], errors="coerce"),
-        })
-        winners = tmp.sort_values("P&L $", ascending=False).head(3)
-        losers  = tmp.sort_values("P&L $", ascending=True).head(3)
-        c1, c2 = st.columns(2)
-        with c1:
-            st.markdown("**Top contributors (since entry)**")
-            st.table(winners.assign(**{"P&L $": winners["P&L $"].map(lambda x: f"{x:,.2f}")}))
-        with c2:
-            st.markdown("**Top detractors (since entry)**")
-            st.table(losers.assign(**{"P&L $": losers["P&L $"].map(lambda x: f"{x:,.2f}")}))
+    # st.divider()
+    # z = compute_derived_metrics(positions).copy()
+    # base_col = "pl_$" if "pl_$" in z.columns else ("pl_today_usd" if "pl_today_usd" in z.columns else None)
+    # if base_col:
+    #     tmp = pd.DataFrame({
+    #         "Symbol": z.get("Ticker", z.get("symbol")),
+    #         "P&L $": pd.to_numeric(z[base_col], errors="coerce"),
+    #     })
+    #     winners = tmp.sort_values("P&L $", ascending=False).head(3)
+    #     losers  = tmp.sort_values("P&L $", ascending=True).head(3)
+    #     c1, c2 = st.columns(2)
+    #     with c1:
+    #         st.markdown("**Top contributors (since entry)**")
+    #         st.table(winners.assign(**{"P&L $": winners["P&L $"].map(lambda x: f"{x:,.2f}")}))
+    #     with c2:
+    #         st.markdown("**Top detractors (since entry)**")
+    #         st.table(losers.assign(**{"P&L $": losers["P&L $"].map(lambda x: f"{x:,.2f}")}))
 
     st.divider()
     st.divider()
