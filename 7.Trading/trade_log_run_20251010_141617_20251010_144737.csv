@@ -1,7 +1,0 @@
-time,run_dir,ticker_file,symbol,action,dollars,est_price,qty,sl_price,tp_price,parent_order_id,tp_order_id,sl_order_id,parent_status,tp_status,sl_status,init_tp,init_sl
-2025-10-10T14:47:35,run_20251010_141617,AMCR,AMCR,SHORT,3941.28,7.97,494,8.07,7.76,e710f376-61fc-46c6-bdba-982ad2dcd2af,3e551000-937c-429f-b3d3-a83bf4d5b369,304d403f-3c98-452c-973d-a44343d8a156,pending_new,held,held,7.76,8.07
-2025-10-10T14:47:35,run_20251010_141617,GS,GS,LONG,3899.8,789.99,4,778.3,814.49,df6f2452-cd5e-403c-8cdf-be038cb86f32,c6eb20c7-5b1c-4c1a-bc5a-bf909459e4d9,26ee4368-ae26-4788-b19e-eabaf8ffee21,pending_new,held,held,814.49,778.3
-2025-10-10T14:47:35,run_20251010_141617,VTRS,VTRS,SHORT,2947.05,9.91,297,10.08,9.56,dcb83cab-fbbc-4ffb-9139-7363f5890e2a,c334a754-3091-4da0-92ab-b9763dbfbfee,173ce4ee-e921-49ce-9fbf-084eec852fc8,pending_new,held,held,9.56,10.08
-2025-10-10T14:47:36,run_20251010_141617,HPQ,HPQ,SHORT,2831.85,26.835,105,27.3,25.87,e3261b00-8f81-4fd7-aa78-ef9f654af356,e2d4ac86-826c-4183-9c91-8afe8f1c1e24,d19ce910-eb59-4ac4-879c-121e292124e4,pending_new,held,held,25.87,27.3
-2025-10-10T14:47:36,run_20251010_141617,F,F,SHORT,2507.0,11.515,217,11.75,11.03,4cb7c31f-47e6-4a3d-88fa-ceb1d28c5813,42b44c1d-92d5-4704-bb95-8b8c53a6fe6f,976c9857-20fd-4069-8eee-51b3994899ec,pending_new,held,held,11.03,11.75
-2025-10-10T14:47:37,run_20251010_141617,PSKY,PSKY,SHORT,1329.78,17.83,74,18.5,16.42,a11894eb-650f-4e54-b759-cb0f4b95be2f,f54fd7c0-78ab-443f-bdfd-c3df41f7fd98,64adc98d-d37d-48ac-a36f-f3f7708e2f1e,pending_new,held,held,16.42,18.5

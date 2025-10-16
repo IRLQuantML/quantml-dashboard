@@ -1,8 +1,0 @@
-2025-10-14 09:48:47,654 | INFO | ARGV → d:/QuantML/VS_QuantML_PROD_US/fATR_trading.py
-2025-10-14 09:48:47,654 | INFO | 🔧 Using config file: d:\QuantML\VS_QuantML_PROD_US\config.py
-2025-10-14 09:48:47,654 | INFO | CFG → mode=percent, pct_trigger=0.0300, pct_step=0.0100, atr_trigger=1.00, atr_step=0.50, max_mult=2.50, interval=120s
-2025-10-14 09:48:47,654 | INFO | ARGS → mode=None, pct_trigger=None, pct_step=None, atr_trigger=None, atr_step=None, max_mult=None, interval=None
-2025-10-14 09:48:47,654 | INFO | ✅ EFFECTIVE → mode=percent (profile), pct_trigger=0.0070, pct_step=0.0040, atr_trigger=0.25, atr_step=0.20, max_mult=2.50, interval=60s
-2025-10-14 09:48:52,875 | INFO | 🔍 Scanning 14 open positions: ALV, AMCR, AZO, ENR, F, HLN, MTX, NG, PSKY, SAP …
-2025-10-14 09:48:53,634 | INFO | ⬆️ Replaced TP for ALV LONG → 117.59
-2025-10-14 09:48:54,060 | WARNING | No free qty for new SL on ALV — TP/SL legs already reserve 6.0 of 6.0.

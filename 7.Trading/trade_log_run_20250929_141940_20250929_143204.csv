@@ -1,8 +1,0 @@
-time,run_dir,ticker_file,symbol,action,dollars,est_price,qty,sl_price,tp_price,parent_order_id,tp_order_id,sl_order_id,parent_status,tp_status,sl_status
-2025-09-29T14:32:01,run_20250929_141940,OTIS,OTIS,LONG,1001.1,90.87,11,89.51,92.69,348800b7-6f3f-492f-958a-cf49838fea73,f9031968-36a6-4f8b-ad4f-f12ff801033a,bf3f8fb6-ae12-4d8f-a657-21348290c0ee,pending_new,held,held
-2025-09-29T14:32:02,run_20250929_141940,GEHC,GEHC,LONG,1001.1,72.85,13,71.76,74.31,f5ac2eed-b7de-4298-bebd-ce1346cee912,df09dbb7-a4ac-4774-a55e-a3baaf4404df,7b6fe8ac-c11f-40fd-8148-4b466356a87c,pending_new,held,held
-2025-09-29T14:32:02,run_20250929_141940,VLTO,VLTO,SHORT,5000.0,104.53,47,106.1,102.44,a2a60a07-235c-49bc-9b9d-e606167aa735,b024848f-6dc0-4bc2-844d-9257dcf525df,f2cc7594-1693-4a12-a006-91b9a77fbbab,pending_new,held,held
-2025-09-29T14:32:02,run_20250929_141940,SOLV,SOLV,LONG,774.52,71.4,10,70.33,72.83,e04e39f1-692e-4738-aaea-c75f127c4390,cb3e70e8-eaf3-45c5-8f0a-e13323c5aac1,f266f7cb-8e0e-4a2e-82b8-cdc8377d4bda,pending_new,held,held
-2025-09-29T14:32:03,run_20250929_141940,CPB,CPB,LONG,767.38,31.92,24,31.44,32.56,fb2830d4-e513-49c8-aea4-e8f96e0033fa,50bc41a2-1578-4965-a208-96fdf0f7ed7f,29bfad45-bfe1-4693-9689-2a41c1a42fbd,pending_new,held,held
-2025-09-29T14:32:03,run_20250929_141940,FDS,FDS,LONG,534.37,289.8,1,285.45,295.6,86b80b97-10f7-4983-ab7b-f81b2679022b,9d0cc31d-4cf9-4cb3-937b-672470e6033c,86a7fa8d-a175-4fb6-b8b1-3e30ebc34697,pending_new,held,held
-2025-09-29T14:32:04,run_20250929_141940,KVUE,KVUE,LONG,483.25,16.5,29,16.25,16.83,b4677e0e-d3e2-4632-81c7-6212f31fa7e4,78f3562d-0e7f-4939-9e2b-95ab12ae208d,72be12a1-f34d-48dd-8775-429323b2575e,pending_new,held,held

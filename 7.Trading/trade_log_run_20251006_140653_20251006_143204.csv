@@ -1,7 +1,0 @@
-time,run_dir,ticker_file,symbol,action,dollars,est_price,qty,sl_price,tp_price,parent_order_id,tp_order_id,sl_order_id,parent_status,tp_status,sl_status
-2025-10-06T14:32:01,run_20251006_140653,INVH,INVH,SHORT,1747.04,28.63,61,28.96,27.94,4301783b-c339-4738-8218-e63bcd837e09,a07d6fec-88de-4e5a-8a49-b4e1d29e8798,e5a28412-49ad-4083-a53d-e5b07963f84a,pending_new,held,held
-2025-10-06T14:32:02,run_20251006_140653,AMCR,AMCR,SHORT,1701.44,8.16,208,8.26,7.95,90abc2bd-225d-4c09-bf8f-1104b571a6ab,2c4a2829-9b76-4c0c-8e80-50df23af8e41,698398f9-fd32-4d89-868e-70f1fadc84ec,pending_new,held,held
-2025-10-06T14:32:02,run_20251006_140653,F,F,SHORT,1317.68,12.57,104,12.77,12.15,99cacc07-9e60-4f1b-b107-58d06ecc1cb1,e3efeea5-0211-4a5b-b590-b9bfda5f4927,b394e5d5-8018-4742-9da1-370840251e19,pending_new,held,held
-2025-10-06T14:32:03,run_20251006_140653,VTRS,VTRS,SHORT,1171.85,10.17,115,10.35,9.8,de7943a0-8b2e-4fe6-8ab4-97dddfdc8c37,2f483e67-6deb-4173-ac49-cd50d0b619c2,ab17b0d3-1450-495e-93b4-afbc934af8c8,pending_new,held,held
-2025-10-06T14:32:03,run_20251006_140653,WBD,WBD,SHORT,683.64,19.045,35,19.64,17.8,1c5d0a70-9780-41b3-83d8-96ccb71703a7,6bf86e50-79e0-4f2f-a84d-60b3b4469de0,fad6740d-a145-445a-8ddb-bc2164f3bfae,pending_new,held,held
-2025-10-06T14:32:04,run_20251006_140653,PSKY,PSKY,SHORT,553.61,19.12,28,19.84,17.61,377cc89a-f43b-42d6-aa8d-59a43236df7b,4b2abe62-1679-4ba2-82fd-f4af211e6416,83e56e4d-025e-4992-a43f-c6e025d7bdbf,pending_new,held,held

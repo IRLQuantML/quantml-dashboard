@@ -1,3 +1,0 @@
-time,run_dir,ticker_file,symbol,action,dollars,est_price,qty,sl_price,tp_price,parent_order_id,tp_order_id,sl_order_id,parent_status,tp_status,sl_status,init_tp,init_sl
-2025-10-10T14:35:41,run_20251010_141617,AMCR,AMCR,SHORT,3941.28,8.08,487,8.18,7.87,76dba59b-249a-448c-a716-dba6b9987dc9,1dc4c9f0-fcc1-4d4d-b284-8032bf5b527a,dcc6880d-0ad1-4900-84e6-9853ac3eef25,pending_new,held,held,7.87,8.18
-2025-10-10T14:35:42,run_20251010_141617,BKNG,BKNG,LONG,5191.93,5186.515,1,5085.81,5397.57,da1833c2-4f15-4801-a698-6bd697ee0703,1ee3dd99-af52-4644-bf23-86b3b91e2085,47bd07d4-672b-47a8-af91-80faec0c338d,pending_new,held,held,5397.57,5085.81
