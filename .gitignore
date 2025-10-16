@@ -1,42 +1,12 @@
-# Sensitive or local-only files
-config.py
-config_local.py
-*.env
-*.csv
-*.xlsx
-*.json
-*.pkl
-*.joblib
-logs/
-temp/
-private/
-1.Summary_signals_portfolio.csv
-totals_latest.json
-.devcontainer/
-1.Stocks/
-2.Features_test/
-2.Features_train/
-3.Models_base/
-3.Models_stacked/
-4.Metrics/
-5.Backtest/
-6.Predictions/
-7.Trading/
-aAll_Markets.py
-aGetSPYandVTY.py
-bGenerate_base_features.py
-catboost_info/
-Compare/
-cTrain.py
-dBacktest.py
-dBacktest_refine.py
-dFit_calibrators_from_predictions.py
-ePredict.py
-fATR_trading.bat
-fATR_trading.py
-fTrade.py
-Guide/
-hReview Git Push.bat
-logs/
-OLDPredict.py
-__pycache__/
+# ============================================
+# QuantML — Exclude everything by default
+# Only hReview_Summary.py and .gitignore allowed
+# ============================================
+
+# Ignore everything
+*
+
+# Allow only these specific files
+!.gitignore
+!hReview_Summary.py
+!hReview Git Push.bat

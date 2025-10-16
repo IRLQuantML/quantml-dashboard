@@ -1,20 +1,30 @@
-REM 1) Make sure .gitignore ignores your large artifacts (*.csv, *.xlsx, *.pdf, *.png, *.joblib, *.pkl, logs, etc.)
+@echo off
+chcp 65001 >nul
+REM === QuantML Git Safe Auto Commit Script ===
+REM Only pushes hReview_Summary.py, .gitignore, and this script.
 
-REM 2) Reset your local branch to the remote tip, but keep your changes in the working tree
-git fetch origin
-git reset --soft origin/main
+REM --- Repo Config ---
+set REPO_PATH=D:\QuantML\VS_QuantML_PROD_US
+set COMMIT_MSG=Auto-update QuantML dashboard only
 
-REM 3) Clear the index (nothing staged)
-git restore --staged .
+cd /d "%REPO_PATH%"
 
-REM 4) Stage ONLY what you want to publish
-git add hReview_Summary.py .gitignore README.md
+echo.
+echo 🔄 Pulling latest changes from origin/main...
+git pull origin main
 
-REM 5) Sanity check before committing
-git status
-git diff --name-only --cached
+echo.
+echo 📦 Staging only allowed files...
+git add hReview_Summary.py .gitignore "hReview Git Push.bat"
 
-REM 6) Commit and push
-git commit -m "Publish dashboard-only changes"
+echo.
+echo 📝 Committing with message: "%COMMIT_MSG%"
+git commit -m "%COMMIT_MSG%"
+
+echo.
+echo 🚀 Pushing to remote repository...
 git push origin main
+
+echo.
+echo ✅ Done! Only dashboard file updated on GitHub.
 pause

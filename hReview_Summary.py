@@ -4981,6 +4981,7 @@ def main() -> None:
     # Live Positions table (sorted)
     render_positions_table(positions)
     st.divider()
+    st.divider()
 
     # ----- Dials (existing) -----
     render_updated_dials(positions, api)
