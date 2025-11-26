@@ -71,6 +71,125 @@ TL_GREEN = BRAND["success"]
 TL_AMBER = BRAND["warning"]
 TL_RED   = BRAND["danger"]
 
+# hReview_Summary.py — Sentiment & News panel
+
+def _load_features_for(symbol: str) -> pd.DataFrame:
+    """
+    Load the *_test_features.csv for a ticker from 2.Features_test (latest schema).
+    """
+    base = Path("2.Features_test")
+    candidates = [
+        base / f"{symbol}_test_features.csv",
+        base / f"{symbol}_test_features_with_predictions.csv",
+        base / f"{symbol}_with_predictions.csv",
+    ]
+    for p in candidates:
+        if p.exists():
+            try:
+                df = pd.read_csv(p)
+                # normalize date
+                dt = "date" if "date" in df.columns else ("Date" if "Date" in df.columns else None)
+                if dt:
+                    df[dt] = pd.to_datetime(df[dt], errors="coerce")
+                return df
+            except Exception:
+                pass
+    return pd.DataFrame()
+
+def render_sentiment_news_panel(positions_df: pd.DataFrame | None = None):
+    st.subheader("📰 Sentiment & News")
+
+    # --- Build list of symbols from *open positions* -------------------------
+    open_syms: list[str] = []
+    if positions_df is not None and not positions_df.empty:
+        # Reuse the same helper you already use elsewhere (positions panel)
+        sym_col = _first_existing_col(positions_df, "Ticker", "symbol", "Asset", "Symbol", "asset")
+        if sym_col is not None:
+            open_syms = (
+                positions_df[sym_col]
+                .dropna()
+                .astype(str)
+                .str.upper()
+                .unique()
+                .tolist()
+            )
+            open_syms = sorted(open_syms)
+
+    # Decide options + build a nice compact dropdown on the left
+    if open_syms:
+        ticker_options = open_syms
+        helper_text = None
+    else:
+        ticker_options = ["AAPL", "MSFT", "NVDA", "AMZN", "GOOGL"]
+        helper_text = "No open positions detected — showing default watchlist."
+
+    sel_col, _ = st.columns([0.30, 0.70])  # 30% width for the dropdown
+    with sel_col:
+        st.caption("Ticker")
+        if helper_text:
+            st.caption(f"_{helper_text}_")
+        symbol = st.selectbox(
+            "Ticker",                 # internal label (hidden)
+            options=ticker_options,
+            label_visibility="collapsed",
+            key="sentiment_news_ticker",
+        )
+
+    # --- Load per-ticker features -------------------------------------------
+    df = _load_features_for(symbol)
+    if df.empty:
+        st.info("No features file found for this ticker in 2.Features_test.")
+        return
+
+    # pick last ~90 rows
+    dtcol = "date" if "date" in df.columns else ("Date" if "Date" in df.columns else None)
+    if not dtcol:
+        st.info("No date column in features file.")
+        return
+    df = df.sort_values(dtcol).tail(90).reset_index(drop=True)
+
+    # compute compact view series
+    m3  = pd.to_numeric(df.get("sent_mean_3d"), errors="coerce")
+    m7  = pd.to_numeric(df.get("sent_mean_7d"), errors="coerce")
+    v7  = pd.to_numeric(df.get("sent_vol_7d"),  errors="coerce")
+    tr  = pd.to_numeric(df.get("sent_trend_3v7"), errors="coerce")
+    e0  = pd.to_numeric(df.get("ev_earnings_d0"), errors="coerce").fillna(0).astype(int)
+    en  = pd.to_numeric(df.get("ev_earnings_in_3d"), errors="coerce").fillna(0).astype(int)
+
+    c1, c2 = st.columns([0.65, 0.35])
+    with c1:
+        line_df = pd.DataFrame({
+            dtcol: df[dtcol],
+            "sent_mean_3d": m3,
+            "sent_mean_7d": m7,
+            "sent_trend_3v7": tr,
+        })
+        st.line_chart(line_df, x=dtcol, height=260)
+        st.caption("Rolling sentiment (3d/7d) and short-vs-long trend.")
+
+    with c2:
+        bar_df = pd.DataFrame({
+            dtcol: df[dtcol],
+            "sent_vol_7d": v7,
+        })
+        st.bar_chart(bar_df, x=dtcol, height=260)
+        st.caption("News flow (7-day headline volume).")
+
+    # event badges
+    has_evt = (e0.sum() + en.sum()) > 0
+    if has_evt:
+        st.markdown(
+            "**Upcoming earnings window (within 3 business days)**"
+            if en.any() else "**No near-term earnings**"
+        )
+        st.dataframe(
+            df[[dtcol, "ev_earnings_d0", "ev_earnings_in_3d", "ev_dividend_d0", "ev_split_d0"]]
+            .tail(15)
+            .style.format({}),
+            width="stretch",
+            hide_index=True,
+        )
+
 
 def apply_branding() -> None:
     px.defaults.template = "plotly_white"
@@ -4948,9 +5067,34 @@ def main() -> None:
     positions = merge_tp_sl_from_alpaca_orders(positions, api)
     positions = compute_derived_metrics(positions)
 
-    # === QuantML vs SPY (Intraday comparison + Mini trailing chart) ===
-    render_perf_and_risk_kpis(api, positions)
-    st.divider()
+    # hReview_Summary.py — inside main(), right after positions are built
+    tabs = st.tabs(["📈 Portfolio", "📰 Sentiment & News"])
+
+    with tabs[0]:
+        # (move the existing sections into this block)
+        render_perf_and_risk_kpis(api, positions)
+        st.divider()
+        render_traffic_lights(positions)
+        render_color_system_legend()
+        st.divider()
+        info = render_portfolio_equity_chart(api)
+        st.divider()
+        render_spy_vs_quantml_daily(api, period=(info or {}).get("period", "1M"))
+        st.divider()
+        render_current_status_grid(positions)
+        st.divider()
+        render_adaptive_atr_table(positions, api)
+        st.divider()
+        effective_atr = {"mode":"ATR", "step_atr":0.50, "trigger_atr":1.00}
+        render_positions_panel(api, positions, atr_mode=effective_atr)
+        st.divider()
+        render_positions_table(positions)
+        st.divider()
+        render_updated_dials(positions, api)
+        st.divider()
+
+    with tabs[1]:
+        render_sentiment_news_panel(positions_df=positions)
 
     # ----- Traffic Lights (moved below QuantML vs SPY) -----
     render_traffic_lights(positions)

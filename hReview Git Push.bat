@@ -4,7 +4,7 @@ REM === QuantML Git Safe Auto Commit Script ===
 REM Only pushes hReview_Summary.py, .gitignore, and this script.
 
 REM --- Repo Config ---
-set REPO_PATH=D:\QuantML\VS_QuantML_PROD_US
+set "REPO_PATH=D:\QuantML\quantml-dashboard"
 set COMMIT_MSG=Auto-update QuantML dashboard only
 
 cd /d "%REPO_PATH%"
