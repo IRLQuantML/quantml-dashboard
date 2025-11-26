@@ -1,16 +1,23 @@
 # ============================================
-# QuantML — Ignore everything by default
-# Only selected files and folders are tracked
+# QuantML — Controlled Tracking
 # ============================================
 
-# Ignore everything
+# Ignore everything by default
+*
 
-# Allow only these specific files/folders
+# Allow the .gitignore itself
 !.gitignore
+
+# Allow dashboard files
 !hReview_Summary.py
 !hReview Git Push.bat
 !QuantML.png
 !requirements.txt
-!Clock/
-!2.Features_test/.gitkeep
 
+# Allow Clock folder
+!Clock/
+Clock/*
+
+# Allow entire 2.Features_test folder AND all CSV inside it
+!2.Features_test/
+!2.Features_test/**
