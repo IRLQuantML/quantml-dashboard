@@ -4,7 +4,6 @@
 # ============================================
 
 # Ignore everything
-*
 
 # Allow only these specific files/folders
 !.gitignore
@@ -13,3 +12,5 @@
 !QuantML.png
 !requirements.txt
 !Clock/
+!2.Features_test/.gitkeep
+
