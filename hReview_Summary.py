@@ -2102,14 +2102,24 @@ def _get_symbol_bars(_api: Optional[REST], symbol: str, timeframe: str, *, days:
 
 def _symbol_returns_5min_robust(api: Optional[REST], symbol: str, *, days: int = 5) -> pd.DataFrame:
     """
-    Try 5Min first; if empty, pull 1Min and resample to 5Min.
+    Try 5Min first; if empty, pull 1Min via the generic bar fetcher and resample to 5Min.
     Always returns tidy ['ts','ret'] in UTC (%).
+    This mirrors the behaviour from the older working dashboard.
     """
-    z = _get_symbol_bars(api, symbol, "5Min", days=days).sort_values("ts")
+    # 1) Primary path: 5-minute bars via the generic fetcher
+    z = _fetch_symbol_bars_generic(api, symbol, "5Min", days=days).sort_values("ts")
+
+    # 2) Fallback: 1-minute bars → resample to 5-minute
     if z.empty:
-        z = _get_symbol_bars(api, symbol, "1Min", days=days).sort_values("ts")
+        z = _fetch_symbol_bars_generic(api, symbol, "1Min", days=days).sort_values("ts")
         if not z.empty:
-            z = (z.set_index("ts").resample("5min").last().dropna().reset_index())
+            z = (
+                z.set_index("ts")
+                 .resample("5min")
+                 .last()
+                 .dropna()
+                 .reset_index()
+            )
 
     if z.empty:
         return pd.DataFrame(columns=["ts", "ret"])
