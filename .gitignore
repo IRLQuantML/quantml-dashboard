@@ -13,6 +13,7 @@
 !hReview Git Push.bat
 !QuantML.png
 !requirements.txt
+!config.py
 
 # Allow Clock folder
 !Clock/

@@ -73,6 +73,81 @@ TL_RED   = BRAND["danger"]
 
 # hReview_Summary.py — Sentiment & News panel
 
+from alpaca_trade_api.rest import REST, TimeFrame
+import config as CFG
+from datetime import datetime, timedelta, timezone
+
+def _map_benchmark_symbol_for_alpaca(symbol: str) -> str:
+    s = str(symbol).strip()
+    m = getattr(CFG, "BENCHMARK_YAHOO_TO_ALPACA", {})
+    return m.get(s, s)  # default: unchanged
+
+
+def _get_benchmark_bars_alpaca(api: REST, symbol: str, timeframe: str, *, days: int):
+    """
+    Fetch SPY / benchmark bars from Alpaca only.
+    timeframe: "1D" or "1Min" (mapped to TimeFrame.Day / TimeFrame.Minute).
+    Returns DataFrame with columns: ts (UTC datetime), close (float).
+    """
+    if api is None:
+        return pd.DataFrame(columns=["ts", "close"])
+
+    alpaca_sym = _map_benchmark_symbol_for_alpaca(symbol)
+    end = datetime.now(timezone.utc)
+    start = end - timedelta(days=days + 3)
+
+    # Map your string timeframe to Alpaca TimeFrame
+    if timeframe.lower() in ("1d", "day", "1day", "daily"):
+        tf = TimeFrame.Day
+    elif timeframe.lower() in ("1min", "minute", "1m"):
+        tf = TimeFrame.Minute
+    else:
+        # default to daily
+        tf = TimeFrame.Day
+
+    bars = api.get_bars(
+        alpaca_sym,
+        tf,
+        start=start.isoformat(),
+        end=end.isoformat(),
+        limit=None,
+    )
+
+    if bars is None or len(bars) == 0:
+        return pd.DataFrame(columns=["ts", "close"])
+
+    # Alpaca v2/pydantic objects → DataFrame
+    try:
+        df = bars.df  # new SDK / DataFrame property
+    except Exception:
+        df = pd.DataFrame([b._raw for b in bars])
+
+    # normalise columns: index or 't' / 'timestamp'
+    if not df.empty:
+        if "timestamp" in df.columns:
+            ts_raw = df["timestamp"]
+        elif "t" in df.columns:
+            ts_raw = df["t"]
+        else:
+            ts_raw = df.index
+
+        ts = pd.to_datetime(ts_raw, utc=True, errors="coerce")
+        # close column may be 'c' or 'close'
+        if "close" in df.columns:
+            close = df["close"]
+        elif "c" in df.columns:
+            close = df["c"]
+        else:
+            close = pd.NA
+
+        out = pd.DataFrame({"ts": ts, "close": close})
+        out = out.dropna(subset=["ts", "close"])
+        out = out.sort_values("ts")
+        return out
+
+    return pd.DataFrame(columns=["ts", "close"])
+
+
 def _load_features_for(symbol: str) -> pd.DataFrame:
     """
     Load the *_test_features.csv for a ticker from 2.Features_test (latest schema).
@@ -1472,36 +1547,42 @@ def _fetch_symbol_bars_generic(_api: Optional[REST], symbol: str, timeframe: str
 
     return pd.DataFrame(columns=["ts", "close"])
 
-def _get_symbol_bars_yahoo(symbol: str, timeframe: str, *, days: int) -> pd.DataFrame:
-    """Best-effort fallback using yfinance; returns ts (UTC) and close."""
-    try:
-        import yfinance as yf
-    except Exception:
-        return pd.DataFrame(columns=["ts","close"])
+def _get_symbol_bars(api: Optional[REST], symbol: str, timeframe: str, *, days: int) -> pd.DataFrame:
+    """
+    Fetch bars for `symbol` over the last `days`, returning columns: ts (UTC), close (float).
+    """
+    if api is None:
+        return pd.DataFrame(columns=["ts", "close"])
 
+    sym = str(symbol).strip()
+
+    # 🔹 1) Benchmarks: go straight to Alpaca ETF and never hit Yahoo
+    bench_map = getattr(CFG, "BENCHMARK_YAHOO_TO_ALPACA", {})
+    if sym in bench_map:
+        return _get_benchmark_bars_alpaca(api, sym, timeframe, days=days)
+
+    # 🔹 2) Normal equities: your existing Alpaca path
     end = datetime.now(timezone.utc)
-    start = end - timedelta(days=days + 5)
-
-    tf = str(timeframe).lower()
-    if "1d" in tf or "day" in tf or tf == "d":
-        interval = "1d"
-    elif "1min" in tf or "1m" in tf:
-        interval = "1m"
-    else:
-        interval = "5m"  # default intraday
+    start = end - timedelta(days=days + 3)
+    feed = _feed_for_account(api)  # your existing helper
 
     try:
-        df = yf.Ticker(symbol).history(start=start, end=end, interval=interval, auto_adjust=False)
-        if df is None or df.empty:
-            return pd.DataFrame(columns=["ts","close"])
-        out = df.reset_index()
-        tcol = "Datetime" if "Datetime" in out.columns else out.columns[0]
-        out = out.rename(columns={tcol:"ts","Close":"close"})
-        # yfinance is usually tz-aware (ET); normalize to UTC
-        out["ts"] = pd.to_datetime(out["ts"], utc=True, errors="coerce")
-        return out[["ts","close"]].dropna()
+        tf = _map_timeframe(timeframe)  # if you already have a helper; else inline like above
+        bars = api.get_bars(sym, tf, start=start.isoformat(), end=end.isoformat(), limit=None)
+        ...
+        # same as before: build df with ['ts','close'] and return
     except Exception:
-        return pd.DataFrame(columns=["ts","close"])
+        pass
+
+    # 🔹 3) Final fallback ONLY for non-benchmarks: Yahoo
+    try:
+        y = _get_symbol_bars_yahoo(sym, timeframe, days=days)
+        if not y.empty:
+            return y
+    except Exception:
+        pass
+
+    return pd.DataFrame(columns=["ts", "close"])
 
 def _style_tp_sl_percent(val):
     if pd.isna(val): return ""
@@ -5096,70 +5177,6 @@ def main() -> None:
     with tabs[1]:
         render_sentiment_news_panel(positions_df=positions)
 
-    # ----- Traffic Lights (moved below QuantML vs SPY) -----
-    render_traffic_lights(positions)
-    render_color_system_legend()
-    st.divider()
-
-    # === Your portfolio (Alpaca)
-    info = render_portfolio_equity_chart(api)
-    st.divider()
-
-    # NEW — SPY vs QuantML (daily returns) using same period
-    render_spy_vs_quantml_daily(api, period=(info or {}).get("period", "1M"))
-    st.divider()
-
-    # ----- Current status (mini-grid) + colour legend -----
-    render_current_status_grid(positions)
-    st.divider()
-
-    # ===== NEW: Adaptive ATR table (between Current status and Overall Performance) =====
-    render_adaptive_atr_table(positions, api)
-    st.divider()
-
-    # Effective ATR settings (pull from config or show "—" if unknown)
-    effective_atr = {"mode":"ATR", "step_atr":0.50, "trigger_atr":1.00}
-    render_positions_panel(api, positions, atr_mode=effective_atr)
-    st.divider()
-
-    # Live Positions table (sorted)
-    render_positions_table(positions)
-    st.divider()
-    st.divider()
-
-    # ----- Dials (existing) -----
-    render_updated_dials(positions, api)
-    st.divider()
-
-    # ----- Portfolio Ledger (existing) -----
-    # hist_days = st.slider("History window (days)", min_value=5, max_value=60, value=14, step=1)
-    # hist_df, realized_total = build_history_rows_from_fills(api, positions, days=int(hist_days))
-    # render_portfolio_ledger_table(positions, realized_pnl_total=realized_total, history_rows=hist_df)
-
-    # st.divider()
-    # ----- NEW: Attach your uploaded transaction history file -----
-    # render_transaction_history_positions(api, days=180)
-
-    # ===== Contributors / Detractors =====
-    # st.divider()
-    # z = compute_derived_metrics(positions).copy()
-    # base_col = "pl_$" if "pl_$" in z.columns else ("pl_today_usd" if "pl_today_usd" in z.columns else None)
-    # if base_col:
-    #     tmp = pd.DataFrame({
-    #         "Symbol": z.get("Ticker", z.get("symbol")),
-    #         "P&L $": pd.to_numeric(z[base_col], errors="coerce"),
-    #     })
-    #     winners = tmp.sort_values("P&L $", ascending=False).head(3)
-    #     losers  = tmp.sort_values("P&L $", ascending=True).head(3)
-    #     c1, c2 = st.columns(2)
-    #     with c1:
-    #         st.markdown("**Top contributors (since entry)**")
-    #         st.table(winners.assign(**{"P&L $": winners["P&L $"].map(lambda x: f"{x:,.2f}")}))
-    #     with c2:
-    #         st.markdown("**Top detractors (since entry)**")
-    #         st.table(losers.assign(**{"P&L $": losers["P&L $"].map(lambda x: f"{x:,.2f}")}))
-
-    st.divider()
     st.divider()
 
 if __name__ == "__main__":
