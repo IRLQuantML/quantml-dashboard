@@ -39,6 +39,30 @@ _SINGLEFILE_CLOCK_HTML = [
 # ── SPY vs QuantML view config ────────────────────────────────────────────────
 START_1M_FROM = pd.Timestamp("2025-09-20").date()   # anchor start for 1M view
 
+# --- Optional config shim (Streamlit Cloud safe) -------------------------------
+try:
+    import config as CFG  # when running inside full QuantML repo
+except ModuleNotFoundError:
+    class _CFG_Fallback:
+        """
+        Minimal fallback for the dashboard when config.py is not available.
+        Uses environment variables for Alpaca in _load_alpaca_api(), and
+        hard-codes a safe benchmark mapping for SPY / indices.
+        """
+        BENCHMARK_YAHOO_TO_ALPACA = {
+            "SPY":   "SPY",
+            "^GSPC": "SPY",
+            "SPX":   "SPY",
+            "^SPX":  "SPY",
+            "QQQ":   "QQQ",
+            "^NDX":  "QQQ",
+            "DIA":   "DIA",
+            "^DJI":  "DIA",
+            "IWM":   "IWM",
+        }
+
+    CFG = _CFG_Fallback()
+
 # =============================================================================
 # Page + Branding
 # =============================================================================
@@ -72,10 +96,9 @@ TL_AMBER = BRAND["warning"]
 TL_RED   = BRAND["danger"]
 
 # hReview_Summary.py — Sentiment & News panel
-
 from alpaca_trade_api.rest import REST, TimeFrame
-import config as CFG
 from datetime import datetime, timedelta, timezone
+
 
 def _map_benchmark_symbol_for_alpaca(symbol: str) -> str:
     s = str(symbol).strip()
