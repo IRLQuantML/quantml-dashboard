@@ -288,6 +288,43 @@ def render_sentiment_news_panel(positions_df: pd.DataFrame | None = None):
             hide_index=True,
         )
 
+def render_signal_quality_meta_style(api: Optional[REST], positions: pd.DataFrame) -> None:
+    st.subheader("Signal Quality (Open Book vs Entry Snapshot)")
+
+    if positions is None or positions.empty:
+        st.info("No open positions to score.")
+        return
+
+    m = enrich_positions_with_meta(positions)
+
+    # Strong count
+    advice = m.get("advice")
+    strong_n = int(advice.astype(str).str.upper().str.contains("STRONG").sum()) if advice is not None else 0
+
+    conf = pd.to_numeric(m.get("confidence"), errors="coerce")
+    diff = pd.to_numeric(m.get("prob_diff"), errors="coerce")
+    agree = pd.to_numeric(m.get("model_agreement"), errors="coerce")
+
+    avg_conf = float(conf.mean()) if conf is not None and conf.notna().any() else np.nan
+    avg_diff = float(diff.mean()) if diff is not None and diff.notna().any() else np.nan
+    avg_agree = float(agree.mean()) if agree is not None and agree.notna().any() else np.nan
+
+    c1, c2, c3, c4 = st.columns(4)
+    with c1: _kpi_card("Open positions", f"{len(m)}")
+    with c2: _kpi_card("Strong signals among opens", f"{strong_n}")
+    with c3: _kpi_card("Avg confidence", f"{avg_conf:.3f}" if np.isfinite(avg_conf) else "—")
+    with c4: _kpi_card("Avg prob-diff (margin)", f"{avg_diff:.3f}" if np.isfinite(avg_diff) else "—")
+
+    if np.isfinite(avg_agree):
+        st.caption(f"Average model agreement: {avg_agree:.2f}")
+
+    # Display table
+    show_cols = ["Ticker", "Side", "qty", "entry_price", "current_price", "pl_%", "advice", "confidence", "prob_diff", "model_agreement"]
+    view = m.copy()
+    # normalize columns
+    if "symbol" in view.columns and "Ticker" not in view.columns:
+        view["Ticker"] = view["symbol"]
+    st.dataframe(view[[c for c in show_cols if c in view.columns]], width="stretch", hide_index=True)
 
 def apply_branding() -> None:
     px.defaults.template = "plotly_white"
@@ -3543,123 +3580,6 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
     # === Open Positions vs SPY caption (color-coded) ===
     _render_open_vs_spy_caption(today_total_pl_pct, spy_intraday_pct)
 
-    # === Intraday smoothing (last 10 minutes) ===
-    st.markdown("<hr style='margin:10px 0;border:0.5px solid rgba(0,0,0,0.05);'>", unsafe_allow_html=True)
-    st.markdown("**Intraday smoothing (last 10 minutes)**")
-
-    # Optional: regular session only
-    reg_only = st.toggle("Regular session only (09:30–16:00 ET)", value=True, key="roll_reg_only")
-
-    r_all   = roll_stats["ret_series"]
-    rs_all  = roll_stats["roll_mean_series"]
-    rv_all  = roll_stats["roll_std_series"]
-    cum_all = roll_stats["cum_series"]
-
-    # Session filter (ET)
-    r, rs, rv, cum = r_all, rs_all, rv_all, cum_all
-    if reg_only and not r_all.empty:
-        try:
-            et = ZoneInfo("US/Eastern")
-        except Exception:
-            et = timezone.utc
-        idx  = pd.to_datetime(intraday["ts"], utc=True, errors="coerce")
-        hhmm = idx.dt.tz_convert(et).dt.time
-        mask = (hhmm >= pd.to_datetime("09:30").time()) & (hhmm <= pd.to_datetime("16:00").time())
-        r   = r_all.loc[mask.values]
-        rs  = rs_all.loc[mask.values]
-        rv  = rv_all.loc[mask.values]
-        cum = cum_all.loc[mask.values]
-
-    # Focus on a reasonable recent window for readability
-    r  = r.tail(60)   # ~ last 60 bars (auto 1m/5m)
-    rs = rs.reindex_like(r)
-    rv = rv.reindex_like(r)
-
-    cA, cB = st.columns([0.66, 0.34])
-
-    with cA:
-        fig_roll = go.Figure()
-
-        # ±σ band around rolling mean
-        if len(rs) and len(rv):
-            upper = (rs + rv)
-            lower = (rs - rv)
-            fig_roll.add_trace(go.Scatter(
-                x=rs.index, y=upper, mode="lines", line=dict(width=0),
-                hoverinfo="skip", showlegend=False, name="+σ"
-            ))
-            fig_roll.add_trace(go.Scatter(
-                x=rs.index, y=lower, mode="lines", line=dict(width=0),
-                fill="tonexty", fillcolor="rgba(16,185,129,0.10)",  # soft green band
-                hoverinfo="skip", showlegend=False, name="-σ"
-            ))
-
-        # raw intraday Δequity (%)
-        if len(r):
-            fig_roll.add_trace(go.Scatter(x=r.index, y=r.values, mode="lines",
-                                          name="Δ equity (%)", line=dict(width=1.6), marker=dict(size=5)))
-        # 10-min rolling mean
-        if len(rs):
-            fig_roll.add_trace(go.Scatter(x=rs.index, y=rs.values, mode="lines",
-                                          name="10-min avg", line=dict(width=2.2)))
-
-        fig_roll.add_hline(y=0, line_dash="dot", line_color="rgba(0,0,0,.35)")
-
-        # right-edge μ / ±σ labels
-        if len(rs):
-            last_mu = float(rs.iloc[-1])
-            fig_roll.add_annotation(x=rs.index[-1], y=last_mu, text=f"μ {last_mu:+.2f}%", showarrow=False,
-                                    xanchor="left", yanchor="middle", xshift=6, font=dict(size=11))
-        if len(rv):
-            last_sig = float(rv.iloc[-1])
-            fig_roll.add_annotation(x=rv.index[-1], y=float((rs+rv).iloc[-1]), text=f"+σ {last_sig:.2f}%", showarrow=False,
-                                    xanchor="left", yanchor="bottom", xshift=6, font=dict(size=10, color="#6b7280"))
-            fig_roll.add_annotation(x=rv.index[-1], y=float((rs-rv).iloc[-1]), text=f"−σ {last_sig:.2f}%", showarrow=False,
-                                    xanchor="left", yanchor="top", xshift=6, font=dict(size=10, color="#6b7280"))
-
-        # flag > 2σ moves
-        if len(rv) and len(r):
-            thresh = (rv * 2.0).reindex_like(r).ffill()
-            spikes = r[abs(r) > thresh]
-            if not spikes.empty:
-                fig_roll.add_trace(go.Scatter(
-                    x=spikes.index, y=spikes.values, mode="markers",
-                    marker=dict(size=8, symbol="circle"), name=">2σ",
-                    hovertemplate="%{x}<br>%{y:.2f}% (>2σ)<extra></extra>"
-                ))
-
-        fig_roll.update_layout(
-            height=180, margin=dict(l=8, r=8, t=6, b=6), showlegend=False,
-            xaxis=dict(visible=False), yaxis_title="Δ equity (%)"
-        )
-        st.plotly_chart(fig_roll, config={**PLOTLY_CONFIG, "responsive": True}, use_container_width=True)
-
-        # summary chips + one-line explanation UNDER the sparkline
-        mu  = roll_stats["roll_mean"]
-        sig = roll_stats["roll_vol"]
-        cum_today = float(cum.iloc[-1]) if len(cum) else float("nan")
-        st.markdown(
-            f"<span class='qml-chip {'good' if (mu or 0) >= 0 else 'bad'}'><span class='sw' style='background:#10B981'></span>μ10 {mu:+.2f}%</span> &nbsp;"
-            f"<span class='qml-chip'><span class='sw' style='background:#64748B'></span>σ10 {sig:.2f}%</span> &nbsp;"
-            f"<span class='qml-chip'><span class='sw' style='background:#4F46E5'></span>Today cum {cum_today:+.2f}%</span>",
-            unsafe_allow_html=True,
-        )
-        st.caption(
-            "μ₁₀ is the 10-minute rolling average of intraday P&L; "
-            "σ₁₀ is its volatility (standard deviation); "
-            "and *Today cum* is your cumulative intraday return since market open."
-        )
-
-    with cB:
-        # Volatility gauge (10-min σ)
-        vol = roll_stats["roll_vol"]
-        st.plotly_chart(
-            _banded_gauge(vol if np.isfinite(vol) else 0.0,
-                        title="P&L vol (10-min σ)",
-                        bands=(0.20, 0.50, 1.00),
-                        good="low"),
-            config={**PLOTLY_CONFIG, "responsive": True}
-        )
 
 def render_broker_balances(acct: dict) -> None:
     st.subheader("Broker Balance & Buying Power (Alpaca)")
@@ -4241,10 +4161,26 @@ def _pick_tp_sl_for(sym: str, side_long_short: str, exits_df: pd.DataFrame) -> t
     return (tp, sl)
 
 def merge_tp_sl_from_alpaca_orders(positions: pd.DataFrame, api) -> pd.DataFrame:
-    """Attach TP/SL columns from broker open orders (no crash if none exist)."""
-    import numpy as np, pandas as pd
+    """
+    Attach TP/SL columns from broker open orders (no crash if none exist).
+    """
+    import pandas as pd
+    import numpy as np
 
-    out = positions.copy() if positions is not None else pd.DataFrame()
+    # ---- HARD GUARD: detect swapped arguments ----
+    if hasattr(positions, "get_account") and hasattr(positions, "list_orders"):
+        raise TypeError(
+            "merge_tp_sl_from_alpaca_orders() called with arguments reversed. "
+            "Expected (positions_df, api), got (api, positions_df)."
+        )
+
+    if positions is None:
+        return pd.DataFrame()
+
+    if not isinstance(positions, pd.DataFrame):
+        raise TypeError(f"positions must be a pandas DataFrame, got {type(positions).__name__}")
+
+    out = positions.copy()
     if out is None or out.empty or api is None:
         for c in ("TP", "SL", "tp_price", "sl_price"):
             if c not in out.columns:
@@ -4347,6 +4283,23 @@ def _kpi_card(title: str, value_str: str, tone: str = "neutral", caption: str | 
         """,
         unsafe_allow_html=True
     )
+
+def _kpi_row(items: list[tuple[str, str, str, str | None]], *, slots: int = 6) -> None:
+    """
+    Render KPI cards in a consistent grid.
+    items: [(title, value_str, tone, caption_or_None), ...]
+    slots: how many cards wide (default 6 to match your Risk Snapshot row)
+    """
+    cols = st.columns(slots)
+    for i in range(slots):
+        if i < len(items):
+            title, value, tone, cap = items[i]
+            with cols[i]:
+                _kpi_card(title, value, tone=tone, caption=cap)
+        else:
+            # empty placeholder keeps alignment consistent
+            with cols[i]:
+                st.markdown("<div style='height:1px'></div>", unsafe_allow_html=True)
 
 # ===================== Traffic Lights (sorted green→amber→red) =====================
 
@@ -5168,6 +5121,570 @@ def render_portfolio_ledger_table(positions: pd.DataFrame,
     st.dataframe(styled, width="stretch", hide_index=True)
     st.caption("“Liquidated” = realized P&L (if provided). History P&L uses cohort math (realized + unrealized). Current P&L = (Open − Cost) + Realized.")
 
+# =============================================================================
+# NEW INVESTOR SECTIONS (8 blocks)
+# =============================================================================
+
+import glob
+import math
+
+def _fmt_money(x: float | None) -> str:
+    try:
+        if x is None or not np.isfinite(float(x)):
+            return "—"
+        return f"${float(x):,.0f}"
+    except Exception:
+        return "—"
+
+def _fmt_pct(x: float | None, *, digits: int = 2) -> str:
+    try:
+        if x is None or not np.isfinite(float(x)):
+            return "—"
+        return f"{float(x):+.{digits}f}%"
+    except Exception:
+        return "—"
+
+def _safe_float(x, default=np.nan) -> float:
+    try:
+        v = float(x)
+        return v
+    except Exception:
+        return float(default)
+
+def _safe_int(x, default=0) -> int:
+    try:
+        return int(x)
+    except Exception:
+        return int(default)
+
+def _latest_run_dir(root: str, prefix: str = "run_") -> str | None:
+    if not os.path.isdir(root):
+        return None
+    runs = sorted([d for d in os.listdir(root) if d.startswith(prefix)])
+    if not runs:
+        return None
+    return os.path.join(root, runs[-1])
+
+def _load_latest_all_portfolio() -> pd.DataFrame:
+    """
+    Loads latest:
+      6.Predictions/run_*/1.Summary_signals_portfolio_ALL.csv
+    """
+    run_dir = _latest_run_dir("6.Predictions", "run_")
+    if not run_dir:
+        return pd.DataFrame()
+    p = os.path.join(run_dir, "1.Summary_signals_portfolio_ALL.csv")
+    if not os.path.isfile(p):
+        return pd.DataFrame()
+    try:
+        df = pd.read_csv(p)
+        if "Ticker" in df.columns:
+            df["Ticker"] = df["Ticker"].astype(str).str.upper()
+        return df
+    except Exception:
+        return pd.DataFrame()
+
+def _load_latest_trade_log() -> pd.DataFrame:
+    """
+    Best-effort: latest trade log (your fTrade output).
+    Pattern:
+      7.Trading/trade_log_run_*.csv
+    """
+    root = "7.Trading"
+    if not os.path.isdir(root):
+        return pd.DataFrame()
+    files = sorted(glob.glob(os.path.join(root, "trade_log_run_*.csv")))
+    if not files:
+        return pd.DataFrame()
+    try:
+        return pd.read_csv(files[-1])
+    except Exception:
+        return pd.DataFrame()
+
+def _load_latest_governance_paths() -> dict:
+    """
+    Latest governance run folder (if exists).
+      7.Governance/run_*/feature_drift.csv
+      7.Governance/run_*/prediction_drift.csv
+      7.Governance/run_*/performance_drift.csv
+    """
+    root = getattr(CFG, "GOVERNANCE_ROOT", "7.Governance")
+    run_dir = _latest_run_dir(root, "run_")
+    if not run_dir:
+        return {"run_dir": None, "feature": None, "pred": None, "perf": None}
+    return {
+        "run_dir": run_dir,
+        "feature": os.path.join(run_dir, "feature_drift.csv"),
+        "pred":    os.path.join(run_dir, "prediction_drift.csv"),
+        "perf":    os.path.join(run_dir, "performance_drift.csv"),
+    }
+
+def _exposure_from_positions(positions: pd.DataFrame) -> dict:
+    """
+    Uses live positions frame:
+      - notional column exists in pull_live_positions()
+      - Side is Long/Short
+    """
+    if positions is None or positions.empty:
+        return {
+            "gross": 0.0, "net": 0.0,
+            "gross_long": 0.0, "gross_short": 0.0,
+            "n_long": 0, "n_short": 0,
+            "max_w": np.nan
+        }
+
+    z = positions.copy()
+    z["Ticker"] = z.get("Ticker", "").astype(str).str.upper()
+    z["Side"] = z.get("Side", "").astype(str).str.lower()
+    z["notional"] = pd.to_numeric(z.get("notional", z.get("market_value", 0.0)), errors="coerce").fillna(0.0).abs()
+
+    is_long = z["Side"].eq("long")
+    is_short = z["Side"].eq("short")
+
+    gross_long = float(z.loc[is_long, "notional"].sum())
+    gross_short = float(z.loc[is_short, "notional"].sum())
+    gross = gross_long + gross_short
+
+    # signed notional for net
+    signed = np.where(is_long, z["notional"], np.where(is_short, -z["notional"], 0.0))
+    net = float(np.nansum(signed))
+
+    max_w = float((z["notional"] / gross).max()) if gross > 0 else np.nan
+
+    return {
+        "gross": gross,
+        "net": net,
+        "gross_long": gross_long,
+        "gross_short": gross_short,
+        "n_long": int(is_long.sum()),
+        "n_short": int(is_short.sum()),
+        "max_w": max_w,
+    }
+
+def render_risk_snapshot(api: Optional[REST], positions: pd.DataFrame) -> None:
+    st.subheader("Risk Snapshot")
+
+    snap = pull_account_snapshot(api) if api is not None else {}
+    equity = _safe_float(snap.get("equity"), default=np.nan)
+    bp = _safe_float(snap.get("buying_power"), default=np.nan)
+    margin_util = _safe_float(snap.get("margin_util_pct"), default=np.nan)
+
+    exp = _exposure_from_positions(positions)
+    gross = float(exp.get("gross", 0.0) or 0.0)
+    net   = float(exp.get("net",   0.0) or 0.0)
+
+    gross_pct = (gross / equity * 100.0) if (np.isfinite(equity) and equity > 0) else np.nan
+    net_pct   = (net   / equity * 100.0) if (np.isfinite(equity) and equity > 0) else np.nan
+
+    def _tone_exposure(p):
+        if p is None or not np.isfinite(p): return "neutral"
+        if p < 60: return "pos"
+        if p < 90: return "neutral"
+        return "neg"
+
+    def _tone_margin(p):
+        if p is None or not np.isfinite(p): return "neutral"
+        if p < 25: return "pos"
+        if p < 50: return "neutral"
+        return "neg"
+
+    maxw = float(exp.get("max_w", np.nan))
+    maxw_tone = "neg" if (np.isfinite(maxw) and maxw >= 0.25) else "neutral"
+
+    # --- row 1 (6 cards)
+    _kpi_row([
+        ("Equity", _fmt_money(equity), "neutral", None),
+        ("Buying power", _fmt_money(bp), "neutral", None),
+        ("Gross exposure", f"{_fmt_money(gross)} · {_fmt_pct(gross_pct)}", _tone_exposure(gross_pct), None),
+        ("Net exposure", f"{_fmt_money(net)} · {_fmt_pct(net_pct)}", _tone_exposure(abs(net_pct) if np.isfinite(net_pct) else net_pct), None),
+        ("Long / # Short", f"{exp['n_long']} / {exp['n_short']}", "neutral", None),
+    ], slots=6)
+
+    # --- row 2 (keep same grid; 1 card + blanks)
+    if np.isfinite(margin_util):
+        _kpi_row([
+            ("Margin utilization", f"{margin_util:.1f}%", _tone_margin(margin_util), "maintenance_margin ÷ equity"),
+        ], slots=6)
+
+    st.caption("Gross/Net are computed from live notional. Max weight is the largest single-name notional share of gross exposure.")
+
+# ---------------------------------------------------------------------
+# (3) EXPECTED RISK / REWARD (portfolio rollups)
+# ---------------------------------------------------------------------
+def render_expected_risk_reward(positions: pd.DataFrame) -> None:
+    st.subheader("Expected Risk / Reward (from live TP/SL)")
+
+    if positions is None or positions.empty:
+        st.info("No open positions.")
+        return
+
+    z = compute_derived_metrics(positions).copy()
+
+    # Missing SL/TP flags
+    has_sl = pd.to_numeric(z.get("sl_price", z.get("SL")), errors="coerce").notna()
+    has_tp = pd.to_numeric(z.get("tp_price", z.get("TP")), errors="coerce").notna()
+
+    risk = pd.to_numeric(z.get("risk_$"), errors="coerce")
+    reward = pd.to_numeric(z.get("reward_$"), errors="coerce")
+
+    total_risk = float(risk.abs().sum(skipna=True)) if risk is not None else 0.0
+    total_reward = float(reward.sum(skipna=True)) if reward is not None else 0.0
+    port_rr = (total_reward / total_risk) if total_risk > 1e-9 else np.nan
+
+    miss_sl = int((~has_sl).sum())
+    miss_tp = int((~has_tp).sum())
+    miss_tone = "neg" if (miss_sl > 0 or miss_tp > 0) else "pos"
+
+    _kpi_row([
+        ("Total risk-to-SL ($)", _fmt_money(total_risk), "neutral", None),
+        ("Total reward-to-TP ($)", _fmt_money(total_reward), "neutral", None),
+        ("Portfolio R:R", f"{port_rr:.2f}×" if np.isfinite(port_rr) else "—", "neutral", None),
+        ("Missing exits", f"SL: {miss_sl} · TP: {miss_tp}", miss_tone, None),
+    ], slots=4)
+
+    st.caption("Risk-to-SL is the sum of absolute risk across positions using the live SL. Reward-to-TP is summed reward using live TP.")
+
+# ---------------------------------------------------------------------
+# (4) TAIL RISK / STRESS (simple shocks + ATR adverse)
+# ---------------------------------------------------------------------
+def render_tail_risk_stress(positions: pd.DataFrame) -> None:
+    st.subheader("Tail Risk / Stress Tests (Approx.)")
+
+    if positions is None or positions.empty:
+        st.info("No open positions.")
+        return
+
+    z = compute_derived_metrics(positions).copy()
+    z["notional_abs"] = (pd.to_numeric(z.get("qty"), errors="coerce").abs()
+                         * pd.to_numeric(z.get("current_price"), errors="coerce")).fillna(0.0)
+    dir_sign = pd.to_numeric(z.get("dir_sign"), errors="coerce").fillna(0.0)
+
+    # 1% / 2% uniform shock
+    def shock_pnl(pct: float) -> float:
+        # +pct market move => longs gain, shorts lose (approx)
+        return float(np.nansum(dir_sign * z["notional_abs"] * (pct / 100.0)))
+
+    s_up1  = shock_pnl(+1.0)
+    s_dn1  = shock_pnl(-1.0)
+    s_dn2  = shock_pnl(-2.0)
+
+    # ATR adverse (2×ATR against each position)
+    atr = pd.to_numeric(z.get("atr", z.get("ATR")), errors="coerce")
+    atr_adverse = (-dir_sign) * (2.0 * atr) * pd.to_numeric(z.get("qty"), errors="coerce").abs()
+    atr_adverse_pnl = float(np.nansum(atr_adverse)) if atr_adverse is not None else np.nan
+
+    def _tone_pnl(x: float) -> str:
+        return "pos" if x >= 0 else "neg"
+
+    _kpi_row([
+        ("Shock +1%", _fmt_money(s_up1), _tone_pnl(s_up1), None),
+        ("Shock −1%", _fmt_money(s_dn1), _tone_pnl(s_dn1), None),
+        ("Shock −2%", _fmt_money(s_dn2), _tone_pnl(s_dn2), None),
+        ("2×ATR adverse (sum)", _fmt_money(atr_adverse_pnl) if np.isfinite(atr_adverse_pnl) else "—", "neutral", None),
+    ], slots=4)
+
+    st.caption("These are rough linear stress estimates based on current notional and direction. ATR stress uses 2×ATR move against each position (if ATR is available).")
+
+# ---------------------------------------------------------------------
+# (6) CHURN & HOLDING BEHAVIOR (from fills-derived lot history)
+# ---------------------------------------------------------------------
+def render_churn_and_holding(api: Optional[REST]) -> None:
+    st.subheader("Churn & Holding Behavior (last 20 trading days)")
+
+    if api is None:
+        st.info("No Alpaca API available.")
+        return
+
+    # Pull a wide-enough calendar window to cover ~20 trading days
+    # (weekends/holidays mean we need >20 calendar days)
+    fills = _pull_all_fills_df(api, start=(datetime.now(timezone.utc) - timedelta(days=45)))
+    if fills is None or fills.empty:
+        st.info("No fills available to compute holding / churn stats.")
+        return
+
+    # Ensure we have a usable date column (UTC date from ts)
+    fills = fills.copy()
+    fills["ts"] = pd.to_datetime(fills["ts"], utc=True, errors="coerce")
+    fills = fills.dropna(subset=["ts"])
+    fills["trade_date"] = fills["ts"].dt.date
+
+    # Last 20 distinct trading days *with fills*
+    days = sorted(fills["trade_date"].unique())
+    if not days:
+        st.info("No valid fill dates found.")
+        return
+    last20 = set(days[-20:])
+
+    fills_20d = fills[fills["trade_date"].isin(last20)].copy()
+    if fills_20d.empty:
+        st.info("No fills in the last 20 trading days.")
+        return
+
+    # --- Build lots only from the last-20-trading-days fills -----------------
+    # Use your FIFO lot builder on a "trimmed" window by temporarily reusing
+    # the same lot logic, but on the filtered fills.
+
+    # Minimal local lot builder: one lot per 0->nonzero and closed when back to 0
+    def _lots_from_fills(f: pd.DataFrame) -> pd.DataFrame:
+        from collections import defaultdict
+
+        out_rows = []
+        for sym, g in f.groupby("symbol", sort=False):
+            g = g.sort_values("ts").reset_index(drop=True)
+
+            # signed qty: buy +, sell -
+            signed = np.where(g["side"].astype(str).str.lower().str.contains("buy"), g["qty"], -g["qty"])
+            g = g.assign(signed_qty=signed)
+
+            cum = 0.0
+            lot_start = None
+            lot_side = None
+
+            for i, r in g.iterrows():
+                prev = cum
+                cum += float(r["signed_qty"])
+
+                if prev == 0 and cum != 0 and lot_start is None:
+                    lot_start = i
+                    lot_side = "Long" if cum > 0 else "Short"
+
+                if lot_start is not None and abs(cum) < 1e-9:
+                    lot_df = g.iloc[lot_start:i+1].copy()
+
+                    # VWAP entry/exit + realized PnL (same logic you already use elsewhere)
+                    if lot_side == "Long":
+                        entries = lot_df[lot_df["signed_qty"] > 0]
+                        exits   = lot_df[lot_df["signed_qty"] < 0]
+                        qty = float(entries["qty"].sum())
+                        entry_vwap = _vwap(entries["price"], entries["qty"])
+                        exit_vwap  = _vwap(exits["price"], exits["qty"].abs())
+                        realized   = (exit_vwap - entry_vwap) * qty
+                    else:
+                        entries = lot_df[lot_df["signed_qty"] < 0]
+                        exits   = lot_df[lot_df["signed_qty"] > 0]
+                        qty = float(entries["qty"].sum())
+                        entry_vwap = _vwap(entries["price"], entries["qty"].abs())
+                        exit_vwap  = _vwap(exits["price"], exits["qty"])
+                        realized   = (entry_vwap - exit_vwap) * qty
+
+                    fees = float(pd.to_numeric(lot_df.get("fee", 0.0), errors="coerce").fillna(0.0).sum())
+                    open_ts  = lot_df["ts"].iloc[0]
+                    close_ts = lot_df["ts"].iloc[-1]
+                    days_open = (close_ts - open_ts).total_seconds() / 86400.0
+
+                    out_rows.append({
+                        "symbol": sym,
+                        "side": lot_side,
+                        "status": "Closed",
+                        "open_ts": open_ts,
+                        "close_ts": close_ts,
+                        "days_open": float(days_open),
+                        "realized_pl$": float(realized - fees),
+                    })
+
+                    lot_start = None
+                    lot_side = None
+
+        return pd.DataFrame(out_rows)
+
+    lots = _lots_from_fills(fills_20d)
+
+    # Closed lots only (this is what your KPI block currently uses)
+    closed = lots[lots.get("status", "").astype(str).str.lower().eq("closed")] if not lots.empty else pd.DataFrame()
+    closed_days = pd.to_numeric(closed.get("days_open"), errors="coerce")
+
+    avg_hold = float(closed_days.mean()) if closed_days.notna().any() else np.nan
+    med_hold = float(closed_days.median()) if closed_days.notna().any() else np.nan
+
+    pl = pd.to_numeric(closed.get("realized_pl$"), errors="coerce").fillna(0.0)
+    win_rate = float((pl > 0).mean() * 100.0) if len(pl) else np.nan
+
+    # Turnover over last 20 trading days: sum(abs(qty*price)) / equity
+    turnover_notional = float(
+        (pd.to_numeric(fills_20d.get("qty"), errors="coerce").fillna(0.0)
+         * pd.to_numeric(fills_20d.get("price"), errors="coerce").fillna(0.0)).abs().sum()
+    )
+
+    snap = pull_account_snapshot(api)
+    equity = _safe_float(snap.get("equity"), default=np.nan)
+    turnover_pct = (turnover_notional / equity * 100.0) if (np.isfinite(equity) and equity > 0) else np.nan
+
+    _kpi_row([
+        ("Closed lots (20D)", f"{len(closed)}", "neutral", None),
+        ("Avg hold (days)", f"{avg_hold:.2f}" if np.isfinite(avg_hold) else "—", "neutral", None),
+        ("Median hold (days)", f"{med_hold:.2f}" if np.isfinite(med_hold) else "—", "neutral", None),
+        ("Win rate (closed)", f"{win_rate:.1f}%" if np.isfinite(win_rate) else "—", "neutral", None),
+    ], slots=4)
+
+    st.caption(
+        f"Turnover (20 trading days): {_fmt_money(turnover_notional)} · "
+        f"{(_fmt_pct(turnover_pct) if np.isfinite(turnover_pct) else '—')} of equity"
+    )
+
+
+# ---------------------------------------------------------------------
+# (8) HEALTH / DATA INTEGRITY
+# ---------------------------------------------------------------------
+def render_health_integrity(api: Optional[REST], positions: pd.DataFrame) -> None:
+    st.subheader("Health / Data Integrity")
+
+    # A) TP/SL presence in live positions
+    z = positions.copy() if positions is not None else pd.DataFrame()
+    if z.empty:
+        st.info("No open positions.")
+        return
+
+    sl = pd.to_numeric(z.get("sl_price", z.get("SL")), errors="coerce")
+    tp = pd.to_numeric(z.get("tp_price", z.get("TP")), errors="coerce")
+    missing_sl = int(sl.isna().sum()) if sl is not None else len(z)
+    missing_tp = int(tp.isna().sum()) if tp is not None else len(z)
+
+    # B) Exit legs check from open orders (more authoritative)
+    exits = _open_exits_df(api) if api is not None else pd.DataFrame()
+    exits_ok = True
+    if exits is None or exits.empty:
+        exits_ok = False
+
+    # C) Governance artifacts existence
+    gov = _load_latest_governance_paths()
+    gov_ok = bool(gov.get("run_dir")) and all(os.path.isfile(p) for p in [gov.get("feature"), gov.get("pred"), gov.get("perf")] if p)
+
+    miss_tone = "neg" if (missing_sl > 0 or missing_tp > 0) else "pos"
+    gov_tone = "pos" if gov_ok else "neg"
+
+    _kpi_row([
+        ("Positions", f"{len(z)}", "neutral", None),
+        ("Missing SL", f"{missing_sl}", miss_tone, None),
+        ("Missing TP", f"{missing_tp}", miss_tone, None),
+    ], slots=4)
+
+    # Show alerts
+    if missing_sl > 0 or missing_tp > 0:
+        st.warning("Some positions are missing TP/SL fields in the merged view. Check open exit legs and extender healthchecks.")
+    if not exits_ok:
+        st.info("No open exit legs detected from broker open orders. This can be normal if no brackets are currently open, or if the API call failed.")
+
+# ---------------------------------------------------------------------
+# SINGLE WRAPPER: renders all 8 sections in one place
+# ---------------------------------------------------------------------
+def render_investor_plus_sections(api: Optional[REST], positions: pd.DataFrame) -> None:
+    render_risk_snapshot(api, positions)
+    st.divider()
+    render_expected_risk_reward(positions)
+    st.divider()
+    render_tail_risk_stress(positions)
+    st.divider()
+    render_churn_and_holding(api)
+    st.divider()
+    render_health_integrity(api, positions)
+
+# =============================================================================
+# Dashboard data sources (no daily prediction files)
+# =============================================================================
+import csv
+
+_POS_META_PATH = os.path.join("7.Trading", "positions_meta.csv")
+
+def _read_positions_meta() -> pd.DataFrame:
+    """
+    Read 7.Trading/positions_meta.csv (entry-time decision snapshot).
+    Safe if missing.
+    """
+    if not os.path.isfile(_POS_META_PATH):
+        return pd.DataFrame()
+    try:
+        df = pd.read_csv(_POS_META_PATH)
+        if "symbol" in df.columns:
+            df["symbol"] = df["symbol"].astype(str).str.upper()
+        if "entry_time" in df.columns:
+            df["entry_time"] = pd.to_datetime(df["entry_time"], errors="coerce", utc=True)
+        return df
+    except Exception:
+        return pd.DataFrame()
+
+def _latest_meta_per_symbol(meta: pd.DataFrame) -> pd.DataFrame:
+    if meta is None or meta.empty:
+        return pd.DataFrame()
+    df = meta.copy()
+    if "entry_time" in df.columns:
+        df = df.sort_values("entry_time").groupby("symbol", as_index=False).tail(1)
+    else:
+        df = df.drop_duplicates("symbol", keep="last")
+    return df.reset_index(drop=True)
+
+def enrich_positions_with_meta(positions: pd.DataFrame) -> pd.DataFrame:
+    """
+    Join live positions to stored entry-time decision metadata.
+    No dependency on 6.Predictions.
+    """
+    if positions is None or positions.empty:
+        return positions
+
+    pos = positions.copy()
+    # normalize symbol column
+    sym_col = "Ticker" if "Ticker" in pos.columns else ("symbol" if "symbol" in pos.columns else None)
+    if sym_col is None:
+        pos["Ticker"] = pos.index.astype(str)
+        sym_col = "Ticker"
+    pos["symbol"] = pos[sym_col].astype(str).str.upper()
+
+    meta = _read_positions_meta()
+    if meta.empty:
+        # still expose the expected columns so tables don’t break
+        for c in ["confidence", "prob_diff", "advice", "model_agreement", "planned_weight", "planned_alloc"]:
+            if c not in pos.columns:
+                pos[c] = np.nan
+        return pos
+
+    meta = _latest_meta_per_symbol(meta)
+    m = pos.merge(meta, on="symbol", how="left", suffixes=("", "_meta"))
+    return m
+
+# =============================================================================
+# Hide non-tradable / stale positions
+# =============================================================================
+def _alpaca_asset_is_tradable(api: REST, symbol: str) -> bool:
+    try:
+        a = api.get_asset(symbol)
+        # alpaca asset has .tradable
+        return bool(getattr(a, "tradable", True))
+    except Exception:
+        # fail-open if API hiccups
+        return True
+
+def filter_positions_hide_stale(api: REST | None, positions: pd.DataFrame) -> pd.DataFrame:
+    """
+    Hide positions that are non-tradable or explicitly blacklisted.
+    """
+    if positions is None or positions.empty:
+        return positions
+
+    hide_blacklist = bool(getattr(CFG, "BLACKLIST_ENABLE", False))
+    bl = set([str(x).upper() for x in getattr(CFG, "BLACKLIST_SYMBOLS", [])]) if hide_blacklist else set()
+
+    z = positions.copy()
+    sym_col = "Ticker" if "Ticker" in z.columns else ("symbol" if "symbol" in z.columns else None)
+    if sym_col is None:
+        z["Ticker"] = z.index.astype(str)
+        sym_col = "Ticker"
+
+    z["Ticker"] = z[sym_col].astype(str).str.upper()
+
+    # 1) Hide explicit blacklist
+    if bl:
+        z = z[~z["Ticker"].isin(bl)].copy()
+
+    # 2) Hide non-tradable assets (e.g., halted/inactive)
+    if api is not None and bool(getattr(CFG, "DASH_HIDE_NONTRADABLE", True)):
+        keep = []
+        for t in z["Ticker"].tolist():
+            if _alpaca_asset_is_tradable(api, t):
+                keep.append(True)
+            else:
+                keep.append(False)
+        z = z.loc[keep].copy()
+
+    return z
 
 # =============================================================================
 # Main — orchestrate sections (no duplicates)
@@ -5178,6 +5695,7 @@ def main() -> None:
 
     # === Load positions once (and enrich) — use everywhere below ===
     positions = pull_live_positions(api)
+    positions = filter_positions_hide_stale(api, positions)   # ✅ hide K/nontradables
     positions = merge_tp_sl_from_alpaca_orders(positions, api)
     positions = compute_derived_metrics(positions)
 
@@ -5185,16 +5703,24 @@ def main() -> None:
     tabs = st.tabs(["📈 Portfolio", "📰 Sentiment & News"])
 
     with tabs[0]:
-        # (move the existing sections into this block)
         render_perf_and_risk_kpis(api, positions)
         st.divider()
+
+        # ✅ NEW: all 8 investor-grade sections
+        # Use 1M by default; after equity chart runs we’ll re-run alpha with selected period if you want.
+        render_investor_plus_sections(api, positions)
+        st.divider()
+
         render_traffic_lights(positions)
         render_color_system_legend()
         st.divider()
+
         info = render_portfolio_equity_chart(api)
         st.divider()
+
         render_spy_vs_quantml_daily(api, period=(info or {}).get("period", "1M"))
         st.divider()
+
         render_current_status_grid(positions)
         st.divider()
         render_adaptive_atr_table(positions, api)
