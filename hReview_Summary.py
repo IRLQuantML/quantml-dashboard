@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import os
+import csv
 from pathlib import Path
 from typing import Optional
 from datetime import datetime, timedelta, timezone
@@ -21,8 +22,6 @@ import streamlit.components.v1 as components
 from zoneinfo import ZoneInfo
 
 from alpaca_trade_api.rest import REST
-
-st.cache_data.clear()
 
 # Prefer local Clock/ folder, then project root, then /mnt/data (for notebook runs)
 _CLOCK_JS_CANDIDATES = [
@@ -62,6 +61,93 @@ except ModuleNotFoundError:
         }
 
     CFG = _CFG_Fallback()
+
+import time
+import random
+
+# --- Global lightweight throttle to avoid hammering Alpaca on reruns ---
+_LAST_ALPACA_CALL_TS = 0.0
+_MIN_CALL_GAP_SEC = 0.15  # adjust 0.10–0.30 if needed
+
+@st.cache_resource(show_spinner=False)
+def _alpaca_client() -> Optional[REST]:
+    """
+    Create ONE Alpaca REST client and cache it for the Streamlit process.
+    Uses config.py when available, else environment variables.
+    """
+    try:
+        # prefer config.py if present
+        from config import ALPACA_API_KEY, ALPACA_SECRET_KEY, USE_LIVE_TRADING, ALPACA_LIVE_URL, ALPACA_PAPER_URL
+    except Exception:
+        ALPACA_API_KEY    = os.getenv("ALPACA_API_KEY")
+        ALPACA_SECRET_KEY = os.getenv("ALPACA_SECRET_KEY")
+        USE_LIVE_TRADING  = bool(int(os.getenv("USE_LIVE_TRADING", "0")))
+        ALPACA_LIVE_URL   = os.getenv("ALPACA_LIVE_URL", "https://api.alpaca.markets")
+        ALPACA_PAPER_URL  = os.getenv("ALPACA_PAPER_URL", "https://paper-api.alpaca.markets")
+
+    if not ALPACA_API_KEY or not ALPACA_SECRET_KEY:
+        # don’t spam warnings on every rerun; just return None
+        return None
+
+    base = ALPACA_LIVE_URL if USE_LIVE_TRADING else ALPACA_PAPER_URL
+    try:
+        return REST(ALPACA_API_KEY, ALPACA_SECRET_KEY, base_url=base)
+    except Exception:
+        return None
+
+@st.cache_data(ttl=30, show_spinner=False)
+def _cached_orders(_key: str) -> list:
+    api = _alpaca_client()
+    res = _alpaca_call(api.list_orders, status="all", limit=500, label="list_orders", max_tries=2)
+    return res or []
+
+@st.cache_data(ttl=15, show_spinner=False)
+def pull_account_snapshot_cached(_key: str) -> dict:
+    api = _alpaca_client()
+    return pull_account_snapshot(api)
+
+@st.cache_data(ttl=60, show_spinner=False)
+def _cached_fills(_key: str, after_iso: str) -> list:
+    api = _alpaca_client()
+    # activities endpoint is rate-limited; keep lookback tight
+    res = _alpaca_call(api.get_activities, activity_types="FILL", after=after_iso, label="fills", max_tries=2)
+    return res or []
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _cached_asset(_key: str, symbol: str):
+    api = _alpaca_client()
+    return _alpaca_call(api.get_asset, symbol, label=f"asset:{symbol}", max_tries=2)
+
+
+def _alpaca_call(fn, *args, label: str = "", max_tries: int = 2, **kwargs):
+    """
+    Wrap Alpaca SDK calls to:
+    - throttle slightly (Streamlit reruns can spam)
+    - retry briefly
+    - fail gracefully without endless SDK retries
+    """
+    global _LAST_ALPACA_CALL_TS
+
+    # small gap between calls
+    now = time.time()
+    gap = now - _LAST_ALPACA_CALL_TS
+    if gap < _MIN_CALL_GAP_SEC:
+        time.sleep(_MIN_CALL_GAP_SEC - gap)
+    _LAST_ALPACA_CALL_TS = time.time()
+
+    err = None
+    for attempt in range(1, max_tries + 1):
+        try:
+            return fn(*args, **kwargs)
+        except Exception as e:
+            err = e
+            # short backoff (don’t fight the SDK’s own retry loop)
+            time.sleep(0.25 * attempt + random.random() * 0.15)
+
+    # Degrade gracefully
+    st.warning(f"⚠️ Alpaca call failed{(' ('+label+')') if label else ''}: {type(err).__name__}: {err}")
+    return None
 
 # =============================================================================
 # Page + Branding
@@ -683,7 +769,6 @@ def confidence_bar(ticker, side, price, tp, sl, atr=None):
     )
     st.plotly_chart(fig, config={**PLOTLY_CONFIG, "responsive": True}, use_container_width=True)
 
-import streamlit as st
 def kpi_triplet(tp_pct, sl_pct, rr, *, tp_atr=None, sl_atr=None):
     c1, c2, c3 = st.columns([1, 1, 1])
     fmt = lambda v: f"{v:.2%}" if np.isfinite(v) else "—"
@@ -996,27 +1081,6 @@ def render_positions_panel(api, positions: pd.DataFrame, *, atr_mode: dict | Non
     # === Compact pill rows (sorted by riskiest first) ===
     rows = df[[sym_col,"Side","Current Price","Current TP","Current SL"]].dropna(subset=[sym_col]).copy()
 
-    # compute buffers (% of price) and SL distance in ATRs
-    atr_col = next((c for c in df.columns if c.lower() in ("atr","atr_14","atr14")), None)
-    def _calc(row):
-        side  = str(row.get("Side","Long")).lower()
-        p     = float(row.get("Current Price") or np.nan)
-        tp    = float(row.get("Current TP")   or np.nan)
-        sl    = float(row.get("Current SL")   or np.nan)
-        if not (np.isfinite(p) and p > 0):
-            return pd.Series({"tp_buf":np.nan,"sl_buf":np.nan,"sl_atr":np.nan})
-        if side == "long":
-            tp_buf = max(((tp - p)/p) if np.isfinite(tp) else 0.0, 0.0)
-            sl_buf = max(((p - sl)/p) if np.isfinite(sl) else 0.0, 0.0)
-        else:
-            tp_buf = max(((p - tp)/p) if np.isfinite(tp) else 0.0, 0.0)
-            sl_buf = max(((sl - p)/p) if np.isfinite(sl) else 0.0, 0.0)
-        sl_atr = np.nan
-        if atr_col and np.isfinite(p) and np.isfinite(sl) and np.isfinite(float(row.get(atr_col) or np.nan)):
-            sl_atr = abs(p - sl) / float(row[atr_col])
-        return pd.Series({"tp_buf":tp_buf,"sl_buf":sl_buf,"sl_atr":sl_atr})
-
-    # compute buffers (% of price) and SL distance in ATRs
     # compute buffers (% of price) and SL distance in ATRs
     atr_col = next((c for c in df.columns if c.lower() in ("atr","atr_14","atr14")), None)
 
@@ -1444,31 +1508,34 @@ def _live_positions_map(api: Optional[REST]) -> dict:
 def _fetch_fills_paged(_api: REST, *, after_iso: str | None = None, until_iso: str | None = None) -> list:
     """
     Fetch ALL FILL activities between [after_iso, until_iso] using Alpaca pagination.
-    Returns a flat list of activity objects.
+    Uses _alpaca_call() to avoid SDK retry spam and to throttle calls.
     """
     if _api is None:
         return []
+
     items, token = [], None
     kw = {"activity_types": "FILL"}
     if after_iso: kw["after"] = after_iso
     if until_iso: kw["until"] = until_iso
+
     while True:
-        try:
-            res = _api.get_activities(page_token=token, **kw) if token else _api.get_activities(**kw)
-        except TypeError:
-            # older SDK signature
-            res = _api.get_account_activities("FILL", page_token=token, **{k:v for k,v in kw.items() if v})
-        except Exception:
-            break
+        # Use our wrapper (max_tries small; SDK already retries)
+        if token:
+            res = _alpaca_call(_api.get_activities, page_token=token, **kw, label="activities:FILL", max_tries=2)
+        else:
+            res = _alpaca_call(_api.get_activities, **kw, label="activities:FILL", max_tries=2)
+
         if not res:
             break
-        items.extend(res)
-        # page_token lives on the *last* item in many SDKs
-        token = getattr(res[-1], "id", None) or getattr(res[-1], "activity_id", None)
-        if not token or len(res) < 100:  # heuristic: last page
-            break
-    return items
 
+        items.extend(res)
+
+        # page token heuristic
+        token = getattr(res[-1], "id", None) or getattr(res[-1], "activity_id", None)
+        if not token or len(res) < 100:
+            break
+
+    return items
 
 def _tp_sl_for_history(api: Optional[REST]) -> pd.DataFrame:
     """
@@ -1559,7 +1626,7 @@ def _fetch_symbol_bars_generic(_api: Optional[REST], symbol: str, timeframe: str
             except Exception:
                 tf = "5Min"
 
-        bars = _api.get_bars(symbol, timeframe, start.isoformat(), end.isoformat(),
+        bars = _api.get_bars(symbol, tf, start.isoformat(), end.isoformat(),
                      adjustment="raw", feed="iex")  # <= enforce IEX for paper
 
         # DF path (most common)
@@ -1602,43 +1669,6 @@ def _fetch_symbol_bars_generic(_api: Optional[REST], symbol: str, timeframe: str
             df = pd.DataFrame(rows).dropna()
             # Clip to range
             return df[(df["ts"] >= start) & (df["ts"] <= end)]
-    except Exception:
-        pass
-
-    return pd.DataFrame(columns=["ts", "close"])
-
-def _get_symbol_bars(api: Optional[REST], symbol: str, timeframe: str, *, days: int) -> pd.DataFrame:
-    """
-    Fetch bars for `symbol` over the last `days`, returning columns: ts (UTC), close (float).
-    """
-    if api is None:
-        return pd.DataFrame(columns=["ts", "close"])
-
-    sym = str(symbol).strip()
-
-    # 🔹 1) Benchmarks: go straight to Alpaca ETF and never hit Yahoo
-    bench_map = getattr(CFG, "BENCHMARK_YAHOO_TO_ALPACA", {})
-    if sym in bench_map:
-        return _get_benchmark_bars_alpaca(api, sym, timeframe, days=days)
-
-    # 🔹 2) Normal equities: your existing Alpaca path
-    end = datetime.now(timezone.utc)
-    start = end - timedelta(days=days + 3)
-    feed = _feed_for_account(api)  # your existing helper
-
-    try:
-        tf = _map_timeframe(timeframe)  # if you already have a helper; else inline like above
-        bars = api.get_bars(sym, tf, start=start.isoformat(), end=end.isoformat(), limit=None)
-        ...
-        # same as before: build df with ['ts','close'] and return
-    except Exception:
-        pass
-
-    # 🔹 3) Final fallback ONLY for non-benchmarks: Yahoo
-    try:
-        y = _get_symbol_bars_yahoo(sym, timeframe, days=days)
-        if not y.empty:
-            return y
     except Exception:
         pass
 
@@ -3157,7 +3187,6 @@ def get_open_ticker_prices(_api) -> list[dict]:
 # --- Robust QUANTML logo loader (Streamlit Cloud safe) ---
 from pathlib import Path
 import base64, os
-import streamlit as st
 
 @st.cache_resource
 def load_logo_b64(candidates: list[str] | None = None) -> str:
@@ -3352,49 +3381,44 @@ def render_market_chip(api: REST) -> None:
         unsafe_allow_html=True
     )
 
-# ---------- BROKER BALANCES & BUYING POWER ----------
-
 def pull_account_snapshot(api: Optional[REST]) -> dict:
     """Grab the key Alpaca fields and compute a few safe derived metrics."""
     if api is None:
         return {}
-    try:
-        a = api.get_account()
-    except Exception as e:
-        st.warning(f"Could not fetch account: {e}")
+
+    # Use throttled wrapper to reduce SDK retry spam
+    a = _alpaca_call(api.get_account, label="get_account", max_tries=2)
+    if a is None:
         return {}
 
-    def _f(x):
-        try: return float(x)
-        except: return None
+    def _get(obj, name, default=None):
+        try:
+            return getattr(obj, name)
+        except Exception:
+            return default
 
-    data = {
-        "regt_buying_power":           _f(getattr(a, "regt_buying_power", None)),
-        "daytrading_buying_power":     _f(getattr(a, "daytrading_buying_power", None)),
-        "buying_power":                _f(getattr(a, "buying_power", None)),
-        "non_marginable_buying_power": _f(getattr(a, "non_marginable_buying_power", None)),
-        "initial_margin":              _f(getattr(a, "initial_margin", None)),
-        "maintenance_margin":          _f(getattr(a, "maintenance_margin", None)),
-        "cash":                        _f(getattr(a, "cash", None)),
-        "cash_withdrawable":           _f(getattr(a, "cash_withdrawable", None) or getattr(a, "withdrawable_amount", None)),
-        "equity":                      _f(getattr(a, "equity", None)),
-        "last_equity":                 _f(getattr(a, "last_equity", None)),
-        "long_market_value":           _f(getattr(a, "long_market_value", None)),
-        "short_market_value":          _f(getattr(a, "short_market_value", None)),
-        "accrued_fees":                _f(getattr(a, "accrued_fees", None)),
-        "daytrade_count":              int(getattr(a, "daytrade_count", 0) or 0),
+    snap = {
+        "equity": _safe_float(_get(a, "equity"), default=np.nan),
+        "cash": _safe_float(_get(a, "cash"), default=np.nan),
+        "cash_withdrawable": _safe_float(_get(a, "cash_withdrawable"), default=np.nan),
+        "buying_power": _safe_float(_get(a, "buying_power"), default=np.nan),
+        "regt_buying_power": _safe_float(_get(a, "regt_buying_power"), default=np.nan),
+        "daytrading_buying_power": _safe_float(_get(a, "daytrading_buying_power"), default=np.nan),
+        "maintenance_margin": _safe_float(_get(a, "maintenance_margin"), default=np.nan),
+        "initial_margin": _safe_float(_get(a, "initial_margin"), default=np.nan),
+        "last_equity": _safe_float(_get(a, "last_equity"), default=np.nan),
+        "portfolio_value": _safe_float(_get(a, "portfolio_value"), default=np.nan),
+        "pattern_day_trader": bool(_get(a, "pattern_day_trader", False)),
+        "daytrade_count": int(_safe_float(_get(a, "daytrade_count"), default=np.nan) or 0),
     }
 
-    lm = data.get("long_market_value")  or 0.0
-    sm = data.get("short_market_value") or 0.0
-    data["position_market_value"] = abs(lm) + abs(sm)
+    # Derived metrics
+    eq = snap["equity"]
+    mm = snap["maintenance_margin"]
+    snap["margin_util_pct"] = (mm / eq * 100.0) if (np.isfinite(eq) and eq > 0 and np.isfinite(mm)) else np.nan
+    snap["headroom"] = (eq - mm) if (np.isfinite(eq) and np.isfinite(mm)) else np.nan
 
-    e, le = data.get("equity"), data.get("last_equity")
-    data["equity_delta"] = (e - le) if (e is not None and le is not None) else None
-
-    mm = data.get("maintenance_margin")
-    data["margin_util_pct"] = (mm / e * 100.0) if (mm and e and e > 0) else None
-    return data
+    return snap
 
 # --- Intraday rolling stats for equity-PnL (robust to 1/5/30 min bars)
 def _rolling_window_bars(ts: pd.Series, minutes: int = 10) -> int:
@@ -3478,6 +3502,251 @@ def _render_open_vs_spy_caption(open_pct: float | None, spy_pct: float | None) -
         unsafe_allow_html=True
     )
 
+# =============================================================================
+# NEW: Investor summary helpers (reconciliation, attribution, exposure history, beta)
+# =============================================================================
+
+_EXPOSURE_HIST_PATH = os.path.join("7.Trading", "exposure_history.csv")
+
+
+def _sod_utc_from_et_midnight() -> datetime:
+    """Start-of-day in UTC, using US/Eastern midnight."""
+    try:
+        et = ZoneInfo("US/Eastern")
+    except Exception:
+        et = timezone.utc
+    now_et = datetime.now(et)
+    sod_et = now_et.replace(hour=0, minute=0, second=0, microsecond=0)
+    return sod_et.astimezone(timezone.utc)
+
+def realized_pnl_today_from_fills(api: Optional[REST]) -> float:
+    """
+    Realized P&L today (net of fees) using FIFO over ONLY today's fills window.
+    """
+    if api is None:
+        return float("nan")
+
+    try:
+        # ET midnight → UTC
+        try:
+            et = ZoneInfo("US/Eastern")
+        except Exception:
+            et = timezone.utc
+        today_et = datetime.now(et).date()
+        sod_et = datetime.now(et).replace(hour=0, minute=0, second=0, microsecond=0)
+        sod_utc = sod_et.astimezone(timezone.utc)
+
+        fills = _pull_all_fills_df(api, start=sod_utc)  # ✅ only today
+        if fills is None or fills.empty:
+            return float("nan")
+
+        hist = _fifo_realized_per_fill(fills)
+        if hist is None or hist.empty:
+            return float("nan")
+
+        d = hist.copy()
+        d["Date"] = pd.to_datetime(d["Date"], errors="coerce")
+        d = d.dropna(subset=["Date"])
+        d = d[d["Date"].dt.date == today_et]
+
+        return float(pd.to_numeric(d.get("P&L $"), errors="coerce").fillna(0.0).sum())
+    except Exception:
+        return float("nan")
+
+def top_contributors_table(positions: pd.DataFrame, *, top_n: int = 8) -> pd.DataFrame:
+    """
+    Build an attribution table from the LIVE open positions snapshot.
+    Prefers pl_today_usd (intraday), else falls back to pl_$ (since entry).
+    """
+    if positions is None or positions.empty:
+        return pd.DataFrame()
+
+    z = positions.copy()
+    sym_col = _first_existing_col(z, "Ticker", "symbol", "Asset", "Symbol", "asset") or "Ticker"
+    z[sym_col] = z[sym_col].astype(str).str.upper()
+
+    # Intraday P&L preference
+    pl_col = None
+    for c in ["pl_today_usd", "unrealized_intraday_pl", "intraday_pl_usd"]:
+        if c in z.columns:
+            pl_col = c
+            break
+    if pl_col is None:
+        # fallback: since-entry P&L
+        pl_col = "pl_$" if "pl_$" in z.columns else ("pl_usd" if "pl_usd" in z.columns else None)
+
+    if pl_col is None:
+        return pd.DataFrame()
+
+    # Notional (abs) for context
+    notional = pd.to_numeric(z.get("notional"), errors="coerce")
+    if notional is None or notional.isna().all():
+        qty = pd.to_numeric(z.get("qty"), errors="coerce").fillna(0.0).abs()
+        px  = pd.to_numeric(z.get("current_price"), errors="coerce").fillna(0.0)
+        notional = qty * px
+
+    out = pd.DataFrame({
+        "Ticker": z[sym_col],
+        "Side": z.get("Side", ""),
+        "Notional": pd.to_numeric(notional, errors="coerce"),
+        "P&L (today, $)": pd.to_numeric(z[pl_col], errors="coerce"),
+        "P&L % (since entry)": pd.to_numeric(z.get("pl_%"), errors="coerce"),
+    }).dropna(subset=["Ticker"])
+
+    out["P&L (today, $)"] = out["P&L (today, $)"].fillna(0.0)
+    out["Notional"] = out["Notional"].fillna(0.0)
+
+    winners = out.sort_values("P&L (today, $)", ascending=False).head(top_n)
+    losers  = out.sort_values("P&L (today, $)", ascending=True).head(top_n)
+
+    winners["Bucket"] = "Top Winners"
+    losers["Bucket"]  = "Top Losers"
+
+    view = pd.concat([winners, losers], axis=0, ignore_index=True)
+    return view[["Bucket", "Ticker", "Side", "Notional", "P&L (today, $)", "P&L % (since entry)"]]
+
+
+def compute_beta_to_spy(api: Optional[REST], *, days: int = 60) -> float:
+    """
+    Rolling beta of QuantML equity vs SPY using daily returns over ~days.
+    """
+    if api is None:
+        return float("nan")
+
+    try:
+        # Portfolio daily equity
+        ph = get_portfolio_history_df(api, period="3M", timeframe="1D")
+        if ph is None or ph.empty:
+            return float("nan")
+
+        qm = ph[["ts", "equity"]].dropna().sort_values("ts").copy()
+        qm["ts"] = pd.to_datetime(qm["ts"], utc=True, errors="coerce")
+        qm = qm.dropna(subset=["ts"])
+        qm["ret"] = qm["equity"].pct_change()
+        qm["date"] = qm["ts"].dt.date
+        qm = qm.dropna(subset=["ret"]).tail(max(20, int(days)))
+
+        # SPY daily closes
+        spy = _get_symbol_bars(api, "SPY", "1D", days=max(90, int(days) + 10))
+        if spy is None or spy.empty:
+            return float("nan")
+        spy = spy.sort_values("ts").copy()
+        spy["ts"] = pd.to_datetime(spy["ts"], utc=True, errors="coerce")
+        spy = spy.dropna(subset=["ts", "close"])
+        spy["ret"] = pd.to_numeric(spy["close"], errors="coerce").pct_change()
+        spy["date"] = spy["ts"].dt.date
+        spy = spy.dropna(subset=["ret"]).tail(max(20, int(days)))
+
+        # Align by date
+        m = qm[["date", "ret"]].rename(columns={"ret": "qm"}).merge(
+            spy[["date", "ret"]].rename(columns={"ret": "spy"}),
+            on="date",
+            how="inner"
+        ).dropna()
+
+        if len(m) < 15:
+            return float("nan")
+
+        cov = float(np.cov(m["qm"].to_numpy(), m["spy"].to_numpy(), ddof=1)[0, 1])
+        var = float(np.var(m["spy"].to_numpy(), ddof=1))
+        if not np.isfinite(cov) or not np.isfinite(var) or var <= 0:
+            return float("nan")
+        return float(cov / var)
+    except Exception:
+        return float("nan")
+
+
+def record_exposure_snapshot(positions: pd.DataFrame, api: Optional[REST] = None) -> None:
+    """
+    Persist a daily exposure snapshot to 7.Trading/exposure_history.csv
+    (one row per day). Safe to call every refresh.
+    """
+    try:
+        if positions is None or positions.empty:
+            return
+
+        snap = pull_account_snapshot_cached("paper")
+        equity = _safe_float(snap.get("equity"), default=np.nan)
+
+        exp = _exposure_from_positions(positions)
+        gross = float(exp.get("gross", 0.0) or 0.0)
+        net   = float(exp.get("net",   0.0) or 0.0)
+
+        gross_pct = (gross / equity * 100.0) if (np.isfinite(equity) and equity > 0) else np.nan
+        net_pct   = (net   / equity * 100.0) if (np.isfinite(equity) and equity > 0) else np.nan
+
+        # Date key (ET date is more investor-friendly)
+        try:
+            et = ZoneInfo("US/Eastern")
+            day = datetime.now(et).date().isoformat()
+        except Exception:
+            day = datetime.utcnow().date().isoformat()
+
+        row = {
+            "date": day,
+            "equity": equity,
+            "gross": gross,
+            "net": net,
+            "gross_pct": gross_pct,
+            "net_pct": net_pct,
+            "n_long": int(exp.get("n_long", 0) or 0),
+            "n_short": int(exp.get("n_short", 0) or 0),
+            "max_w": float(exp.get("max_w", np.nan)),
+        }
+
+        os.makedirs(os.path.dirname(_EXPOSURE_HIST_PATH), exist_ok=True)
+
+        # Read existing; only append if date not present
+        if os.path.exists(_EXPOSURE_HIST_PATH):
+            try:
+                existing = pd.read_csv(_EXPOSURE_HIST_PATH)
+                if "date" in existing.columns and (existing["date"].astype(str) == day).any():
+                    return
+            except Exception:
+                pass
+
+        write_header = not os.path.exists(_EXPOSURE_HIST_PATH)
+        with open(_EXPOSURE_HIST_PATH, "a", newline="", encoding="utf-8") as f:
+            w = csv.DictWriter(f, fieldnames=list(row.keys()))
+            if write_header:
+                w.writeheader()
+            w.writerow(row)
+    except Exception:
+        return
+
+
+def render_exposure_history_panel() -> None:
+    """
+    Show last ~20 recorded days of gross/net exposure as small line charts.
+    """
+    if not os.path.exists(_EXPOSURE_HIST_PATH):
+        st.caption("Exposure history: not recorded yet.")
+        return
+
+    try:
+        df = pd.read_csv(_EXPOSURE_HIST_PATH)
+        if df is None or df.empty or "date" not in df.columns:
+            st.caption("Exposure history: unavailable.")
+            return
+
+        df["date"] = pd.to_datetime(df["date"], errors="coerce")
+        df = df.dropna(subset=["date"]).sort_values("date").tail(25)
+
+        g = pd.to_numeric(df.get("gross_pct"), errors="coerce")
+        n = pd.to_numeric(df.get("net_pct"), errors="coerce")
+
+        c1, c2 = st.columns(2)
+        with c1:
+            st.caption("Gross exposure (% of equity) — history")
+            st.line_chart(pd.DataFrame({"gross_pct": g}).set_index(df["date"]))
+        with c2:
+            st.caption("Net exposure (% of equity) — history")
+            st.line_chart(pd.DataFrame({"net_pct": n}).set_index(df["date"]))
+    except Exception:
+        st.caption("Exposure history: failed to render.")
+        return
+
+
 def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> None:
     """
     Performance KPIs row:
@@ -3503,23 +3772,34 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
     # ===== Open positions P&L today (sum across positions) =====
     today_total_pl_usd = np.nan
     today_total_pl_pct = np.nan
-    if positions is not None and not positions.empty:
-        z = compute_derived_metrics(positions).copy()
 
-        intraday_cols_usd = [
-            "pl_today_usd",                # from compute_derived_metrics()
-            "unrealized_intraday_pl",      # Alpaca field
-            "intraday_pl_usd",             # any custom alias
-        ]
+    if positions is not None and not positions.empty:
+        z = positions.copy()
+
+        # pick the column holding intraday P&L (preferred)
+        intraday_cols_usd = ["pl_today_usd", "unrealized_intraday_pl", "intraday_pl_usd"]
         c_today_usd = next((c for c in intraday_cols_usd if c in z.columns), None)
 
-        if c_today_usd is None and {"current_price","prev_close","qty"}.issubset(z.columns):
-            today_vec = (pd.to_numeric(z["current_price"], errors="coerce")
-                        - pd.to_numeric(z["prev_close"],  errors="coerce")) \
-                        * pd.to_numeric(z["qty"], errors="coerce")
-            today_total_pl_usd = float(np.nansum(today_vec.to_numpy()))
-        elif c_today_usd is not None:
-            today_total_pl_usd = float(pd.to_numeric(z[c_today_usd], errors="coerce").sum())
+        if c_today_usd is not None:
+            today_total_pl_usd = float(pd.to_numeric(z[c_today_usd], errors="coerce").fillna(0.0).sum())
+
+        if np.isfinite(today_total_pl_usd) and np.isfinite(start_equity) and start_equity > 0:
+            today_total_pl_pct = (today_total_pl_usd / start_equity) * 100.0
+
+        # --- Sanity check: compare today's open P&L vs net exposure magnitude ---
+        try:
+            exp = _exposure_from_positions(positions)
+            net_exposure = float(exp.get("net", 0.0) or 0.0)
+
+            # avoid false positives when net exposure ~0
+            if np.isfinite(today_total_pl_usd) and np.isfinite(net_exposure) and abs(net_exposure) > 1.0:
+                if abs(today_total_pl_usd - net_exposure) / abs(net_exposure) < 0.02:
+                    st.warning(
+                        "⚠️ Open Positions Intraday P&L looks equal to Net Exposure. "
+                        "This suggests the intraday P&L field may be mis-mapped/overwritten."
+                    )
+        except Exception:
+            pass
 
         if start_equity and np.isfinite(start_equity) and start_equity > 0 and np.isfinite(today_total_pl_usd):
             today_total_pl_pct = float(today_total_pl_usd / start_equity * 100.0)
@@ -3564,7 +3844,9 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
 
     # Open positions (sum of intraday)
     with c3:
-        tone = "pos" if (today_total_pl_pct or 0) >= 0 else "neg"
+        val = today_total_pl_pct if np.isfinite(today_total_pl_pct) else 0.0
+        tone = "pos" if val >= 0 else "neg"
+
         arrow = "▲" if tone == "pos" else "▼"
         _kpi_card("🟢 Open Positions P&L (Today, %)",
                   f"{arrow} {(today_total_pl_pct if np.isfinite(today_total_pl_pct) else 0):+.2f}%",
@@ -3573,12 +3855,62 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
     with c4:
         tone = "pos" if (today_total_pl_usd or 0) >= 0 else "neg"
         arrow = "▲" if tone == "pos" else "▼"
-        _kpi_card("💹 Open Positions P&L (Today, $)",
+        _kpi_card("💹 Open Positions Intraday P&L ($)",
                   f"{arrow} {money(today_total_pl_usd)}",
                   tone)
 
     # === Open Positions vs SPY caption (color-coded) ===
     _render_open_vs_spy_caption(today_total_pl_pct, spy_intraday_pct)
+    # ====================== NEW: RECONCILIATION + ATTRIBUTION ======================
+
+    st.markdown("---")
+
+    # Realized today (net of fees) — may fail under rate limiting
+    realized_today = realized_pnl_today_from_fills(api)
+    if not np.isfinite(realized_today):
+        st.info("ℹ️ Realized P&L today unavailable (rate-limited). Showing open P&L only.")
+
+    # Portfolio P&L today ($) already computed: day_pl_usd
+    # Open intraday P&L ($) already computed: today_total_pl_usd
+    # Reconciliation: Portfolio ≈ Realized + Open (intraday)
+    recon_gap = np.nan
+    if np.isfinite(day_pl_usd) and np.isfinite(realized_today) and np.isfinite(today_total_pl_usd):
+        recon_gap = float(day_pl_usd - (realized_today + today_total_pl_usd))
+
+    r1, r2, r3, r4 = st.columns(4)
+    with r1:
+        _kpi_card("✅ Realized P&L (Today, $)", money(realized_today),
+                  tone=("pos" if (realized_today or 0) >= 0 else "neg"))
+    with r2:
+        _kpi_card("🧾 Realized + Open (Today, $)",
+                  money((realized_today if np.isfinite(realized_today) else 0.0) +
+                        (today_total_pl_usd if np.isfinite(today_total_pl_usd) else 0.0)),
+                  tone="neutral")
+    with r3:
+        _kpi_card("🔁 Recon gap (Portfolio − (Realized+Open))",
+                  money(recon_gap),
+                  tone=("neg" if (np.isfinite(recon_gap) and abs(recon_gap) > 50) else "neutral"),
+                  caption="Should be small (fills timing/spread).")
+    with r4:
+        beta = compute_beta_to_spy(api, days=60)
+        _kpi_card("β to SPY (60d)", f"{beta:.2f}" if np.isfinite(beta) else "—", tone="neutral")
+
+    # Top contributors / detractors (open positions intraday)
+    st.markdown("**Top contributors (open positions)**")
+    contrib = top_contributors_table(positions, top_n=6)
+    if contrib.empty:
+        st.caption("No attribution available.")
+    else:
+        st.dataframe(
+            contrib.style.format({
+                "Notional": "${:,.0f}",
+                "P&L (today, $)": "${:,.2f}",
+                "P&L % (since entry)": "{:+.2f}%",
+            }, na_rep="—"),
+            width="stretch",
+            hide_index=True
+        )
+
 
 
 def render_broker_balances(acct: dict) -> None:
@@ -3798,26 +4130,26 @@ def _get_order_by_id_robust(_api: Optional[REST], order_id: str):
         d["legs"] = [_plain_order(l) for l in legs] if legs else []
         return d
 
-    # --- fetch with fallbacks ---
+    # --- fetch with fallbacks (throttled + cached) ---
     o = None
+
+    # 1) Direct fetch (wrapped to avoid SDK retry spam)
     try:
-        o = _api.get_order(order_id)
+        o = _alpaca_call(_api.get_order, order_id, label="get_order", max_tries=2)
     except TypeError:
+        # Some SDK versions expose get_order_by_id instead
         try:
-            o = _api.get_order_by_id(order_id)
+            o = _alpaca_call(_api.get_order_by_id, order_id, label="get_order_by_id", max_tries=2)
         except Exception:
             o = None
     except Exception:
         o = None
 
+    # 2) Fallback: scan cached recent orders and match by id
     if o is None:
-        # Fallback: scan recent orders and match by id
         try:
-            try:
-                orders = _api.list_orders(status="all", nested=True, limit=500)
-            except TypeError:
-                orders = _api.list_orders(status="all", limit=500)
-            for cand in orders or []:
+            orders = _cached_orders("paper")  # use your key ("paper"/"live")
+            for cand in (orders or []):
                 if str(_g(cand, "id")) == str(order_id):
                     o = cand
                     break
@@ -3952,7 +4284,7 @@ def _initial_tp_sl_lookup(_api: Optional[REST], positions: pd.DataFrame) -> dict
                         v = obj.get(name if alt is None else alt)
                     return v
 
-                orders = _api.list_orders(status="all", limit=500)  # nested=True optional
+                orders = _cached_orders("paper")
                 cand = []
                 for o in (orders or []):
                     osym = (getattr(o, "symbol", None) or getattr(o, "asset_symbol", None) or "").upper()
@@ -4761,11 +5093,9 @@ def render_adaptive_atr_table(positions: pd.DataFrame, api: Optional[REST]) -> N
         column_config={k: st.column_config.TextColumn(k, help=v) for k, v in column_help.items() if k in df.columns}
     )
 
-
 def _symbols_touched_today(api: Optional[REST]) -> set[str]:
-    """Symbols with any fills since ET midnight (today)."""
-    df = _pull_all_fills_df(api)
-    if df.empty:
+    """Symbols with any fills since ET midnight (today) — light and cached."""
+    if api is None:
         return set()
 
     try:
@@ -4777,8 +5107,11 @@ def _symbols_touched_today(api: Optional[REST]) -> set[str]:
     sod_et = now_et.replace(hour=0, minute=0, second=0, microsecond=0)
     sod_utc = sod_et.astimezone(timezone.utc)
 
-    touched = df[df["ts"] >= sod_utc]["symbol"].astype(str).str.upper().unique().tolist()
-    return set(touched)
+    df = _pull_all_fills_df(api, start=sod_utc)  # ✅ only today
+    if df.empty:
+        return set()
+
+    return set(df["symbol"].astype(str).str.upper().unique().tolist())
 
 def pull_live_positions(api: Optional[REST]) -> pd.DataFrame:
     """
@@ -5264,7 +5597,7 @@ def _exposure_from_positions(positions: pd.DataFrame) -> dict:
 def render_risk_snapshot(api: Optional[REST], positions: pd.DataFrame) -> None:
     st.subheader("Risk Snapshot")
 
-    snap = pull_account_snapshot(api) if api is not None else {}
+    snap = pull_account_snapshot_cached("paper")
     equity = _safe_float(snap.get("equity"), default=np.nan)
     bp = _safe_float(snap.get("buying_power"), default=np.nan)
     margin_util = _safe_float(snap.get("margin_util_pct"), default=np.nan)
@@ -5292,11 +5625,27 @@ def render_risk_snapshot(api: Optional[REST], positions: pd.DataFrame) -> None:
     maxw_tone = "neg" if (np.isfinite(maxw) and maxw >= 0.25) else "neutral"
 
     # --- row 1 (6 cards)
+    cash = _safe_float(snap.get("cash"), default=np.nan)
+    cash_w = _safe_float(snap.get("cash_withdrawable"), default=np.nan)
+    mm = _safe_float(snap.get("maintenance_margin"), default=np.nan)
+    headroom = (equity - mm) if (np.isfinite(equity) and np.isfinite(mm)) else np.nan
+
+    maxw = float(exp.get("max_w", np.nan))
+    maxw_pct = (maxw * 100.0) if np.isfinite(maxw) else np.nan
+
     _kpi_row([
         ("Equity", _fmt_money(equity), "neutral", None),
         ("Buying power", _fmt_money(bp), "neutral", None),
+        ("Cash", _fmt_money(cash), "neutral", None),
+        ("Withdrawable", _fmt_money(cash_w), "neutral", None),
+        ("Headroom (Eq − Maint)", _fmt_money(headroom), "neutral", None),
+        ("Max single-name wt", f"{maxw_pct:.1f}%" if np.isfinite(maxw_pct) else "—", "neutral", "share of gross exposure"),
+    ], slots=6)
+
+    # Optional: keep the gross/net row just below for clarity
+    _kpi_row([
         ("Gross exposure", f"{_fmt_money(gross)} · {_fmt_pct(gross_pct)}", _tone_exposure(gross_pct), None),
-        ("Net exposure", f"{_fmt_money(net)} · {_fmt_pct(net_pct)}", _tone_exposure(abs(net_pct) if np.isfinite(net_pct) else net_pct), None),
+        ("Net exposure (risk, $)", f"{_fmt_money(net)} · {_fmt_pct(net_pct)}", _tone_exposure(abs(net_pct) if np.isfinite(net_pct) else net_pct), None),
         ("Long / # Short", f"{exp['n_long']} / {exp['n_short']}", "neutral", None),
     ], slots=6)
 
@@ -5505,7 +5854,7 @@ def render_churn_and_holding(api: Optional[REST]) -> None:
          * pd.to_numeric(fills_20d.get("price"), errors="coerce").fillna(0.0)).abs().sum()
     )
 
-    snap = pull_account_snapshot(api)
+    snap = pull_account_snapshot_cached("paper")
     equity = _safe_float(snap.get("equity"), default=np.nan)
     turnover_pct = (turnover_notional / equity * 100.0) if (np.isfinite(equity) and equity > 0) else np.nan
 
@@ -5571,6 +5920,8 @@ def render_investor_plus_sections(api: Optional[REST], positions: pd.DataFrame) 
     render_risk_snapshot(api, positions)
     st.divider()
     render_expected_risk_reward(positions)
+    st.divider()
+    render_exposure_history_panel()
     st.divider()
     render_tail_risk_stress(positions)
     st.divider()
@@ -5643,13 +5994,13 @@ def enrich_positions_with_meta(positions: pd.DataFrame) -> pd.DataFrame:
 # =============================================================================
 # Hide non-tradable / stale positions
 # =============================================================================
-def _alpaca_asset_is_tradable(api: REST, symbol: str) -> bool:
+def _alpaca_asset_is_tradable(api: REST, symbol: str, *, cache_key: str = "paper") -> bool:
     try:
-        a = api.get_asset(symbol)
-        # alpaca asset has .tradable
+        a = _cached_asset(cache_key, symbol)
+        if a is None:
+            return True
         return bool(getattr(a, "tradable", True))
     except Exception:
-        # fail-open if API hiccups
         return True
 
 def filter_positions_hide_stale(api: REST | None, positions: pd.DataFrame) -> pd.DataFrame:
@@ -5698,6 +6049,9 @@ def main() -> None:
     positions = filter_positions_hide_stale(api, positions)   # ✅ hide K/nontradables
     positions = merge_tp_sl_from_alpaca_orders(positions, api)
     positions = compute_derived_metrics(positions)
+    # NEW: persist exposure snapshot (daily) + show history charts
+    record_exposure_snapshot(positions, api)
+    
 
     # hReview_Summary.py — inside main(), right after positions are built
     tabs = st.tabs(["📈 Portfolio", "📰 Sentiment & News"])
