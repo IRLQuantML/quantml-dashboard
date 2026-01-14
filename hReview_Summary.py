@@ -6060,14 +6060,15 @@ def main() -> None:
         render_perf_and_risk_kpis(api, positions)
         st.divider()
 
+        render_traffic_lights(positions)
+        render_color_system_legend()
+        st.divider()
+ 
         # ✅ NEW: all 8 investor-grade sections
         # Use 1M by default; after equity chart runs we’ll re-run alpha with selected period if you want.
         render_investor_plus_sections(api, positions)
         st.divider()
 
-        render_traffic_lights(positions)
-        render_color_system_legend()
-        st.divider()
 
         info = render_portfolio_equity_chart(api)
         st.divider()
