@@ -21,6 +21,12 @@ import streamlit as st
 import streamlit.components.v1 as components
 from zoneinfo import ZoneInfo
 
+# --- Timezone helper for ET formatting (prevents "—:— ET") ---
+try:
+    _NY = ZoneInfo("US/Eastern")
+except Exception:
+    _NY = None
+
 from alpaca_trade_api.rest import REST
 
 # Prefer local Clock/ folder, then project root, then /mnt/data (for notebook runs)
@@ -230,6 +236,43 @@ def _map_benchmark_symbol_for_alpaca(symbol: str) -> str:
     m = getattr(CFG, "BENCHMARK_YAHOO_TO_ALPACA", {})
     return m.get(s, s)  # default: unchanged
 
+def intraday_rth_return_pct(api: Optional[REST], symbol: str) -> float:
+    """
+    Intraday return (%) from NYSE regular-session open (09:30 ET) to latest price.
+    EXCLUDES pre-market and after-hours by construction.
+    """
+    if api is None:
+        return np.nan
+
+    try:
+        from zoneinfo import ZoneInfo
+        et = ZoneInfo("US/Eastern")
+    except Exception:
+        et = timezone.utc
+
+    # Pull recent intraday bars (robust helper you already use)
+    bars = _symbol_returns_5min_robust(api, symbol, days=2)
+    if bars.empty:
+        return np.nan
+
+    bars = bars.copy()
+    bars["ts"] = bars["ts"].dt.tz_convert(et)
+
+    # Regular session window
+    mopen  = pd.to_datetime("09:30").time()
+    mclose = pd.to_datetime("16:00").time()
+
+    bars = bars[(bars["ts"].dt.time >= mopen) & (bars["ts"].dt.time <= mclose)]
+    if bars.empty:
+        return np.nan
+
+    today = datetime.now(et).date()
+    tday = bars[bars["ts"].dt.date == today]
+    if tday.empty:
+        return np.nan
+
+    # Compound intraday returns from session open
+    return float((np.prod(1.0 + tday["ret"].to_numpy() / 100.0) - 1.0) * 100.0)
 
 def _get_benchmark_bars_alpaca(api: REST, symbol: str, timeframe: str, *, days: int):
     """
@@ -3436,7 +3479,10 @@ def render_market_chip(api: REST) -> None:
 
     color = "#16A34A" if is_open else "#DC2626"
     label = "NYSE OPEN" if is_open else "NYSE CLOSED"
-    tail  = f"· closes { _fmt_et(next_close) } ET" if is_open else f"· opens { _fmt_et(next_open) } ET"
+    if is_open:
+        tail = f"· closes { _fmt_et(next_close) } ET" if next_close else "· closes today"
+    else:
+        tail = f"· opens { _fmt_et(next_open) } ET" if next_open else "· opens next session"
 
     st.markdown(
         f'<div class="chip"><span class="dot" style="background:{color}"></span>'
@@ -3819,7 +3865,12 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
       • Compact caption comparing QuantML intraday vs SPY intraday
     """
     # ===== Intraday equity curve (Portfolio P&L today) =====
-    intraday = get_portfolio_history_df(api, period="1D")
+    intraday = get_portfolio_history_df(
+        api,
+        period="1D",
+        timeframe="5Min",
+        extended_hours=False   # 🔑 critical: RTH only
+    )
 
     # Rolling 10-minute average & volatility (uses equity curve % changes)
     roll_stats = _intraday_rolling_stats(intraday, minutes=10)
@@ -3872,24 +3923,18 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
             today_total_pl_pct = float(today_total_pl_usd / start_equity * 100.0)
 
     # ===== Optional: SPY intraday (for caption) =====
-    spy_intraday_pct = np.nan
-    try:
-        et = ZoneInfo("US/Eastern")
-    except Exception:
-        et = timezone.utc
+    spy_intraday_pct = intraday_rth_return_pct(api, "SPY")
 
+    # ===== QuantML intraday return on DEPLOYED capital (skill metric) =====
+    quantml_deployed_pct = np.nan
     try:
-        spy_5 = _symbol_returns_5min_robust(api, "SPY", days=3)
-        if not spy_5.empty:
-            spy_5["ts"] = spy_5["ts"].dt.tz_convert(et)
-            mopen, mclose = pd.to_datetime("09:30").time(), pd.to_datetime("16:00").time()
-            spy_5 = spy_5[(spy_5["ts"].dt.time >= mopen) & (spy_5["ts"].dt.time <= mclose)]
-            today_et = datetime.now(et).date()
-            tday = spy_5[spy_5["ts"].dt.date == today_et]
-            if not tday.empty:
-                spy_intraday_pct = (np.prod(1.0 + tday["ret"].astype(float).to_numpy()/100.0) - 1.0) * 100.0
+        exp = _exposure_from_positions(positions)
+        gross_exposure = float(exp.get("gross", 0.0) or 0.0)
+
+        if np.isfinite(today_total_pl_usd) and gross_exposure > 0:
+            quantml_deployed_pct = (today_total_pl_usd / gross_exposure) * 100.0
     except Exception:
-        pass  # keep NaN on any data issue
+        quantml_deployed_pct = np.nan
 
     c1, c2, c3, c4, c5 = st.columns([1, 1, 1, 1.2, 0.8])
 
@@ -3916,7 +3961,7 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
         tone = "pos" if val >= 0 else "neg"
         arrow = "▲" if tone == "pos" else "▼"
         _kpi_card(
-            "🟢 Open Positions P&L (Today, %)",
+            "🟢 Open Positions P&L (Today, % of NAV)",
             f"{arrow} {val:+.2f}%",
             tone
         )
@@ -3939,9 +3984,45 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
             "neutral"
         )
 
-    # === Open Positions vs SPY caption (color-coded) ===
-    _render_open_vs_spy_caption(today_total_pl_pct, spy_intraday_pct)
-    # ====================== NEW: RECONCILIATION + ATTRIBUTION ======================
+    # ===== Dual comparison caption (NAV + deployed capital) =====
+    def _render_quantml_vs_spy_dual(nav_pct, deployed_pct, spy_pct):
+        def _fmt(v):
+            return f"{float(v):+.2f}%" if v is not None and np.isfinite(v) else "—"
+
+        def _col(v):
+            if v is None or not np.isfinite(v):
+                return "#6B7280"
+            return BRAND["success"] if v >= 0 else BRAND["danger"]
+
+        st.markdown(
+            f"""
+            <div style="text-align:center;margin-top:12px;margin-bottom:6px;">
+                <div style="font-size:1.6rem;font-weight:800;">
+                    <span style="color:{_col(nav_pct)};">QuantML (NAV) {_fmt(nav_pct)}</span>
+                    &nbsp;&nbsp;vs&nbsp;&nbsp;
+                    <span style="color:{_col(spy_pct)};">SPY {_fmt(spy_pct)}</span>
+                </div>
+                <div style="font-size:1.1rem;margin-top:6px;">
+                    <span style="color:{_col(deployed_pct)};font-weight:700;">
+                        QuantML (on deployed capital): {_fmt(deployed_pct)}
+                    </span>
+                </div>
+                <div style="font-size:1.0rem;color:#64748B;margin-top:4px;">
+                    (intraday, regular session only)
+                </div>
+                <div style="font-size:0.95rem;color:#94A3B8;margin-top:2px;">
+                    NAV uses total equity. Deployed capital uses gross exposure only.
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+    _render_quantml_vs_spy_dual(
+        nav_pct=today_total_pl_pct,
+        deployed_pct=quantml_deployed_pct,
+        spy_pct=spy_intraday_pct
+    )
 
     st.markdown("---")
 
@@ -5918,12 +5999,22 @@ def render_churn_and_holding(api: Optional[REST]) -> None:
 
     lots = _lots_from_fills(fills_20d)
 
-    # Closed lots only (this is what your KPI block currently uses)
-    closed = lots[lots.get("status", "").astype(str).str.lower().eq("closed")] if not lots.empty else pd.DataFrame()
-    closed_days = pd.to_numeric(closed.get("days_open"), errors="coerce")
+    # Closed lots only (robust even if schema changes / empty)
+    if lots is None or lots.empty:
+        closed = pd.DataFrame(columns=["days_open", "realized_pl$"])
+    else:
+        status_s = lots.get("status", pd.Series("", index=lots.index, dtype="object")).astype(str).str.lower()
+        closed = lots.loc[status_s.eq("closed")].copy()
 
-    avg_hold = float(closed_days.mean()) if closed_days.notna().any() else np.nan
-    med_hold = float(closed_days.median()) if closed_days.notna().any() else np.nan
+    # ✅ Force closed_days to ALWAYS be a Series
+    if ("days_open" in closed.columns) and (closed is not None) and (not closed.empty):
+        closed_days = pd.to_numeric(closed["days_open"], errors="coerce")
+    else:
+        closed_days = pd.Series(dtype=float)
+
+    has_days = bool(getattr(closed_days, "notna", lambda: pd.Series([False]))().any())
+    avg_hold = float(closed_days.mean()) if has_days else np.nan
+    med_hold = float(closed_days.median()) if has_days else np.nan
 
     pl = pd.to_numeric(closed.get("realized_pl$"), errors="coerce").fillna(0.0)
     win_rate = float((pl > 0).mean() * 100.0) if len(pl) else np.nan
