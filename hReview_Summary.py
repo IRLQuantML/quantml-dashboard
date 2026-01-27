@@ -3891,40 +3891,53 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
     except Exception:
         pass  # keep NaN on any data issue
 
-    # ====================== KPI CARDS ======================
-    c1, c2, c3, c4 = st.columns(4)
+    c1, c2, c3, c4, c5 = st.columns([1, 1, 1, 1.2, 0.8])
 
-    # Portfolio-level (from equity curve)
     with c1:
         tone = "pos" if (day_pl_pct or 0) >= 0 else "neg"
         arrow = "▲" if tone == "pos" else "▼"
-        _kpi_card("📈 Portfolio P&L (Today, %)",
-                  f"{arrow} {(day_pl_pct if np.isfinite(day_pl_pct) else 0):+.2f}%",
-                  tone)
+        _kpi_card(
+            "📈 Portfolio P&L (Today, %)",
+            f"{arrow} {(day_pl_pct if np.isfinite(day_pl_pct) else 0):+.2f}%",
+            tone
+        )
 
     with c2:
         tone = "pos" if (day_pl_usd or 0) >= 0 else "neg"
         arrow = "▲" if tone == "pos" else "▼"
-        _kpi_card("💰 Portfolio P&L (Today, $)",
-                  f"{arrow} {money(day_pl_usd)}",
-                  tone)
+        _kpi_card(
+            "💰 Portfolio P&L (Today, $)",
+            f"{arrow} {money(day_pl_usd)}",
+            tone
+        )
 
-    # Open positions (sum of intraday)
     with c3:
         val = today_total_pl_pct if np.isfinite(today_total_pl_pct) else 0.0
         tone = "pos" if val >= 0 else "neg"
-
         arrow = "▲" if tone == "pos" else "▼"
-        _kpi_card("🟢 Open Positions P&L (Today, %)",
-                  f"{arrow} {(today_total_pl_pct if np.isfinite(today_total_pl_pct) else 0):+.2f}%",
-                  tone)
+        _kpi_card(
+            "🟢 Open Positions P&L (Today, %)",
+            f"{arrow} {val:+.2f}%",
+            tone
+        )
 
     with c4:
         tone = "pos" if (today_total_pl_usd or 0) >= 0 else "neg"
         arrow = "▲" if tone == "pos" else "▼"
-        _kpi_card("💹 Open Positions Intraday P&L ($)",
-                  f"{arrow} {money(today_total_pl_usd)}",
-                  tone)
+        _kpi_card(
+            "💹 Open Positions Intraday P&L ($)",
+            f"{arrow} {money(today_total_pl_usd)}",
+            tone
+        )
+
+    with c5:
+        snap = pull_account_snapshot_cached("paper")
+        portfolio_value = snap.get("portfolio_value")
+        _kpi_card(
+            "Total Portfolio Value",
+            money(portfolio_value),
+            "neutral"
+        )
 
     # === Open Positions vs SPY caption (color-coded) ===
     _render_open_vs_spy_caption(today_total_pl_pct, spy_intraday_pct)
@@ -6133,11 +6146,13 @@ def main() -> None:
     except Exception:
         k_sec = s_sec = paper_url = live_url = ""
 
-    st.caption(
-        f"Auth → secrets_key={_last4(k_sec)} secrets_secret={'set' if s_sec else 'none'} | "
-        f"paper_url={'set' if paper_url else 'none'} live_url={'set' if live_url else 'none'} | "
-        f"api_base_url={getattr(api, 'base_url', None)}"
-    )
+    # --- Auth diagnostics (DEBUG ONLY – hidden in production) ---
+    if os.getenv("QML_DEBUG", "0") == "1":
+        st.caption(
+            f"Auth → secrets_key={_last4(k_sec)} secrets_secret={'set' if s_sec else 'none'} | "
+            f"paper_url={'set' if paper_url else 'none'} live_url={'set' if live_url else 'none'} | "
+            f"api_base_url={getattr(api, 'base_url', None)}"
+        )
 
     # === Load positions once (and enrich) — use everywhere below ===
     positions = pull_live_positions(api)
