@@ -15,18 +15,19 @@ config.py
 .env
 .env.*
 
+# ✅ Allow the SAFE template file (track this)
+!config.example.py
+
 # Allow dashboard files
 !hReview_Summary.py
 !hReview Git Push.bat
 !QuantML.png
 !requirements.txt
-!config.py
 
 # Allow Clock folder
 !Clock/
-Clock/*
+!Clock/**
 
-# Allow entire 2.Features_test folder AND all CSV inside it
+# Allow entire 2.Features_test folder AND all contents
 !2.Features_test/
 !2.Features_test/**
-
