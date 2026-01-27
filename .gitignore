@@ -22,3 +22,6 @@ Clock/*
 # Allow entire 2.Features_test folder AND all CSV inside it
 !2.Features_test/
 !2.Features_test/**
+
+# Local configuration (contains secrets)
+config.py
