@@ -70,40 +70,58 @@ _LAST_ALPACA_CALL_TS = 0.0
 _MIN_CALL_GAP_SEC = 0.15  # adjust 0.10–0.30 if needed
 
 @st.cache_resource(show_spinner=False)
-def _alpaca_client() -> Optional[REST]:
+def _alpaca_client(_cache_buster: str = ""):
     """
-    Create ONE Alpaca REST client and cache it for the Streamlit process.
-    Order of precedence:
-      1) Streamlit secrets (Cloud)
-      2) Environment variables
-      3) config.py (local dev only)
+    Alpaca client creation.
+    Cloud:   Secrets ONLY
+    Local:   Env → config.py
     """
-    # 1) Streamlit secrets first (Cloud)
-    try:
-        key    = (st.secrets.get("ALPACA_API_KEY", "") or "").strip()
-        secret = (st.secrets.get("ALPACA_SECRET_KEY", "") or "").strip()
-        use_live = str(st.secrets.get("USE_LIVE_TRADING", "0")).strip() in ("1", "true", "True")
-        live_url  = (st.secrets.get("ALPACA_LIVE_URL", "https://api.alpaca.markets") or "").strip()
-        paper_url = (st.secrets.get("ALPACA_PAPER_URL", "https://paper-api.alpaca.markets") or "").strip()
-        if key and secret:
-            base = live_url if use_live else paper_url
-            return REST(key, secret, base_url=base)
-    except Exception:
-        pass
 
-    # 2) Environment variables next
+    on_cloud = _running_on_streamlit_cloud()
+
+    # ==========================================================
+    # 1️⃣ Streamlit Cloud → Secrets ONLY
+    # ==========================================================
+    if on_cloud:
+        try:
+            key    = (st.secrets.get("ALPACA_API_KEY", "") or "").strip()
+            secret = (st.secrets.get("ALPACA_SECRET_KEY", "") or "").strip()
+            use_live = str(st.secrets.get("USE_LIVE_TRADING", "0")).lower() in ("1","true","yes")
+            paper_url = (st.secrets.get("ALPACA_PAPER_URL", "") or "").strip()
+            live_url  = (st.secrets.get("ALPACA_LIVE_URL", "") or "").strip()
+
+            if key and secret:
+                base = live_url if use_live else paper_url
+                return REST(key, secret, base_url=base)
+        except Exception:
+            pass
+
+        return None   # 🚨 DO NOT FALL THROUGH TO ENV VARS ON CLOUD
+
+    # ==========================================================
+    # 2️⃣ Local / dev → env vars
+    # ==========================================================
     key    = (os.getenv("ALPACA_API_KEY") or "").strip()
     secret = (os.getenv("ALPACA_SECRET_KEY") or "").strip()
-    use_live = str(os.getenv("USE_LIVE_TRADING", "0")).strip() in ("1", "true", "True")
-    live_url  = (os.getenv("ALPACA_LIVE_URL") or "https://api.alpaca.markets").strip()
+    use_live = str(os.getenv("USE_LIVE_TRADING", "0")).lower() in ("1","true","yes")
     paper_url = (os.getenv("ALPACA_PAPER_URL") or "https://paper-api.alpaca.markets").strip()
+    live_url  = (os.getenv("ALPACA_LIVE_URL") or "https://api.alpaca.markets").strip()
+
     if key and secret:
         base = live_url if use_live else paper_url
         return REST(key, secret, base_url=base)
 
-    # 3) Local dev fallback
+    # ==========================================================
+    # 3️⃣ Local fallback → config.py
+    # ==========================================================
     try:
-        from config import ALPACA_API_KEY, ALPACA_SECRET_KEY, USE_LIVE_TRADING, ALPACA_LIVE_URL, ALPACA_PAPER_URL
+        from config import (
+            ALPACA_API_KEY,
+            ALPACA_SECRET_KEY,
+            USE_LIVE_TRADING,
+            ALPACA_PAPER_URL,
+            ALPACA_LIVE_URL,
+        )
         if ALPACA_API_KEY and ALPACA_SECRET_KEY:
             base = ALPACA_LIVE_URL if USE_LIVE_TRADING else ALPACA_PAPER_URL
             return REST(ALPACA_API_KEY, ALPACA_SECRET_KEY, base_url=base)
@@ -117,6 +135,10 @@ def _cached_orders(_key: str) -> list:
     api = _alpaca_client()
     res = _alpaca_call(api.list_orders, status="all", limit=500, label="list_orders", max_tries=2)
     return res or []
+
+def _running_on_streamlit_cloud() -> bool:
+    # STREAMLIT_SERVER_PORT is always set on Streamlit Cloud
+    return bool(os.getenv("STREAMLIT_SERVER_PORT"))
 
 @st.cache_data(ttl=15, show_spinner=False)
 def pull_account_snapshot_cached(_key: str) -> dict:
@@ -6061,15 +6083,29 @@ def main() -> None:
     api = _alpaca_client()
     render_header(api)  # clock + heading + ticker ribbon
 
-    # --- Safe diagnostics (won't crash if no secrets.toml locally) ---
+    # --- Safe diagnostics (won't leak secrets) ---
+    def _last4(x: str) -> str:
+        x = (x or "").strip()
+        return ("***" + x[-4:]) if len(x) >= 4 else ("set" if x else "none")
+
     try:
-        sec_key_present = bool((st.secrets.get("ALPACA_API_KEY", "") or "").strip())
+        k_sec = (st.secrets.get("ALPACA_API_KEY", "") or "").strip()
+        s_sec = (st.secrets.get("ALPACA_SECRET_KEY", "") or "").strip()
+        live_sec = str(st.secrets.get("USE_LIVE_TRADING", "0")).strip().lower() in ("1", "true", "yes")
     except Exception:
-        sec_key_present = False
+        k_sec = s_sec = ""
+        live_sec = False
 
-    env_key_present = bool((os.getenv("ALPACA_API_KEY") or "").strip())
+    k_env = (os.getenv("ALPACA_API_KEY") or "").strip()
+    s_env = (os.getenv("ALPACA_SECRET_KEY") or "").strip()
+    live_env = str(os.getenv("USE_LIVE_TRADING", "0")).strip().lower() in ("1", "true", "yes")
 
-    st.caption(f"Auth source check → secrets:{sec_key_present} | env:{env_key_present}")
+    st.caption(
+        "Auth fingerprint → "
+        f"secrets_key={_last4(k_sec)} secrets_secret={'set' if s_sec else 'none'} use_live(secrets)={live_sec} | "
+        f"env_key={_last4(k_env)} env_secret={'set' if s_env else 'none'} use_live(env)={live_env} | "
+        f"api_base_url={getattr(api, 'base_url', None)}"
+    )
 
     # === Load positions once (and enrich) — use everywhere below ===
     positions = pull_live_positions(api)
