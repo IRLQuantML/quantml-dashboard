@@ -6080,7 +6080,16 @@ def filter_positions_hide_stale(api: REST | None, positions: pd.DataFrame) -> pd
 # Main — orchestrate sections (no duplicates)
 # =============================================================================
 def main() -> None:
-    api = _alpaca_client()
+    try:
+        buster = str(st.secrets.get("ALPACA_API_KEY", "") or "")[-4:]
+    except Exception:
+        buster = ""
+
+    api = _alpaca_client(buster)
+    if api is None:
+        st.error("❌ Alpaca client not initialized. Check Streamlit Secrets and reboot the app.")
+        st.stop()
+
     render_header(api)  # clock + heading + ticker ribbon
 
     # --- Safe diagnostics (won't leak secrets) ---
@@ -6091,19 +6100,14 @@ def main() -> None:
     try:
         k_sec = (st.secrets.get("ALPACA_API_KEY", "") or "").strip()
         s_sec = (st.secrets.get("ALPACA_SECRET_KEY", "") or "").strip()
-        live_sec = str(st.secrets.get("USE_LIVE_TRADING", "0")).strip().lower() in ("1", "true", "yes")
+        paper_url = (st.secrets.get("ALPACA_PAPER_URL", "") or "").strip()
+        live_url  = (st.secrets.get("ALPACA_LIVE_URL", "") or "").strip()
     except Exception:
-        k_sec = s_sec = ""
-        live_sec = False
-
-    k_env = (os.getenv("ALPACA_API_KEY") or "").strip()
-    s_env = (os.getenv("ALPACA_SECRET_KEY") or "").strip()
-    live_env = str(os.getenv("USE_LIVE_TRADING", "0")).strip().lower() in ("1", "true", "yes")
+        k_sec = s_sec = paper_url = live_url = ""
 
     st.caption(
-        "Auth fingerprint → "
-        f"secrets_key={_last4(k_sec)} secrets_secret={'set' if s_sec else 'none'} use_live(secrets)={live_sec} | "
-        f"env_key={_last4(k_env)} env_secret={'set' if s_env else 'none'} use_live(env)={live_env} | "
+        f"Auth → secrets_key={_last4(k_sec)} secrets_secret={'set' if s_sec else 'none'} | "
+        f"paper_url={'set' if paper_url else 'none'} live_url={'set' if live_url else 'none'} | "
         f"api_base_url={getattr(api, 'base_url', None)}"
     )
 
