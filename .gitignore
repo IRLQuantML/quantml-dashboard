@@ -8,6 +8,13 @@
 # Allow the .gitignore itself
 !.gitignore
 
+# ==================================================
+# Local secrets / machine-specific config
+# ==================================================
+config.py
+.env
+.env.*
+
 # Allow dashboard files
 !hReview_Summary.py
 !hReview Git Push.bat
@@ -23,5 +30,3 @@ Clock/*
 !2.Features_test/
 !2.Features_test/**
 
-# Local configuration (contains secrets)
-config.py
