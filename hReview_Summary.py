@@ -2311,7 +2311,31 @@ def render_spy_vs_quantml_daily(api: Optional[REST], period: str = "1M") -> None
         spy = spy[spy["date_et"].isin(last2)]
 
         qm["date_et"] = qm["ts"].dt.date
-        if qm["date_et"].max() > spy["date_et"].max():
+
+        # --- Safe compare (avoid NaN vs date TypeError) ---
+        def _max_date(series) -> object:
+            if series is None:
+                return None
+            s = pd.Series(series).dropna()
+            if s.empty:
+                return None
+            # keep only real date/datetime values
+            vals = []
+            for v in s.tolist():
+                # v may be datetime.date, datetime.datetime, or junk/NaN
+                if isinstance(v, datetime):
+                    vals.append(v.date())
+                elif hasattr(v, "year") and hasattr(v, "month") and hasattr(v, "day"):
+                    # catches datetime.date
+                    vals.append(v)
+            if not vals:
+                return None
+            return max(vals)
+
+        qm_max  = _max_date(qm.get("date_et"))
+        spy_max = _max_date(spy.get("date_et"))
+
+        if (qm_max is not None) and (spy_max is not None) and (qm_max > spy_max):
             # Overlay pre-market day onto prior SPY session
             qm["ts"] -= pd.Timedelta(days=1)
             qm["date_et"] = qm["ts"].dt.date
