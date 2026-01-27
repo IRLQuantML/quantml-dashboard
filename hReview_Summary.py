@@ -3844,7 +3844,11 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
         c_today_usd = next((c for c in intraday_cols_usd if c in z.columns), None)
 
         if c_today_usd is not None:
-            today_total_pl_usd = float(pd.to_numeric(z[c_today_usd], errors="coerce").fillna(0.0).sum())
+            today_total_pl_usd = float(
+                pd.to_numeric(z[c_today_usd], errors="coerce")
+                .fillna(0.0)
+                .sum()
+            )
 
         if np.isfinite(today_total_pl_usd) and np.isfinite(start_equity) and start_equity > 0:
             today_total_pl_pct = (today_total_pl_usd / start_equity) * 100.0
