@@ -6058,8 +6058,18 @@ def filter_positions_hide_stale(api: REST | None, positions: pd.DataFrame) -> pd
 # Main — orchestrate sections (no duplicates)
 # =============================================================================
 def main() -> None:
-    api = _load_alpaca_api()
+    api = _alpaca_client()
     render_header(api)  # clock + heading + ticker ribbon
+
+    # --- Safe diagnostics (won't crash if no secrets.toml locally) ---
+    try:
+        sec_key_present = bool((st.secrets.get("ALPACA_API_KEY", "") or "").strip())
+    except Exception:
+        sec_key_present = False
+
+    env_key_present = bool((os.getenv("ALPACA_API_KEY") or "").strip())
+
+    st.caption(f"Auth source check → secrets:{sec_key_present} | env:{env_key_present}")
 
     # === Load positions once (and enrich) — use everywhere below ===
     positions = pull_live_positions(api)
