@@ -73,27 +73,44 @@ _MIN_CALL_GAP_SEC = 0.15  # adjust 0.10–0.30 if needed
 def _alpaca_client() -> Optional[REST]:
     """
     Create ONE Alpaca REST client and cache it for the Streamlit process.
-    Uses config.py when available, else environment variables.
+    Order of precedence:
+      1) Streamlit secrets (Cloud)
+      2) Environment variables
+      3) config.py (local dev only)
     """
+    # 1) Streamlit secrets first (Cloud)
     try:
-        # prefer config.py if present
+        key    = (st.secrets.get("ALPACA_API_KEY", "") or "").strip()
+        secret = (st.secrets.get("ALPACA_SECRET_KEY", "") or "").strip()
+        use_live = str(st.secrets.get("USE_LIVE_TRADING", "0")).strip() in ("1", "true", "True")
+        live_url  = (st.secrets.get("ALPACA_LIVE_URL", "https://api.alpaca.markets") or "").strip()
+        paper_url = (st.secrets.get("ALPACA_PAPER_URL", "https://paper-api.alpaca.markets") or "").strip()
+        if key and secret:
+            base = live_url if use_live else paper_url
+            return REST(key, secret, base_url=base)
+    except Exception:
+        pass
+
+    # 2) Environment variables next
+    key    = (os.getenv("ALPACA_API_KEY") or "").strip()
+    secret = (os.getenv("ALPACA_SECRET_KEY") or "").strip()
+    use_live = str(os.getenv("USE_LIVE_TRADING", "0")).strip() in ("1", "true", "True")
+    live_url  = (os.getenv("ALPACA_LIVE_URL") or "https://api.alpaca.markets").strip()
+    paper_url = (os.getenv("ALPACA_PAPER_URL") or "https://paper-api.alpaca.markets").strip()
+    if key and secret:
+        base = live_url if use_live else paper_url
+        return REST(key, secret, base_url=base)
+
+    # 3) Local dev fallback
+    try:
         from config import ALPACA_API_KEY, ALPACA_SECRET_KEY, USE_LIVE_TRADING, ALPACA_LIVE_URL, ALPACA_PAPER_URL
+        if ALPACA_API_KEY and ALPACA_SECRET_KEY:
+            base = ALPACA_LIVE_URL if USE_LIVE_TRADING else ALPACA_PAPER_URL
+            return REST(ALPACA_API_KEY, ALPACA_SECRET_KEY, base_url=base)
     except Exception:
-        ALPACA_API_KEY    = os.getenv("ALPACA_API_KEY")
-        ALPACA_SECRET_KEY = os.getenv("ALPACA_SECRET_KEY")
-        USE_LIVE_TRADING  = bool(int(os.getenv("USE_LIVE_TRADING", "0")))
-        ALPACA_LIVE_URL   = os.getenv("ALPACA_LIVE_URL", "https://api.alpaca.markets")
-        ALPACA_PAPER_URL  = os.getenv("ALPACA_PAPER_URL", "https://paper-api.alpaca.markets")
+        pass
 
-    if not ALPACA_API_KEY or not ALPACA_SECRET_KEY:
-        # don’t spam warnings on every rerun; just return None
-        return None
-
-    base = ALPACA_LIVE_URL if USE_LIVE_TRADING else ALPACA_PAPER_URL
-    try:
-        return REST(ALPACA_API_KEY, ALPACA_SECRET_KEY, base_url=base)
-    except Exception:
-        return None
+    return None
 
 @st.cache_data(ttl=30, show_spinner=False)
 def _cached_orders(_key: str) -> list:
