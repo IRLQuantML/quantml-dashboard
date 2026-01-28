@@ -199,17 +199,66 @@ def _yahoo_prev_close(symbol: str) -> float:
     except Exception:
         return np.nan
 
-def spy_close_to_now_return_pct_yahoo() -> float:
+def spy_close_to_now_return_pct(api: Optional[REST]):
     """
-    SPY return (%) from Yahoo: previous close -> current price.
-    This includes overnight/pre-market effects (same economic definition you want).
+    OLD working method:
+    SPY intraday return (%) during regular session only (09:30–16:00 ET),
+    computed from 5-min returns and compounded.
+    Returns:
+      {"pct": float, "px": float} or None
     """
-    px = _yahoo_quote_price("SPY")
-    prev = _yahoo_prev_close("SPY")
-    if not np.isfinite(px) or not np.isfinite(prev) or prev <= 0:
-        return np.nan
-    return (px / prev - 1.0) * 100.0
+    import numpy as np
+    import pandas as pd
+    from datetime import datetime, timezone
+    try:
+        from zoneinfo import ZoneInfo
+        et = ZoneInfo("US/Eastern")
+    except Exception:
+        et = timezone.utc
 
+    try:
+        spy_5 = _symbol_returns_5min_robust(api, "SPY", days=3)
+        if spy_5 is None or spy_5.empty:
+            return None
+
+        spy_5 = spy_5.copy()
+        spy_5["ts"] = pd.to_datetime(spy_5["ts"], utc=True, errors="coerce").dt.tz_convert(et)
+        spy_5 = spy_5.dropna(subset=["ts"])
+
+        # Regular session window
+        mopen  = pd.to_datetime("09:30").time()
+        mclose = pd.to_datetime("16:00").time()
+        spy_5 = spy_5[(spy_5["ts"].dt.time >= mopen) & (spy_5["ts"].dt.time <= mclose)]
+        if spy_5.empty:
+            return None
+
+        today_et = datetime.now(et).date()
+        tday = spy_5[spy_5["ts"].dt.date == today_et]
+        if tday.empty:
+            return None
+
+        # Compound intraday return
+        rets = pd.to_numeric(tday["ret"], errors="coerce").dropna().to_numpy()
+        if rets.size == 0:
+            return None
+
+        pct = float((np.prod(1.0 + rets / 100.0) - 1.0) * 100.0)
+
+        # Best-effort "now price": last close in the filtered bars
+        # (this mirrors the OLD dashboard behaviour)
+        if "close" in tday.columns:
+            px_series = pd.to_numeric(tday["close"], errors="coerce").dropna()
+            px = float(px_series.iloc[-1]) if not px_series.empty else np.nan
+        else:
+            px = np.nan
+
+        out = {"pct": pct}
+        if np.isfinite(px) and px > 0:
+            out["px"] = px
+        return out
+
+    except Exception:
+        return None
 
 def _alpaca_call(fn, *args, label: str = "", max_tries: int = 2, **kwargs):
     """
@@ -320,44 +369,6 @@ def intraday_rth_return_pct(api: Optional[REST], symbol: str) -> float:
     # Compound intraday returns from session open
     return float((np.prod(1.0 + tday["ret"].to_numpy() / 100.0) - 1.0) * 100.0)
 
-def spy_close_to_now_return_pct(api: Optional[REST]) -> float:
-    """
-    SPY return (%) from prior close to now.
-
-    Preferred: Alpaca (if allowed).
-    Fallback: Yahoo (when Alpaca denies SIP data or returns empty).
-    Never throws — always returns NaN on failure.
-    """
-    # --- Try Alpaca first (but NEVER crash if subscription blocks it) ---
-    try:
-        if api is not None:
-            bars_d = _get_benchmark_bars_alpaca(api, "SPY", timeframe="1D", days=7)
-            if bars_d is not None and (not bars_d.empty) and len(bars_d) >= 2:
-                bars_d = bars_d.sort_values("ts")
-                prev_close = float(pd.to_numeric(bars_d["close"], errors="coerce").iloc[-2])
-
-                # "now" price attempt from Alpaca
-                last_px = np.nan
-                try:
-                    t = _alpaca_call(api.get_latest_trade, "SPY", label="latest_trade:SPY", max_tries=2)
-                    if t is not None:
-                        last_px = float(getattr(t, "price", np.nan))
-                except Exception:
-                    last_px = np.nan
-
-                if not np.isfinite(last_px) or last_px <= 0:
-                    # fall back to last available daily close from Alpaca
-                    last_px = float(pd.to_numeric(bars_d["close"], errors="coerce").dropna().iloc[-1])
-
-                if np.isfinite(prev_close) and prev_close > 0 and np.isfinite(last_px) and last_px > 0:
-                    return (last_px / prev_close - 1.0) * 100.0
-    except Exception:
-        # Any Alpaca permission/feed issue -> fall through to Yahoo
-        pass
-
-    # --- Yahoo fallback (no paid SIP required) ---
-    return spy_close_to_now_return_pct_yahoo()
-
 def _get_benchmark_bars_alpaca(api: REST, symbol: str, timeframe: str, *, days: int):
     """
     Fetch SPY / benchmark bars from Alpaca only.
@@ -372,12 +383,12 @@ def _get_benchmark_bars_alpaca(api: REST, symbol: str, timeframe: str, *, days: 
     start = end - timedelta(days=days + 3)
 
     # Map your string timeframe to Alpaca TimeFrame
-    if timeframe.lower() in ("1d", "day", "1day", "daily"):
+    tfs = str(timeframe).lower()
+    if tfs in ("1d", "day", "1day", "daily"):
         tf = TimeFrame.Day
-    elif timeframe.lower() in ("1min", "minute", "1m"):
+    elif tfs in ("1min", "minute", "1m"):
         tf = TimeFrame.Minute
     else:
-        # default to daily
         tf = TimeFrame.Day
 
     bars = api.get_bars(
@@ -422,6 +433,79 @@ def _get_benchmark_bars_alpaca(api: REST, symbol: str, timeframe: str, *, days: 
 
     return pd.DataFrame(columns=["ts", "close"])
 
+def _alpaca_spy_close_to_now_iexbars(api: Optional[REST]) -> float:
+    """
+    SPY return (%) from prior close -> latest intraday price using Alpaca *IEX feed* only.
+    Works on paper accounts (no SIP) more reliably than get_latest_trade().
+    Returns NaN on failure.
+    """
+    if api is None:
+        return np.nan
+
+    try:
+        # 1) Prev close from daily bars (IEX)
+        bars_d = _get_benchmark_bars_alpaca(api, "SPY", timeframe="1D", days=10)
+        if bars_d is None or bars_d.empty or len(bars_d) < 2:
+            return np.nan
+        bars_d = bars_d.sort_values("ts")
+        dclose = pd.to_numeric(bars_d["close"], errors="coerce").dropna()
+        if len(dclose) < 2:
+            return np.nan
+        prev_close = float(dclose.iloc[-2])
+
+        # 2) "Now" price — prefer quote mid, else 1-min bar close, else last daily close
+        bars_m = _get_benchmark_bars_alpaca(api, "SPY", timeframe="1Min", days=2)
+
+        daily_close_series = pd.to_numeric(bars_d["close"], errors="coerce").dropna()
+        if daily_close_series.empty:
+            return None
+
+        # IMPORTANT: pick the LAST FINITE close, not just the last row
+        last_daily_close = float(daily_close_series[daily_close_series.notna()].iloc[-1])
+        if not np.isfinite(last_daily_close) or last_daily_close <= 0:
+            return None
+
+        # Prefer live-ish quote mid (closer to Yahoo)
+        mid = _alpaca_latest_mid(api, "SPY")
+        if np.isfinite(mid) and mid > 0:
+            last_px = float(mid)
+        else:
+            # Fallback to most recent completed 1-min bar close
+            if bars_m is not None and not bars_m.empty:
+                bars_m = bars_m.sort_values("ts")
+                px_series = pd.to_numeric(bars_m["close"], errors="coerce").dropna()
+                if not px_series.empty:
+                    last_px = float(px_series.iloc[-1])
+                else:
+                    last_px = last_daily_close
+            else:
+                last_px = last_daily_close
+
+        # Final hard guard: NEVER return NaN px if daily close exists
+        if not np.isfinite(last_px) or last_px <= 0:
+            last_px = last_daily_close
+
+        return {
+            "pct": (last_px / prev_close - 1.0) * 100.0,
+            "px": float(last_px),
+        }
+
+    except Exception:
+        return None
+
+def _alpaca_latest_mid(api: Optional[REST], symbol: str) -> float:
+    """Best-effort current price using Alpaca quote mid (more 'live' than bar close)."""
+    if api is None:
+        return np.nan
+    try:
+        q = api.get_latest_quote(symbol)
+        bid = float(getattr(q, "bidprice", None) or getattr(q, "bid_price", None) or np.nan)
+        ask = float(getattr(q, "askprice", None) or getattr(q, "ask_price", None) or np.nan)
+        if np.isfinite(bid) and np.isfinite(ask) and ask > 0 and bid > 0:
+            return 0.5 * (bid + ask)
+    except Exception:
+        pass
+    return np.nan
 
 def _load_features_for(symbol: str) -> pd.DataFrame:
     """
@@ -1013,35 +1097,99 @@ def state_badge(*, last_tp_ts, last_sl_ts, cooldown_min, move_atr, trigger_atr):
     else:
         st.caption("ℹ️ Watching…")
 
-def _render_quantml_vs_spy_deployed(qml_pct, spy_pct, nav_pct):
-    def _fmt(v):
-        return f"{float(v):+.2f}%" if v is not None and np.isfinite(v) else "—"
+def _render_quantml_vs_spy_deployed(qml_pct, spy, nav_pct, *, deployed_usd=None, open_value_usd=None):
+    import numpy as np
+
+    # ---- safe numeric coercion (KEEP NaN as NaN; never coerce to 0) ----
+    def _safe_nan(v):
+        try:
+            v = float(v)
+            return v if np.isfinite(v) else np.nan
+        except Exception:
+            return np.nan
+
+    qml_pct = _safe_nan(qml_pct)
+    nav_pct = _safe_nan(nav_pct)
+
+    # ---- unpack SPY dict {pct, px} ----
+    spy_pct = np.nan
+    spy_px  = np.nan
+    if isinstance(spy, dict):
+        spy_pct = _safe_nan(spy.get("pct"))
+        spy_px  = _safe_nan(spy.get("px"))
+
+    # ---- formatters ----
+    def _fmt_pct(v):
+        return "—" if not np.isfinite(v) else f"{v:+.2f}%"
+
+    def _fmt_px(v):
+        return "—" if not np.isfinite(v) else f"${v:,.2f}"
+
+    def _fmt_money(v):
+        return "—" if not np.isfinite(v) else f"${v:,.0f}"
 
     def _col(v):
-        if v is None or not np.isfinite(v):
-            return "#6B7280"
+        # Grey when missing
+        if not np.isfinite(v):
+            return "#64748B"
         return BRAND["success"] if v >= 0 else BRAND["danger"]
 
-    st.markdown(
-        f"""
-        <div style="text-align:center;margin-top:14px;margin-bottom:6px;">
-            <div style="font-size:1.6rem;font-weight:800;">
-                <span style="color:{_col(qml_pct)};">QuantML {_fmt(qml_pct)}</span>
-                &nbsp;&nbsp;vs&nbsp;&nbsp;
-                <span style="color:{_col(spy_pct)};">SPY {_fmt(spy_pct)}</span>
-            </div>
-            <div style="font-size:1.05rem;margin-top:6px;color:#64748B;">
-                QuantML return is based on <b>capital deployed</b>.
-                SPY return is from <b>prior close to now</b>.
-            </div>
-            <div style="font-size:0.95rem;margin-top:4px;color:#94A3B8;">
-                NAV impact today: {_fmt(nav_pct)}
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    # Optional detail line (nice for investors)
+    detail = ""
+    if deployed_usd is not None or open_value_usd is not None:
+        d = _safe_nan(deployed_usd) if deployed_usd is not None else np.nan
+        o = _safe_nan(open_value_usd) if open_value_usd is not None else np.nan
 
+        pieces = []
+        if np.isfinite(d):
+            pieces.append(f"Capital deployed: <b>{_fmt_money(d)}</b>")
+        if np.isfinite(o):
+            pieces.append(f"Open value: <b>{_fmt_money(o)}</b>")
+
+        if pieces:
+            detail = (
+                "<div style='"
+                "display:inline-block;"
+                "padding:10px 14px;"
+                "border-radius:10px;"
+                "background:#F8FAFC;"
+                "border:1px solid #E5E7EB;"
+                "margin-top:10px;"
+                "color:#475569;"
+                "font-size:0.98rem;"
+                "'>"
+                + " &nbsp;·&nbsp; ".join(pieces) +
+                "</div>"
+            )
+
+    import streamlit.components.v1 as components
+    # Render as raw HTML (bypasses Streamlit Markdown parsing => no stray </span>)
+    html = f"""
+    <div style="text-align:center;margin-top:14px;margin-bottom:6px;font-family:system-ui,-apple-system,Segoe UI,Roboto;">
+
+      <div style="font-size:1.6rem;font-weight:800;">
+        <span style="color:{_col(qml_pct)};">
+          QuantML (on deployed capital) {_fmt_pct(qml_pct)}
+        </span>
+        &nbsp;&nbsp;vs&nbsp;&nbsp;
+        <span style="color:{_col(spy_pct)};">
+          SPY {("unavailable" if not np.isfinite(spy_pct) else _fmt_pct(spy_pct))}
+          {("" if not np.isfinite(spy_px) else f"({_fmt_px(spy_px)})")}
+        </span>
+      </div>
+
+      {detail}
+
+      <div style="font-size:0.95rem;margin-top:4px;color:#94A3B8;">
+        NAV impact today: {_fmt_pct(nav_pct)}
+      </div>
+
+    </div>
+    """
+
+    # height: give a bit more room when the detail pill is present
+    h = 150 if detail else 110
+    components.html(html, height=h, scrolling=False)
 
 def render_positions_panel(api, positions: pd.DataFrame, *, atr_mode: dict | None = None) -> None:
     """
@@ -4037,12 +4185,12 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
             today_total_pl_pct = float(today_total_pl_usd / start_equity * 100.0)
 
     # ===== SPY return (prior close → now, includes pre-market) =====
-    spy_full_day_pct = spy_close_to_now_return_pct(api)
+    spy = spy_close_to_now_return_pct(api)
 
-    if not np.isfinite(spy_full_day_pct):
-        st.caption("⚠️ SPY benchmark unavailable (Alpaca feed blocked + Yahoo fetch failed).")
+    if not isinstance(spy, dict):
+        st.caption("ℹ️ SPY benchmark not yet updated intraday (using prior close).")
     else:
-        st.caption("ℹ️ SPY benchmark uses prior close → now (Yahoo fallback if Alpaca blocks SIP).")
+        st.caption("ℹ️ SPY benchmark uses prior close → now.")
 
     # ===== QuantML intraday return on DEPLOYED capital (skill metric) =====
     quantml_deployed_pct = np.nan
@@ -4055,13 +4203,27 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
     except Exception:
         quantml_deployed_pct = np.nan
 
-    c1, c2, c3, c4, c5 = st.columns([1, 1, 1, 1.2, 0.8])
+    # ===== Capital deployed + Open positions current value =====
+    cap_deployed = np.nan      # "cost to open" (entry notional)
+    open_value   = np.nan      # current market value of opens
+    if positions is not None and not positions.empty:
+        try:
+            # Uses your existing helper (already in file)
+            led = _compute_open_ledger(positions)
+            cap_deployed = float(led.get("cost_open", np.nan))
+            open_value   = float(led.get("open_value", np.nan))
+        except Exception:
+            cap_deployed = np.nan
+            open_value   = np.nan
+
+    c1, c2, c3, c4, c5 = st.columns([1, 1, 1, 1, 1])
+
 
     with c1:
         tone = "pos" if (day_pl_pct or 0) >= 0 else "neg"
         arrow = "▲" if tone == "pos" else "▼"
         _kpi_card(
-            "📈 Portfolio P&L (Today, %)",
+            "📈 Portfolio P&L (Today)",
             f"{arrow} {(day_pl_pct if np.isfinite(day_pl_pct) else 0):+.2f}%",
             tone
         )
@@ -4070,7 +4232,7 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
         tone = "pos" if (day_pl_usd or 0) >= 0 else "neg"
         arrow = "▲" if tone == "pos" else "▼"
         _kpi_card(
-            "💰 Portfolio P&L (Today, $)",
+            "💰 Portfolio P&L (Today)",
             f"{arrow} {money(day_pl_usd)}",
             tone
         )
@@ -4103,11 +4265,12 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
             "neutral"
         )
 
-    # ===== Primary comparison: deployed capital vs SPY =====
     _render_quantml_vs_spy_deployed(
         qml_pct=quantml_deployed_pct,
-        spy_pct=spy_full_day_pct,
-        nav_pct=day_pl_pct   # NAV context shown as secondary
+        spy=spy,
+        nav_pct=day_pl_pct,
+        deployed_usd=cap_deployed,
+        open_value_usd=open_value
     )
 
     # ===== Traffic Lights directly under the benchmark caption =====
@@ -4115,41 +4278,6 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
     render_traffic_lights(positions)
     render_color_system_legend()
     st.divider()
-
-    # ===== Dual comparison caption (NAV + deployed capital) =====
-    def _render_quantml_vs_spy_dual(nav_pct, deployed_pct, spy_pct):
-        def _fmt(v):
-            return f"{float(v):+.2f}%" if v is not None and np.isfinite(v) else "—"
-
-        def _col(v):
-            if v is None or not np.isfinite(v):
-                return "#6B7280"
-            return BRAND["success"] if v >= 0 else BRAND["danger"]
-
-        st.markdown(
-            f"""
-            <div style="text-align:center;margin-top:12px;margin-bottom:6px;">
-                <div style="font-size:1.6rem;font-weight:800;">
-                    <span style="color:{_col(nav_pct)};">QuantML (NAV) {_fmt(nav_pct)}</span>
-                    &nbsp;&nbsp;vs&nbsp;&nbsp;
-                    <span style="color:{_col(spy_pct)};">SPY {_fmt(spy_pct)}</span>
-                </div>
-                <div style="font-size:1.1rem;margin-top:6px;">
-                    <span style="color:{_col(deployed_pct)};font-weight:700;">
-                        QuantML (on deployed capital): {_fmt(deployed_pct)}
-                    </span>
-                </div>
-                <div style="font-size:1.0rem;color:#64748B;margin-top:4px;">
-                    (intraday, regular session only)
-                </div>
-                <div style="font-size:0.95rem;color:#94A3B8;margin-top:2px;">
-                    NAV uses total equity. Deployed capital uses gross exposure only.
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
     st.markdown("---")
 
     # Realized today (net of fees) — may fail under rate limiting
