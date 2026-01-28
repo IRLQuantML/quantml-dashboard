@@ -164,6 +164,52 @@ def _cached_asset(_key: str, symbol: str):
     api = _alpaca_client()
     return _alpaca_call(api.get_asset, symbol, label=f"asset:{symbol}", max_tries=2)
 
+import urllib.request
+import json
+
+def _yahoo_quote_price(symbol: str) -> float:
+    """
+    Fetch latest regularMarketPrice from Yahoo quote API (no key required).
+    Returns NaN on failure.
+    """
+    try:
+        url = f"https://query1.finance.yahoo.com/v7/finance/quote?symbols={symbol}"
+        with urllib.request.urlopen(url, timeout=6) as r:
+            data = json.loads(r.read().decode("utf-8"))
+        res = (data.get("quoteResponse", {}) or {}).get("result", []) or []
+        if not res:
+            return np.nan
+        return float(res[0].get("regularMarketPrice", np.nan))
+    except Exception:
+        return np.nan
+
+def _yahoo_prev_close(symbol: str) -> float:
+    """
+    Fetch previous close from Yahoo quote API.
+    Returns NaN on failure.
+    """
+    try:
+        url = f"https://query1.finance.yahoo.com/v7/finance/quote?symbols={symbol}"
+        with urllib.request.urlopen(url, timeout=6) as r:
+            data = json.loads(r.read().decode("utf-8"))
+        res = (data.get("quoteResponse", {}) or {}).get("result", []) or []
+        if not res:
+            return np.nan
+        return float(res[0].get("regularMarketPreviousClose", np.nan))
+    except Exception:
+        return np.nan
+
+def spy_close_to_now_return_pct_yahoo() -> float:
+    """
+    SPY return (%) from Yahoo: previous close -> current price.
+    This includes overnight/pre-market effects (same economic definition you want).
+    """
+    px = _yahoo_quote_price("SPY")
+    prev = _yahoo_prev_close("SPY")
+    if not np.isfinite(px) or not np.isfinite(prev) or prev <= 0:
+        return np.nan
+    return (px / prev - 1.0) * 100.0
+
 
 def _alpaca_call(fn, *args, label: str = "", max_tries: int = 2, **kwargs):
     """
@@ -273,6 +319,44 @@ def intraday_rth_return_pct(api: Optional[REST], symbol: str) -> float:
 
     # Compound intraday returns from session open
     return float((np.prod(1.0 + tday["ret"].to_numpy() / 100.0) - 1.0) * 100.0)
+
+def spy_close_to_now_return_pct(api: Optional[REST]) -> float:
+    """
+    SPY return (%) from prior close to now.
+
+    Preferred: Alpaca (if allowed).
+    Fallback: Yahoo (when Alpaca denies SIP data or returns empty).
+    Never throws — always returns NaN on failure.
+    """
+    # --- Try Alpaca first (but NEVER crash if subscription blocks it) ---
+    try:
+        if api is not None:
+            bars_d = _get_benchmark_bars_alpaca(api, "SPY", timeframe="1D", days=7)
+            if bars_d is not None and (not bars_d.empty) and len(bars_d) >= 2:
+                bars_d = bars_d.sort_values("ts")
+                prev_close = float(pd.to_numeric(bars_d["close"], errors="coerce").iloc[-2])
+
+                # "now" price attempt from Alpaca
+                last_px = np.nan
+                try:
+                    t = _alpaca_call(api.get_latest_trade, "SPY", label="latest_trade:SPY", max_tries=2)
+                    if t is not None:
+                        last_px = float(getattr(t, "price", np.nan))
+                except Exception:
+                    last_px = np.nan
+
+                if not np.isfinite(last_px) or last_px <= 0:
+                    # fall back to last available daily close from Alpaca
+                    last_px = float(pd.to_numeric(bars_d["close"], errors="coerce").dropna().iloc[-1])
+
+                if np.isfinite(prev_close) and prev_close > 0 and np.isfinite(last_px) and last_px > 0:
+                    return (last_px / prev_close - 1.0) * 100.0
+    except Exception:
+        # Any Alpaca permission/feed issue -> fall through to Yahoo
+        pass
+
+    # --- Yahoo fallback (no paid SIP required) ---
+    return spy_close_to_now_return_pct_yahoo()
 
 def _get_benchmark_bars_alpaca(api: REST, symbol: str, timeframe: str, *, days: int):
     """
@@ -928,6 +1012,36 @@ def state_badge(*, last_tp_ts, last_sl_ts, cooldown_min, move_atr, trigger_atr):
         st.caption("✅ Ready to ratchet")
     else:
         st.caption("ℹ️ Watching…")
+
+def _render_quantml_vs_spy_deployed(qml_pct, spy_pct, nav_pct):
+    def _fmt(v):
+        return f"{float(v):+.2f}%" if v is not None and np.isfinite(v) else "—"
+
+    def _col(v):
+        if v is None or not np.isfinite(v):
+            return "#6B7280"
+        return BRAND["success"] if v >= 0 else BRAND["danger"]
+
+    st.markdown(
+        f"""
+        <div style="text-align:center;margin-top:14px;margin-bottom:6px;">
+            <div style="font-size:1.6rem;font-weight:800;">
+                <span style="color:{_col(qml_pct)};">QuantML {_fmt(qml_pct)}</span>
+                &nbsp;&nbsp;vs&nbsp;&nbsp;
+                <span style="color:{_col(spy_pct)};">SPY {_fmt(spy_pct)}</span>
+            </div>
+            <div style="font-size:1.05rem;margin-top:6px;color:#64748B;">
+                QuantML return is based on <b>capital deployed</b>.
+                SPY return is from <b>prior close to now</b>.
+            </div>
+            <div style="font-size:0.95rem;margin-top:4px;color:#94A3B8;">
+                NAV impact today: {_fmt(nav_pct)}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
 
 def render_positions_panel(api, positions: pd.DataFrame, *, atr_mode: dict | None = None) -> None:
     """
@@ -3922,8 +4036,13 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
         if start_equity and np.isfinite(start_equity) and start_equity > 0 and np.isfinite(today_total_pl_usd):
             today_total_pl_pct = float(today_total_pl_usd / start_equity * 100.0)
 
-    # ===== Optional: SPY intraday (for caption) =====
-    spy_intraday_pct = intraday_rth_return_pct(api, "SPY")
+    # ===== SPY return (prior close → now, includes pre-market) =====
+    spy_full_day_pct = spy_close_to_now_return_pct(api)
+
+    if not np.isfinite(spy_full_day_pct):
+        st.caption("⚠️ SPY benchmark unavailable (Alpaca feed blocked + Yahoo fetch failed).")
+    else:
+        st.caption("ℹ️ SPY benchmark uses prior close → now (Yahoo fallback if Alpaca blocks SIP).")
 
     # ===== QuantML intraday return on DEPLOYED capital (skill metric) =====
     quantml_deployed_pct = np.nan
@@ -3984,6 +4103,19 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
             "neutral"
         )
 
+    # ===== Primary comparison: deployed capital vs SPY =====
+    _render_quantml_vs_spy_deployed(
+        qml_pct=quantml_deployed_pct,
+        spy_pct=spy_full_day_pct,
+        nav_pct=day_pl_pct   # NAV context shown as secondary
+    )
+
+    # ===== Traffic Lights directly under the benchmark caption =====
+    st.markdown("<div style='height:10px'></div>", unsafe_allow_html=True)
+    render_traffic_lights(positions)
+    render_color_system_legend()
+    st.divider()
+
     # ===== Dual comparison caption (NAV + deployed capital) =====
     def _render_quantml_vs_spy_dual(nav_pct, deployed_pct, spy_pct):
         def _fmt(v):
@@ -4017,12 +4149,6 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
             """,
             unsafe_allow_html=True
         )
-
-    _render_quantml_vs_spy_dual(
-        nav_pct=today_total_pl_pct,
-        deployed_pct=quantml_deployed_pct,
-        spy_pct=spy_intraday_pct
-    )
 
     st.markdown("---")
 
@@ -6260,16 +6386,11 @@ def main() -> None:
     with tabs[0]:
         render_perf_and_risk_kpis(api, positions)
         st.divider()
-
-        render_traffic_lights(positions)
-        render_color_system_legend()
-        st.divider()
  
         # ✅ NEW: all 8 investor-grade sections
         # Use 1M by default; after equity chart runs we’ll re-run alpha with selected period if you want.
         render_investor_plus_sections(api, positions)
         st.divider()
-
 
         info = render_portfolio_equity_chart(api)
         st.divider()
