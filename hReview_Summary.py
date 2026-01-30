@@ -4216,26 +4216,7 @@ def render_perf_and_risk_kpis(api: Optional[REST], positions: pd.DataFrame) -> N
             cap_deployed = np.nan
             open_value   = np.nan
 
-    c1, c2, c3, c4, c5 = st.columns([1, 1, 1, 1, 1])
-
-
-    with c1:
-        tone = "pos" if (day_pl_pct or 0) >= 0 else "neg"
-        arrow = "▲" if tone == "pos" else "▼"
-        _kpi_card(
-            "📈 Portfolio P&L (Today)",
-            f"{arrow} {(day_pl_pct if np.isfinite(day_pl_pct) else 0):+.2f}%",
-            tone
-        )
-
-    with c2:
-        tone = "pos" if (day_pl_usd or 0) >= 0 else "neg"
-        arrow = "▲" if tone == "pos" else "▼"
-        _kpi_card(
-            "💰 Portfolio P&L (Today)",
-            f"{arrow} {money(day_pl_usd)}",
-            tone
-        )
+    c3, c4, c5 = st.columns([1, 1, 1])
 
     with c3:
         val = today_total_pl_pct if np.isfinite(today_total_pl_pct) else 0.0
