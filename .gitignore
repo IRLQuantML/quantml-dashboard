@@ -28,6 +28,6 @@ config.py
 !Clock/
 !Clock/**
 
-# Allow entire 2.Features_test folder AND all contents
-!2.Features_test/
-!2.Features_test/**
+# Generated features (never commit)
+2.Features_test/
+2.Features_test/**
