@@ -1180,10 +1180,6 @@ def _render_quantml_vs_spy_deployed(qml_pct, spy, nav_pct, *, deployed_usd=None,
 
       {detail}
 
-      <div style="font-size:0.95rem;margin-top:4px;color:#94A3B8;">
-        NAV impact today: {_fmt_pct(nav_pct)}
-      </div>
-
     </div>
     """
 
