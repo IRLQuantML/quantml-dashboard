@@ -24,6 +24,11 @@ config.py
 !QuantML.png
 !requirements.txt
 
+# Allow backend API files (Render / FastAPI)
+!app.py
+!render.yaml
+!requirements.txt
+
 # Allow Clock folder
 !Clock/
 !Clock/**
