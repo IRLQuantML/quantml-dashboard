@@ -8,3 +8,5 @@ openpyxl>=3.1   # read .xlsx on Streamlit Cloud
 matplotlib>=3.8 # some plots/PDFs use it
 pandas-market-calendars>=4.4  # aligns sessions/holidays for SPY vs QuantML
 tzdata                        # reliable timezone handling on Linux
+fastapi
+uvicorn
