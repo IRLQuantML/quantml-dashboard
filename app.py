@@ -16,7 +16,11 @@ from jose import jwt, JWTError
 from passlib.context import CryptContext
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, select
 from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.exc import SQLAlchemyError
 
+
+import logging
+logging.basicConfig(level=logging.INFO)
 
 # -----------------------------
 # Config
@@ -43,6 +47,10 @@ ALLOWED_ORIGINS = [
 # Auth / Database
 # -----------------------------
 DATABASE_URL = os.getenv("DATABASE_URL", "")
+ 
+# 🔑 Normalize Render's postgres:// → postgresql:// for SQLAlchemy
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 JWT_SECRET = os.getenv("JWT_SECRET", "")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRE_MIN = int(os.getenv("JWT_EXPIRES_MIN", "720"))
@@ -146,21 +154,35 @@ def health():
 
 @app.post("/auth/register")
 def register_user(data: RegisterIn, db=Depends(get_db)):
-    email = data.email.lower().strip()
-    if len(data.password) < 10:
-        raise HTTPException(status_code=400, detail="Password too short")
+    try:
+        email = data.email.lower().strip()
+        if len(data.password) < 10:
+            raise HTTPException(status_code=400, detail="Password too short")
 
-    exists = db.execute(select(User).where(User.email == email)).scalar_one_or_none()
-    if exists:
-        raise HTTPException(status_code=409, detail="Email already registered")
+        exists = db.execute(select(User).where(User.email == email)).scalar_one_or_none()
+        if exists:
+            raise HTTPException(status_code=409, detail="Email already registered")
 
-    user = User(email=email, password_hash=hash_password(data.password))
-    db.add(user)
-    db.commit()
+        # Hash password (this is where bcrypt/passlib can fail)
+        pw_hash = hash_password(data.password)
 
-    token = create_access_token(email)
-    return {"access_token": token, "token_type": "bearer"}
+        user = User(email=email, password_hash=pw_hash)
+        db.add(user)
+        db.commit()
 
+        token = create_access_token(email)
+        return {"access_token": token, "token_type": "bearer"}
+
+    except HTTPException:
+        raise
+
+    except SQLAlchemyError:
+        logging.exception("DB error in /auth/register")
+        raise HTTPException(status_code=500, detail="Database error")
+
+    except Exception:
+        logging.exception("Unhandled error in /auth/register")
+        raise HTTPException(status_code=500, detail="Server error")
 
 @app.post("/auth/login")
 def login(form: OAuth2PasswordRequestForm = Depends(), db=Depends(get_db)):
