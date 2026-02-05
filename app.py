@@ -10,6 +10,14 @@ from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from alpaca_trade_api.rest import REST
 
+from datetime import datetime, timedelta
+from fastapi import Depends
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import jwt, JWTError
+from passlib.context import CryptContext
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, select
+from sqlalchemy.orm import declarative_base, sessionmaker
+
 
 # -----------------------------
 # Config
@@ -33,6 +41,64 @@ ALLOWED_ORIGINS = [
 ]
 
 # -----------------------------
+# Auth / Database
+# -----------------------------
+DATABASE_URL = os.getenv("DATABASE_URL", "")
+JWT_SECRET = os.getenv("JWT_SECRET", "")
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRE_MIN = int(os.getenv("JWT_EXPIRES_MIN", "720"))
+
+if not DATABASE_URL or not JWT_SECRET:
+    raise RuntimeError("DATABASE_URL and JWT_SECRET must be set")
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
+Base = declarative_base()
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True)
+    email = Column(String(320), unique=True, index=True, nullable=False)
+    password_hash = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    is_active = Column(Boolean, default=True)
+
+Base.metadata.create_all(bind=engine)
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+def hash_password(pw: str) -> str:
+    return pwd_context.hash(pw)
+
+def verify_password(pw: str, pw_hash: str) -> bool:
+    return pwd_context.verify(pw, pw_hash)
+
+def create_access_token(email: str) -> str:
+    payload = {
+        "sub": email,
+        "exp": datetime.utcnow() + timedelta(minutes=JWT_EXPIRE_MIN)
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+def get_current_user(token: str = Depends(oauth2_scheme)) -> str:
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        email = payload.get("sub")
+        if not email:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        return email
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+# -----------------------------
 # Simple TTL cache
 # -----------------------------
 @dataclass
@@ -51,6 +117,46 @@ class TTLCache:
 
 
 CACHE = TTLCache()
+
+from pydantic import BaseModel, EmailStr
+
+class RegisterIn(BaseModel):
+    email: EmailStr
+    password: str
+
+@app.post("/auth/register")
+def register_user(data: RegisterIn, db=Depends(get_db)):
+    email = data.email.lower().strip()
+    if len(data.password) < 10:
+        raise HTTPException(status_code=400, detail="Password too short")
+
+    exists = db.execute(select(User).where(User.email == email)).scalar_one_or_none()
+    if exists:
+        raise HTTPException(status_code=409, detail="Email already registered")
+
+    user = User(email=email, password_hash=hash_password(data.password))
+    db.add(user)
+    db.commit()
+
+    token = create_access_token(email)
+    return {"access_token": token, "token_type": "bearer"}
+
+
+@app.post("/auth/login")
+def login(form: OAuth2PasswordRequestForm = Depends(), db=Depends(get_db)):
+    email = form.username.lower().strip()
+    user = db.execute(select(User).where(User.email == email)).scalar_one_or_none()
+
+    if not user or not verify_password(form.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    token = create_access_token(email)
+    return {"access_token": token, "token_type": "bearer"}
+
+
+@app.get("/auth/me")
+def me(user_email: str = Depends(get_current_user)):
+    return {"email": user_email}
 
 
 # -----------------------------
@@ -230,8 +336,7 @@ def get_spy_prior_close_to_now_return_pct() -> Optional[float]:
 # The single endpoint
 # -----------------------------
 @app.get("/api/dashboard")
-def dashboard(x_api_key: Optional[str] = Header(default=None, alias="X-API-Key")):
-    auth_guard(x_api_key)
+def dashboard(user_email: str = Depends(get_current_user)):
 
     cached = CACHE.get()
     if cached is not None:
