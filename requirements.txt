@@ -10,3 +10,9 @@ pandas-market-calendars>=4.4  # aligns sessions/holidays for SPY vs QuantML
 tzdata                        # reliable timezone handling on Linux
 fastapi
 uvicorn
+python-jose[cryptography]
+passlib[bcrypt]
+sqlalchemy
+psycopg2-binary
+python-multipart
+
