@@ -17,6 +17,7 @@ from alpaca_trade_api.rest import REST
 ALPACA_API_KEY = os.getenv("ALPACA_API_KEY", "")
 ALPACA_SECRET_KEY = os.getenv("ALPACA_SECRET_KEY", "")
 ALPACA_BASE_URL = os.getenv("ALPACA_BASE_URL", "https://paper-api.alpaca.markets")
+X_API_Key = "quantml-dashboard-2026-secure-key"
 
 # Optional shared secret between QuantML and this API
 DASHBOARD_API_KEY = os.getenv("DASHBOARD_API_KEY", "")
@@ -64,6 +65,14 @@ app.add_middleware(
     allow_methods=["GET", "OPTIONS"],
     allow_headers=["*"],
 )
+
+@app.get("/")
+def root():
+    return {"ok": True, "service": "QuantML Dashboard API"}
+
+@app.get("/health")
+def health():
+    return {"ok": True}
 
 
 def require_env() -> None:
@@ -140,18 +149,28 @@ def build_positions(api: REST) -> Dict[str, Any]:
             "pl_today_pct": pl_today_pct,
         })
 
-    df = pd.DataFrame(rows) if rows else pd.DataFrame(columns=["deployed", "market_value", "pl_today_usd"])
+    df = pd.DataFrame(rows) if rows else pd.DataFrame(columns=["deployed", "market_value", "pl_today_usd", "pl_usd"])
 
     capital_deployed = float(df["deployed"].sum()) if not df.empty else 0.0
-    open_value = float(df["market_value"].sum()) if not df.empty else 0.0
+
+    # Keep net open_value if you want (net exposure). Optional.
+    open_value_net = float(df["market_value"].sum()) if not df.empty else 0.0
+
+    # NEW: gross open value is more intuitive for "open value" display
+    open_value_gross = float(df["market_value"].abs().sum()) if not df.empty else 0.0
 
     open_positions_intraday_pl_usd = float(df["pl_today_usd"].sum()) if not df.empty else 0.0
+
+    # NEW: total unrealized P&L across positions
+    open_positions_unrealized_pl_usd = float(df["pl_usd"].sum()) if not df.empty else 0.0
 
     return {
         "rows": rows,
         "capital_deployed": capital_deployed,
-        "open_value": open_value,
+        "open_value_net": open_value_net,
+        "open_value_gross": open_value_gross,
         "open_positions_intraday_pl_usd": open_positions_intraday_pl_usd,
+        "open_positions_unrealized_pl_usd": open_positions_unrealized_pl_usd,
     }
 
 
@@ -190,12 +209,10 @@ def build_portfolio_history(api: REST) -> Dict[str, Any]:
         "day_pl_pct": float(day_pl_pct) if day_pl_pct is not None else None,
     }
 
-
-def compute_quantml_return_on_deployed(capital_deployed: float, open_value: float) -> Optional[float]:
-    # Return in % terms based on deployed capital (your investor dashboard concept)
+def compute_quantml_return_on_deployed(capital_deployed: float, unrealized_pl_usd: float) -> Optional[float]:
     if capital_deployed <= 0:
         return None
-    return (open_value - capital_deployed) / capital_deployed * 100.0
+    return (unrealized_pl_usd / capital_deployed) * 100.0
 
 
 def get_spy_prior_close_to_now_return_pct() -> Optional[float]:
@@ -227,10 +244,9 @@ def dashboard(x_api_key: Optional[str] = Header(default=None, alias="X-API-Key")
     history = build_portfolio_history(api)
 
     capital_deployed = positions["capital_deployed"]
-    open_value = positions["open_value"]
+    unrealized_pl_usd = positions["open_positions_unrealized_pl_usd"]
 
-    quantml_on_deployed_pct = compute_quantml_return_on_deployed(capital_deployed, open_value)
-
+    quantml_on_deployed_pct = compute_quantml_return_on_deployed(capital_deployed, unrealized_pl_usd)
     spy_pct = get_spy_prior_close_to_now_return_pct()
 
     payload = {
@@ -242,16 +258,17 @@ def dashboard(x_api_key: Optional[str] = Header(default=None, alias="X-API-Key")
         "snapshot": snapshot,
         "positions": {
             "capital_deployed": capital_deployed,
-            "open_value": open_value,
+            "open_value_net": positions["open_value_net"],
+            "open_value_gross": positions["open_value_gross"],
             "open_positions_intraday_pl_usd": positions["open_positions_intraday_pl_usd"],
+            "open_positions_unrealized_pl_usd": positions["open_positions_unrealized_pl_usd"],
             "rows": positions["rows"],
-        },
-        "portfolio_history": history,
+        },        "portfolio_history": history,
         "kpis": {
             "portfolio_pl_today_usd": history.get("day_pl_usd"),
             "portfolio_pl_today_pct": history.get("day_pl_pct"),
-            "quantml_return_on_deployed_pct": quantml_on_deployed_pct,
             "spy_return_prior_close_to_now_pct": spy_pct,
+            "quantml_return_on_deployed_pct": quantml_on_deployed_pct,
         },
     }
 
