@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional, Tuple, List
 
 import numpy as np
 import pandas as pd
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, Header, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from alpaca_trade_api.rest import REST
 
