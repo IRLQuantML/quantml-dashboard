@@ -11,7 +11,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from alpaca_trade_api.rest import REST
 
 from datetime import datetime, timedelta
-from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import jwt, JWTError
 from passlib.context import CryptContext
@@ -124,6 +123,27 @@ class RegisterIn(BaseModel):
     email: EmailStr
     password: str
 
+# -----------------------------
+# App
+# -----------------------------
+app = FastAPI(title="QuantML Dashboard API", version="1.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "OPTIONS"],
+    allow_headers=["*"],
+)
+
+@app.get("/")
+def root():
+    return {"ok": True, "service": "QuantML Dashboard API"}
+
+@app.get("/health")
+def health():
+    return {"ok": True}
+
 @app.post("/auth/register")
 def register_user(data: RegisterIn, db=Depends(get_db)):
     email = data.email.lower().strip()
@@ -153,33 +173,9 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db=Depends(get_db)):
     token = create_access_token(email)
     return {"access_token": token, "token_type": "bearer"}
 
-
 @app.get("/auth/me")
 def me(user_email: str = Depends(get_current_user)):
     return {"email": user_email}
-
-
-# -----------------------------
-# App
-# -----------------------------
-app = FastAPI(title="QuantML Dashboard API", version="1.0")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["GET", "OPTIONS"],
-    allow_headers=["*"],
-)
-
-@app.get("/")
-def root():
-    return {"ok": True, "service": "QuantML Dashboard API"}
-
-@app.get("/health")
-def health():
-    return {"ok": True}
-
 
 def require_env() -> None:
     if not ALPACA_API_KEY or not ALPACA_SECRET_KEY:
