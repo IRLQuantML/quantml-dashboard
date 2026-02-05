@@ -12,6 +12,7 @@ fastapi
 uvicorn
 python-jose[cryptography]
 passlib[bcrypt]
+bcrypt>=4.1.2
 sqlalchemy
 psycopg2-binary
 python-multipart
