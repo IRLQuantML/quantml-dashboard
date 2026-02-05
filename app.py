@@ -58,7 +58,7 @@ JWT_EXPIRE_MIN = int(os.getenv("JWT_EXPIRES_MIN", "720"))
 if not DATABASE_URL or not JWT_SECRET:
     raise RuntimeError("DATABASE_URL and JWT_SECRET must be set")
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 Base = declarative_base()
