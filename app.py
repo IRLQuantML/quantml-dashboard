@@ -112,9 +112,6 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> str:
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-
-app = FastAPI()
-
 def db_conn():
     return psycopg2.connect(os.environ["DATABASE_URL"], sslmode="require")
 
