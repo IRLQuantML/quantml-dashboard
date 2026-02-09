@@ -31,3 +31,8 @@ node_modules/
 # Optional: if you do NOT want Clock image assets committed
 # Clock/*.png
 Clock/*.png
+
+.vscode/
+7.Trading/
+API Key.txt
+*.docx
