@@ -10,6 +10,10 @@ from fastapi import FastAPI, Header, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from alpaca_trade_api.rest import REST
 
+import json
+import psycopg2
+from psycopg2.extras import RealDictCursor
+
 from datetime import datetime, timedelta
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import jwt, JWTError
@@ -21,6 +25,9 @@ from sqlalchemy.exc import SQLAlchemyError
 
 import logging
 logging.basicConfig(level=logging.INFO)
+
+from dotenv import load_dotenv
+load_dotenv()
 
 # -----------------------------
 # Config
@@ -104,6 +111,48 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> str:
         return email
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+
+app = FastAPI()
+
+def db_conn():
+    return psycopg2.connect(os.environ["DATABASE_URL"], sslmode="require")
+
+@app.get("/api/predictions/latest")
+def predictions_latest():
+    conn = db_conn()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("select payload from daily_signals order by run_date desc limit 1;")
+            row = cur.fetchone()
+            if not row:
+                raise HTTPException(404, "No predictions found")
+            return row["payload"]
+    finally:
+        conn.close()
+
+@app.get("/api/predictions/dates")
+def predictions_dates(limit: int = 30):
+    conn = db_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("select run_date from daily_signals order by run_date desc limit %s;", (limit,))
+            return [r[0].isoformat() for r in cur.fetchall()]
+    finally:
+        conn.close()
+
+@app.get("/api/predictions/{run_date}")
+def predictions_by_date(run_date: str):
+    conn = db_conn()
+    try:
+        with conn.cursor(cursor_factory=RealDictCursor) as cur:
+            cur.execute("select payload from daily_signals where run_date = %s;", (run_date,))
+            row = cur.fetchone()
+            if not row:
+                raise HTTPException(404, "No predictions for that date")
+            return row["payload"]
+    finally:
+        conn.close()
 
 # -----------------------------
 # Simple TTL cache
@@ -194,6 +243,41 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db=Depends(get_db)):
 
     token = create_access_token(email)
     return {"access_token": token, "token_type": "bearer"}
+
+from fastapi import Header, HTTPException
+import os
+
+@app.post("/api/admin/ingest")
+def ingest(payload: dict, authorization: str | None = Header(default=None)):
+    secret = os.environ.get("INGEST_SECRET")
+    if not secret:
+        raise HTTPException(500, "INGEST_SECRET not configured")
+
+    if not authorization or authorization != f"Bearer {secret}":
+        raise HTTPException(401, "Unauthorized")
+
+    # continue with DB upsert...
+
+    run_date = payload.get("reportDate")
+    if not run_date:
+        raise HTTPException(400, "payload must include reportDate")
+
+    conn = db_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                insert into daily_signals (run_date, payload, updated_at)
+                values (%s, %s::jsonb, now())
+                on conflict (run_date)
+                do update set payload = excluded.payload, updated_at = now();
+                """,
+                (run_date, json.dumps(payload)),
+            )
+        conn.commit()
+        return {"ok": True, "run_date": run_date}
+    finally:
+        conn.close()
 
 @app.get("/auth/me")
 def me(user_email: str = Depends(get_current_user)):
