@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: quantml-dashboard-api
+    name: quantml-dashboard-api-v2
     env: python
     plan: starter
 
