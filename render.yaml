@@ -4,12 +4,9 @@ services:
     env: python
     plan: starter
 
-    # ✅ Pin python version (fix psycopg2 ImportError on py3.13)
     pythonVersion: 3.12.2
 
-    buildCommand: pip install -r requirements.txt
-
-    # ✅ Render requires you to bind to $PORT
+    buildCommand: pip install -r requirements.api.txt
     startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
 
     envVars:
