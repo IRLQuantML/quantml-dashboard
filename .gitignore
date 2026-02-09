@@ -1,38 +1,33 @@
 # ============================================
-# QuantML — Controlled Tracking
+# QuantML Dashboard/API repo (Render deploy)
 # ============================================
 
-# Ignore everything by default
-*
-
-# Allow the .gitignore itself
-!.gitignore
-
-# ==================================================
-# Local secrets / machine-specific config
-# ==================================================
-config.py
+# Secrets (never commit)
 .env
 .env.*
+config.py
 
-# ✅ Allow the SAFE template file (track this)
-!config.example.py
+# Python junk
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+.venv/
+venv/
+.envrc
 
-# Allow dashboard files
-!hReview_Summary.py
-!hReview Git Push.bat
-!QuantML.png
-!requirements.txt
+# OS junk
+.DS_Store
+Thumbs.db
 
-# Allow backend API files (Render / FastAPI)
-!app.py
-!render.yaml
-!requirements.txt
+# Node / frontend junk (if any)
+node_modules/
 
-# Allow Clock folder
-!Clock/
-!Clock/**
-
-# Generated features (never commit)
+# Large generated data (never commit)
 2.Features_test/
 2.Features_test/**
+
+# Optional: if you do NOT want Clock image assets committed
+# Clock/*.png
+Clock/*.png
