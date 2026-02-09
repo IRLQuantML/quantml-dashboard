@@ -14,3 +14,5 @@ alpaca-trade-api==3.0.2
 pandas==2.2.0
 numpy==1.26.4
 tzdata
+
+python-dotenv==1.0.1
