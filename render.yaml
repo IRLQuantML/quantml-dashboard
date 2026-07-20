@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: quantml-dashboard-api-v1
+    name: quantml-dashboard-api-v1-20260209a
     runtime: python
     region: frankfurt
     plan: starter
